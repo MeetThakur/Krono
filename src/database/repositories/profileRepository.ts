@@ -7,8 +7,8 @@ export const saveProfile = async (profile: UnifiedProfile) => {
   await db.runAsync(
     `INSERT OR REPLACE INTO profiles (
       id, platformId, username, displayName, avatar, rating, maxRating, rank, 
-      problemsSolved, totalSubmissions, badges, lastUpdated, isStale
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      problemsSolved, totalSubmissions, totalContests, badges, lastUpdated, isStale
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       profile.id,
       profile.platformId,
@@ -20,6 +20,7 @@ export const saveProfile = async (profile: UnifiedProfile) => {
       profile.rank ?? null,
       profile.problemsSolved,
       profile.totalSubmissions,
+      profile.totalContests || 0,
       JSON.stringify(profile.badges),
       dateToTimestamp(profile.lastUpdated),
       profile.isStale ? 1 : 0
@@ -44,6 +45,7 @@ export const getProfile = async (id: string): Promise<UnifiedProfile | null> => 
     rank: result.rank || undefined,
     problemsSolved: result.problemsSolved,
     totalSubmissions: result.totalSubmissions,
+    totalContests: result.totalContests || 0,
     badges: JSON.parse(result.badges || '[]'),
     lastUpdated: timestampToDate(result.lastUpdated),
     isStale: !!result.isStale
@@ -65,6 +67,7 @@ export const getAllProfiles = async (): Promise<UnifiedProfile[]> => {
     rank: result.rank || undefined,
     problemsSolved: result.problemsSolved,
     totalSubmissions: result.totalSubmissions,
+    totalContests: result.totalContests || 0,
     badges: JSON.parse(result.badges || '[]'),
     lastUpdated: timestampToDate(result.lastUpdated),
     isStale: !!result.isStale

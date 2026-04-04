@@ -25,6 +25,7 @@ export interface UnifiedProfile {
   // Progress Stats
   problemsSolved: number;
   totalSubmissions: number;
+  totalContests?: number;
   
   // Activity
   streak?: number;

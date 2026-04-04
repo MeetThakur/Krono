@@ -30,6 +30,7 @@ export const normalizeCodeforcesProfile = (
     
     problemsSolved: solvedProblems.size,
     totalSubmissions: submissions.length,
+    totalContests: ratingHistory.length,
     
     badges: [], // Codeforces doesn't have badges in API
     
@@ -119,6 +120,7 @@ export const normalizeLeetCodeProfile = (
     
     problemsSolved: totalSolved,
     totalSubmissions: totalSubmissions,
+    totalContests: contestData?.ranking?.attendedContestsCount || 0,
     
     badges: [], // Could parse from profile if needed
     
@@ -170,6 +172,7 @@ export const normalizeCodeChefProfile = (userData: any): UnifiedProfile => {
     problemsSolved: userData.problemsSolved,
     // Since we scrape, we might not have total submissions, use solved count as fallback or 0
     totalSubmissions: userData.problemsSolved, 
+    totalContests: userData.totalContests || 0,
     
     badges: [],
     
@@ -247,6 +250,7 @@ export const normalizeAtCoderProfile = (userData: any): UnifiedProfile => {
     
     problemsSolved: userData.problemsSolved,
     totalSubmissions: 0,
+    totalContests: userData.totalContests || 0,
     
     badges: [],
     

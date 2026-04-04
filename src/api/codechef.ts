@@ -138,6 +138,10 @@ export const codechefApi = {
         /<h1[^>]*>(?:<span[^>]*>)?([^<]+)(?:<\/span>)?<\/h1>/,
       );
 
+      // 8. Total Contests
+      const contestsMatch = html.match(/Contests[a-zA-Z\s<>]*:\s*(?:<strong>|<b>)?\s*(\d+)/i) || html.match(/"contests"\s*:\s*(\d+)/i) || html.match(/Contests[^0-9]*(\d+)/i);
+      const totalContests = contestsMatch ? parseInt(contestsMatch[1], 10) : 0;
+
       return {
         handle,
         rating,
@@ -147,6 +151,7 @@ export const codechefApi = {
           ? parseInt(globalRankMatch[1], 10)
           : undefined,
         problemsSolved,
+        totalContests,
         avatar: avatarMatch ? avatarMatch[1] : undefined,
         name: nameMatch ? nameMatch[1].trim() : handle,
       };

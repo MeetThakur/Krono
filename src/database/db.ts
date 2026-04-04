@@ -42,11 +42,19 @@ const initDatabase = async (database: SQLite.SQLiteDatabase) => {
         rank TEXT,
         problemsSolved INTEGER DEFAULT 0,
         totalSubmissions INTEGER DEFAULT 0,
+        totalContests INTEGER DEFAULT 0,
         badges TEXT,
         lastUpdated INTEGER,
         isStale INTEGER DEFAULT 0
       );
     `);
+
+    // Migration for adding totalContests to existing tables
+    try {
+      await database.execAsync('ALTER TABLE profiles ADD COLUMN totalContests INTEGER DEFAULT 0;');
+    } catch (e) {
+      // Column likely already exists
+    }
 
     await database.execAsync(`
       CREATE TABLE IF NOT EXISTS contests (

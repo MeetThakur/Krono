@@ -149,6 +149,7 @@ export const atcoderApi = {
         rating,
         maxRating,
         problemsSolved,
+        totalContests: historyData.length,
         avatar: undefined, 
         rank: scrapedRank // Pass the scraped rank
       };

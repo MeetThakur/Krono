@@ -16,6 +16,7 @@ import {
 } from "../../src/components/common/SkeletonLoader";
 import { ContestList } from "../../src/components/contests/ContestList";
 import { ProfileCarousel } from "../../src/components/profile/ProfileCarousel";
+import { CumulativeStats } from "../../src/components/profile/CumulativeStats";
 import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
@@ -57,13 +58,18 @@ export default function DashboardScreen() {
   const { leetcode, refreshPotd, isLoading: isPotdLoading } = usePotdStore();
 
   useEffect(() => {
-    loadProfiles();
+    const initProfiles = async () => {
+      await loadProfiles();
+      // Fetch fresh data from APIs on launch (respects TTL if already set)
+      refreshProfiles();
+    };
+    initProfiles();
     loadContests();
     refreshPotd();
   }, []);
 
   const handleSync = async () => {
-    refreshProfiles();
+    refreshProfiles(true);
     refreshPotd();
     syncContests();
   };
@@ -256,6 +262,9 @@ export default function DashboardScreen() {
               </Surface>
             </View>
           )}
+
+          {/* Cumulative Stats */}
+          {profiles.length > 0 && <CumulativeStats profiles={profiles} />}
 
           {/* Daily Challenge */}
           <View style={styles.section}>

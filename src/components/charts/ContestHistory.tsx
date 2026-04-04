@@ -73,8 +73,34 @@ export function ContestHistory({ profiles }: ContestHistoryProps) {
           console.warn("[ContestHistory] LC fetch failed:", e);
         })
         .finally(() => setIsLoading(false));
+    } else if (profile.platformId === "atcoder") {
+      // AtCoder: official history JSON
+      const axios = require("axios");
+      axios
+        .get(`https://atcoder.jp/users/${profile.username}/history/json`)
+        .then((resp: any) => {
+          if (Array.isArray(resp.data)) {
+            const mapped: ContestEntry[] = resp.data.map((h: any, i: number) => {
+              const prevRating = i > 0 ? resp.data[i - 1].NewRating : null;
+              const change =
+                prevRating !== null ? h.NewRating - prevRating : null;
+              return {
+                event: h.ContestName || "Contest",
+                date: h.EndTime || "",
+                place: h.Place || 0,
+                ratingChange: change,
+                newRating: h.NewRating,
+              };
+            });
+            setEntries(mapped.reverse().slice(0, 20));
+          }
+        })
+        .catch((e: any) => {
+          console.warn("[ContestHistory] AC fetch failed:", e);
+        })
+        .finally(() => setIsLoading(false));
     } else {
-      // CF, AC, CC: use clist.by
+      // CF, CC: use clist.by
       clistApi
         .getRecentContests(profile.platformId, profile.username, 20)
         .then((stats) => {

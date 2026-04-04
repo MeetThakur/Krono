@@ -83,7 +83,7 @@ export function ProfileDetailModal({
     },
     {
       label: "Contests",
-      value: contestCount ?? "…",
+      value: profile.totalContests ?? contestCount ?? "…",
       icon: "trophy-outline" as const,
     },
   ];
