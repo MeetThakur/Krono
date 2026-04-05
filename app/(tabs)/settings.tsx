@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View, Pressable } from "react-native";
 import {
     Appbar,
     Button,
@@ -27,7 +27,7 @@ import { PLATFORMS, PlatformId } from "../../src/types/platform";
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { isDarkMode, toggleTheme } = useThemeStore();
+  const { isDarkMode, themeColor, toggleTheme, setThemeColor } = useThemeStore();
   const { profiles, addProfile, removeProfile, isLoading } = useProfileStore();
   const { resetOnboarding } = useOnboardingStore();
   const {
@@ -120,6 +120,45 @@ export default function SettingsScreen() {
                 <Switch value={isDarkMode} onValueChange={toggleTheme} />
               )}
             />
+            <Divider />
+            <View style={{ padding: 16 }}>
+              <Text variant="labelMedium" style={{ marginBottom: 12, fontWeight: "600", color: colors.onSurfaceVariant }}>
+                Accent Color
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+                {[
+                  { id: 'monochrome', hex: isDarkMode ? '#FAFAFA' : '#18181B' },
+                  { id: 'blue', hex: '#3B82F6' },
+                  { id: 'emerald', hex: '#10B981' },
+                  { id: 'violet', hex: '#8B5CF6' },
+                  { id: 'rose', hex: '#F43F5E' },
+                  { id: 'amber', hex: '#F59E0B' },
+                ].map(color => (
+                  <Pressable
+                    key={color.id}
+                    onPress={() => setThemeColor(color.id as any)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 22,
+                      backgroundColor: color.hex,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: themeColor === color.id ? 2 : 0,
+                      borderColor: colors.onSurface,
+                    }}
+                  >
+                    {themeColor === color.id && (
+                      <MaterialCommunityIcons 
+                        name="check" 
+                        size={20} 
+                        color={color.id === 'monochrome' ? (isDarkMode ? '#000' : '#FFF') : '#FFF'} 
+                      />
+                    )}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
           </Card>
         </View>
 

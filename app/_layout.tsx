@@ -21,14 +21,14 @@ import {
 } from "../src/services/notificationService";
 import { useOnboardingStore } from "../src/stores/useOnboardingStore";
 import { useThemeStore } from "../src/stores/useThemeStore";
-import { theme as md3Theme } from "../src/theme/md3-theme";
+import { getTheme } from "../src/theme/md3-theme";
 
 setupNotificationHandler();
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const isDarkMode = useThemeStore((state) => state.isDarkMode);
+  const { isDarkMode, themeColor } = useThemeStore();
   const router = useRouter();
 
   const { hasCompleted, isLoading, checkOnboarding } = useOnboardingStore();
@@ -69,7 +69,7 @@ export default function RootLayout() {
     return null;
   }
 
-  const activeTheme = isDarkMode ? md3Theme.dark : md3Theme.light;
+  const activeTheme = getTheme(isDarkMode, themeColor);
 
   return (
     <PaperProvider theme={activeTheme}>

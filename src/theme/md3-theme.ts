@@ -5,6 +5,7 @@ import {
 } from "react-native-paper";
 import { darkColors as customDark, lightColors as customLight } from "./colors";
 import { typography } from "./typography";
+import type { ThemeColor } from "../stores/useThemeStore";
 
 // Light: Clean white with black accent
 const lightColors = {
@@ -110,15 +111,27 @@ const darkColors = {
   backdrop: "rgba(0, 0, 0, 0.5)",
 };
 
-export const theme = {
-  light: {
-    ...MD3LightTheme,
+const themePalettes: Record<ThemeColor, { light: string; dark: string }> = {
+  monochrome: { light: customLight.primary, dark: customDark.primary },
+  blue: { light: "#3B82F6", dark: "#3B82F6" },
+  emerald: { light: "#10B981", dark: "#10B981" },
+  violet: { light: "#8B5CF6", dark: "#8B5CF6" },
+  rose: { light: "#F43F5E", dark: "#F43F5E" },
+  amber: { light: "#F59E0B", dark: "#F59E0B" },
+};
+
+export const getTheme = (isDark: boolean, colorType: ThemeColor = "monochrome") => {
+  const baseColors = isDark ? darkColors : lightColors;
+  const MD3Base = isDark ? MD3DarkTheme : MD3LightTheme;
+
+  const hexColor = themePalettes[colorType][isDark ? "dark" : "light"];
+
+  return {
+    ...MD3Base,
     fonts: configureFonts({ config: typography.fonts }),
-    colors: lightColors,
-  },
-  dark: {
-    ...MD3DarkTheme,
-    fonts: configureFonts({ config: typography.fonts }),
-    colors: darkColors,
-  },
+    colors: {
+      ...baseColors,
+      primary: hexColor,
+    },
+  };
 };
