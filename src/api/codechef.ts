@@ -142,6 +142,17 @@ export const codechefApi = {
       const contestsMatch = html.match(/Contests[a-zA-Z\s<>]*:\s*(?:<strong>|<b>)?\s*(\d+)/i) || html.match(/"contests"\s*:\s*(\d+)/i) || html.match(/Contests[^0-9]*(\d+)/i);
       const totalContests = contestsMatch ? parseInt(contestsMatch[1], 10) : 0;
 
+      // 9. Rating History (Scrape all_rating array)
+      let ratingHistory: any[] = [];
+      const ratingHistoryMatch = html.match(/var all_rating = (\[.*?\]);/s);
+      if (ratingHistoryMatch) {
+        try {
+          ratingHistory = JSON.parse(ratingHistoryMatch[1]);
+        } catch(e) {
+          console.warn("CodeChef rating parsing failed", e);
+        }
+      }
+
       return {
         handle,
         rating,
@@ -152,6 +163,7 @@ export const codechefApi = {
           : undefined,
         problemsSolved,
         totalContests,
+        ratingHistory,
         avatar: avatarMatch ? avatarMatch[1] : undefined,
         name: nameMatch ? nameMatch[1].trim() : handle,
       };

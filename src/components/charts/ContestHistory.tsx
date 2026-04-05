@@ -2,7 +2,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Surface, Text, useTheme } from "react-native-paper";
-import { clistApi } from "../../api/clist";
+import { codechefApi } from "../../api/codechef";
+import { codeforcesApi } from "../../api/codeforces";
 import { leetcodeApi } from "../../api/leetcode";
 import { UnifiedProfile } from "../../types/user";
 import { Skeleton } from "../common/SkeletonLoader";
@@ -99,24 +100,51 @@ export function ContestHistory({ profiles }: ContestHistoryProps) {
           console.warn("[ContestHistory] AC fetch failed:", e);
         })
         .finally(() => setIsLoading(false));
-    } else {
-      // CF, CC: use clist.by
-      clistApi
-        .getRecentContests(profile.platformId, profile.username, 20)
-        .then((stats) => {
-          const mapped: ContestEntry[] = stats.map((s) => ({
-            event: s.event || "Contest",
-            date: s.date || "",
-            place: s.place || 0,
-            ratingChange: s.rating_change,
-            newRating: s.new_rating,
-          }));
-          setEntries(mapped);
+    } else if (profile.platformId === "codeforces") {
+      codeforcesApi
+        .getUserRating(profile.username)
+        .then((data: any) => {
+          if (Array.isArray(data)) {
+            const mapped: ContestEntry[] = data.map((d: any) => ({
+              event: d.contestName || "Contest",
+              date: new Date(d.ratingUpdateTimeSeconds * 1000).toISOString(),
+              place: d.rank || 0,
+              ratingChange: d.newRating - d.oldRating,
+              newRating: d.newRating,
+            }));
+            setEntries(mapped.reverse().slice(0, 20));
+          }
         })
-        .catch((e) => {
-          console.warn("[ContestHistory] fetch failed:", e);
-        })
+        .catch((e) => console.warn("[ContestHistory] CF fetch failed:", e))
         .finally(() => setIsLoading(false));
+    } else if (profile.platformId === "codechef") {
+      codechefApi
+        .getUserInfo(profile.username)
+        .then((info: any) => {
+          if (info.ratingHistory && Array.isArray(info.ratingHistory)) {
+            const mapped: ContestEntry[] = info.ratingHistory.map(
+              (d: any, i: number) => {
+                const prevRating =
+                  i > 0 ? parseInt(info.ratingHistory[i - 1].rating) : null;
+                const curRating = parseInt(d.rating);
+                const change =
+                  prevRating !== null ? curRating - prevRating : null;
+                return {
+                  event: d.name || "Contest",
+                  date: d.end_date ? new Date(d.end_date.replace(" ", "T")).toISOString() : "",
+                  place: parseInt(d.rank) || 0,
+                  ratingChange: change,
+                  newRating: curRating,
+                };
+              }
+            );
+            setEntries(mapped.reverse().slice(0, 20));
+          }
+        })
+        .catch((e) => console.warn("[ContestHistory] CC fetch failed:", e))
+        .finally(() => setIsLoading(false));
+    } else {
+      setIsLoading(false);
     }
   }, [profiles]);
 

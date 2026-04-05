@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { Surface, Text, useTheme } from "react-native-paper";
-import { clistApi } from "../../api/clist";
+import { codechefApi } from "../../api/codechef";
 import { codeforcesApi } from "../../api/codeforces";
 import { leetcodeApi } from "../../api/leetcode";
 import { PlatformId, PLATFORMS } from "../../types/platform";
@@ -75,31 +75,17 @@ export function RatingChart({ profiles }: RatingChartProps) {
                 label: d.ContestName,
               }));
             }
-          } catch {
-            // Fallback to clist.by
-            const history = await clistApi.getRatingHistory(
-              profile.platformId,
-              profile.username,
-            );
-            if (history.length > 0) {
-              result[profile.platformId] = history.map((s) => ({
-                date: new Date(s.date).getTime(),
-                rating: s.new_rating!,
-                label: s.event,
-              }));
-            }
+          } catch (e) {
+            console.warn("[RatingChart] AC history failed", e);
           }
         } else if (profile.platformId === "codechef") {
-          // CodeChef — use clist.by statistics for reliable rating history
-          const history = await clistApi.getRatingHistory(
-            profile.platformId,
-            profile.username,
-          );
-          if (history.length > 0) {
-            result[profile.platformId] = history.map((s) => ({
-              date: new Date(s.date).getTime(),
-              rating: s.new_rating!,
-              label: s.event,
+          // CodeChef native history
+          const info = await codechefApi.getUserInfo(profile.username);
+          if (info && info.ratingHistory && Array.isArray(info.ratingHistory) && info.ratingHistory.length > 0) {
+            result[profile.platformId] = info.ratingHistory.map((s: any) => ({
+              date: new Date(s.end_date.replace(" ", "T")).getTime(),
+              rating: parseInt(s.rating),
+              label: s.name,
             }));
           }
         }
