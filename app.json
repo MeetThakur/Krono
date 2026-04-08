@@ -2,7 +2,7 @@
   "expo": {
     "name": "Krono",
     "slug": "Krono",
-    "version": "1.1.1",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "krono",
@@ -15,13 +15,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "1.1.1",
+      "buildNumber": "1.2.0",
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
-      "versionCode": 111,
+      "versionCode": 120,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "monochromeImage": "./assets/images/monochrome-icon.png",

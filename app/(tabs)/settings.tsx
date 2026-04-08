@@ -420,7 +420,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text variant="bodySmall" style={{ color: colors.outline }}>
-            v1.1.0 • Krono
+            v1.2.0 • Krono
           </Text>
           <Text
             variant="bodySmall"
