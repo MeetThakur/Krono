@@ -159,7 +159,7 @@ export default function ContestsScreen() {
                 fontWeight: "500",
               }}
             >
-              {format(startDate, "HH:mm")}
+              {format(startDate, "MMM d, HH:mm")}
             </Text>
           </View>
 

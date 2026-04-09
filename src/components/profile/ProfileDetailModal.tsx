@@ -1,16 +1,14 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
     Modal,
     Pressable,
     ScrollView,
     StyleSheet,
     View,
 } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { clistApi } from "../../api/clist";
 import { leetcodeApi } from "../../api/leetcode";
 import { PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
@@ -37,7 +35,6 @@ export function ProfileDetailModal({
       setContestCount(null);
 
       if (profile.platformId === "leetcode") {
-        // LeetCode: use its own GraphQL API (clist.by doesn't index LC)
         leetcodeApi
           .getUserContestRanking(profile.username)
           .then((data) => {
@@ -46,13 +43,6 @@ export function ProfileDetailModal({
             }
           })
           .catch(() => {});
-      } else {
-        // CF, AC, CC: use clist.by
-        clistApi
-          .getAccountInfo(profile.platformId, profile.username)
-          .then((acc) => {
-            if (acc) setContestCount(acc.n_contests);
-          });
       }
     }
   }, [profile?.id, visible]);
@@ -60,33 +50,12 @@ export function ProfileDetailModal({
   if (!profile) return null;
 
   const platformConfig = PLATFORMS[profile.platformId];
-  let platformColor = platformConfig?.color || colors.primary;
-  if (profile.platformId === "atcoder" && !dark) platformColor = "#000000";
-  const onPlatformColor =
-    profile.platformId === "atcoder" && dark ? "#000000" : "#FFFFFF";
-
-  const stats = [
-    {
-      label: "Rating",
-      value: profile.rating ?? "—",
-      icon: "star-outline" as const,
-    },
-    {
-      label: "Peak",
-      value: profile.maxRating ?? "—",
-      icon: "arrow-up-bold" as const,
-    },
-    {
-      label: "Solved",
-      value: profile.problemsSolved ?? 0,
-      icon: "check-circle-outline" as const,
-    },
-    {
-      label: "Contests",
-      value: profile.totalContests ?? contestCount ?? "…",
-      icon: "trophy-outline" as const,
-    },
-  ];
+  
+  // Handle AtCoder color based on theme (Black in light mode, White in dark mode)
+  let effectivePlatformColor = platformConfig?.color || colors.primary;
+  if (profile.platformId === "atcoder") {
+    effectivePlatformColor = dark ? "#FFFFFF" : "#18181B";
+  }
 
   return (
     <Modal
@@ -98,209 +67,177 @@ export function ProfileDetailModal({
       <View
         style={[
           styles.container,
-          {
-            backgroundColor: colors.background,
-          },
+          { backgroundColor: colors.background },
         ]}
       >
-        {/* Header — full platform color */}
-        <View
-          style={[
-            styles.header,
-            { backgroundColor: platformColor, paddingTop: insets.top + 8 },
-          ]}
-        >
-          {/* Profile Row */}
-          <View style={styles.profileRow}>
-            {/* Left: Icon + Username + Rank */}
-            <View
+        {/* Header Navigation */}
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <View style={[styles.platformPill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+            <MaterialCommunityIcons
+              name={(platformConfig?.icon as any) || "code-tags"}
+              size={14}
+              color={effectivePlatformColor}
+            />
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                flex: 1,
+                color: effectivePlatformColor,
+                fontWeight: "700",
+                fontSize: 11,
+                marginLeft: 6,
+                letterSpacing: 0.5,
+                textTransform: "uppercase",
               }}
             >
-              <View
-                style={[
-                  styles.avatarCircle,
-                  {
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    alignSelf: "center",
-                  },
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name={(platformConfig?.icon as any) || "code-tags"}
-                  size={20}
-                  color={onPlatformColor}
-                />
-              </View>
-              <View style={{ flex: 1, justifyContent: "center" }}>
-                <Text
-                  style={{
-                    fontWeight: "800",
-                    color: onPlatformColor,
-                    fontSize: 18,
-                    letterSpacing: -0.3,
-                  }}
-                  numberOfLines={1}
-                >
-                  {profile.username}
-                </Text>
-                {profile.rank ? (
-                  <Text
-                    style={{
-                      color: onPlatformColor,
-                      opacity: 0.8,
-                      fontWeight: "600",
-                      fontSize: 12,
-                      marginTop: 1,
-                    }}
-                  >
-                    {profile.rank}
-                  </Text>
-                ) : null}
-              </View>
-            </View>
-
-            {/* Right: Close button and optional Global Rank */}
-            <View
-              style={{
-                alignItems: "flex-end",
-                justifyContent: "center",
-                gap: 4,
-              }}
-            >
-              <Pressable
-                onPress={onDismiss}
-                style={styles.closeButton}
-                hitSlop={12}
-              >
-                <MaterialCommunityIcons
-                  name="close"
-                  size={18}
-                  color={onPlatformColor}
-                />
-              </Pressable>
-
-              {profile.globalRank ? (
-                <View style={{ alignItems: "flex-end", marginTop: 8 }}>
-                  <Text
-                    style={{
-                      color: onPlatformColor,
-                      fontWeight: "900",
-                      fontSize: 16,
-                    }}
-                  >
-                    #{profile.globalRank.toLocaleString()}
-                  </Text>
-                  <Text
-                    style={{
-                      color: onPlatformColor,
-                      opacity: 0.7,
-                      fontSize: 10,
-                      fontWeight: "600",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    Global Rank
-                  </Text>
-                </View>
-              ) : null}
-            </View>
+              {platformConfig?.name}
+            </Text>
           </View>
+          
+          <Pressable
+            onPress={onDismiss}
+            style={[
+              styles.closeBtn,
+              { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="close"
+              size={18}
+              color={colors.onSurfaceVariant}
+            />
+          </Pressable>
         </View>
 
-        {/* Scrollable content */}
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Stats Grid */}
-          <View style={styles.statsGrid}>
-            {stats.map((stat) => (
-              <Surface
-                key={stat.label}
-                style={[
-                  styles.statCard,
-                  {
-                    backgroundColor: dark
-                      ? "rgba(255,255,255,0.03)"
-                      : "rgba(0,0,0,0.02)",
-                    borderColor: dark
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(0,0,0,0.05)",
-                  },
-                ]}
-                elevation={0}
-              >
-                <View
-                  style={[
-                    styles.statIconWrapper,
-                    { backgroundColor: colors.surfaceVariant },
-                  ]}
+          {/* Identity Section */}
+          <View style={styles.identitySection}>
+            <Text
+              style={{
+                fontSize: 40,
+                fontWeight: "900",
+                color: colors.onSurface,
+                letterSpacing: -1.5,
+                marginBottom: 6,
+              }}
+              numberOfLines={1}
+            >
+              {profile.username}
+            </Text>
+            
+            <View style={styles.rankRow}>
+              {profile.rank ? (
+                <Text
+                  style={{
+                    fontSize: 16,
+                    fontWeight: "600",
+                    color: effectivePlatformColor,
+                  }}
                 >
-                  <MaterialCommunityIcons
-                    name={stat.icon}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={styles.statContent}>
-                  <Text
-                    variant="labelSmall"
-                    style={{
-                      color: colors.onSurfaceVariant,
-                      textTransform: "uppercase",
-                      fontSize: 10,
-                      fontWeight: "700",
-                      letterSpacing: 0.5,
-                      marginBottom: 2,
-                    }}
-                  >
-                    {stat.label}
-                  </Text>
-                  <Text
-                    variant="titleLarge"
-                    style={{
-                      fontWeight: "900",
-                      color: colors.onSurface,
-                      letterSpacing: -0.5,
-                    }}
-                  >
-                    {stat.value}
-                  </Text>
-                </View>
-              </Surface>
-            ))}
+                  {profile.rank}
+                </Text>
+              ) : null}
+
+              {profile.rank && profile.globalRank ? (
+                <View style={[styles.dot, { backgroundColor: colors.onSurfaceVariant }]} />
+              ) : null}
+
+              {profile.globalRank ? (
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: colors.onSurfaceVariant,
+                  }}
+                >
+                  Global Rank <Text style={{ fontWeight: "700", color: colors.onSurface }}>#{profile.globalRank.toLocaleString()}</Text>
+                </Text>
+              ) : null}
+            </View>
           </View>
 
-          {/* Rating History */}
+          <View style={[styles.hDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
+
+          {/* Primary Stat: Rating */}
+          <View style={styles.ratingSection}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color: colors.onSurfaceVariant,
+                letterSpacing: 1,
+                marginBottom: 4,
+                textTransform: "uppercase",
+              }}
+            >
+              Current Rating
+            </Text>
+            <Text
+              style={{
+                fontSize: 84,
+                fontWeight: "900",
+                color: effectivePlatformColor,
+                letterSpacing: -3,
+                lineHeight: 96,
+                includeFontPadding: false,
+              }}
+            >
+              {profile.rating ?? "—"}
+            </Text>
+          </View>
+
+          {/* Secondary Stats */}
+          <View style={styles.secondaryStatsRow}>
+            <View style={styles.statBox}>
+              <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, letterSpacing: -0.5 }}>
+                {profile.problemsSolved ?? 0}
+              </Text>
+              <Text style={{ fontSize: 11, fontWeight: "600", color: colors.onSurfaceVariant, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                Problems Solved
+              </Text>
+            </View>
+
+            <View style={[styles.vDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
+
+            <View style={styles.statBox}>
+              <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, letterSpacing: -0.5 }}>
+                {profile.totalContests ?? contestCount ?? "—"}
+              </Text>
+              <Text style={{ fontSize: 11, fontWeight: "600", color: colors.onSurfaceVariant, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                Contests Played
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.hDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
+
+          {/* Charts */}
           <View style={styles.chartSection}>
             <Text
-              variant="titleMedium"
-              style={[styles.chartLabel, { color: colors.onSurfaceVariant }]}
+              style={[
+                styles.sectionTitle,
+                { color: colors.onSurfaceVariant },
+              ]}
             >
-              Rating History
+              RATING HISTORY
             </Text>
             <RatingChart profiles={[profile]} />
           </View>
 
-          {/* Contest History */}
           <View style={styles.chartSection}>
             <Text
-              variant="titleMedium"
-              style={[styles.chartLabel, { color: colors.onSurfaceVariant }]}
+              style={[
+                styles.sectionTitle,
+                { color: colors.onSurfaceVariant },
+              ]}
             >
-              Contest History
+              RECENT ACTIVITY
             </Text>
             <ContestHistory profiles={[profile]} />
           </View>
 
-          {/* Extra bottom padding */}
-          <View style={{ height: 40 }} />
+          <View style={{ height: 60 }} />
         </ScrollView>
       </View>
     </Modal>
@@ -312,77 +249,76 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 14,
-  },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(0,0,0,0.15)",
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 16,
   },
-  profileRow: {
+  platformPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    marginTop: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-  },
-  userInfo: {
-    flex: 1,
-  },
-  ratingBlock: {
-    marginTop: 14,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
   },
   scrollContent: {
-    paddingTop: 20,
+    paddingTop: 16,
   },
-  statsGrid: {
+  identitySection: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  rankRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  statCard: {
-    width: (Dimensions.get("window").width - 40 - 12) / 2,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  statIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
   },
-  statContent: {
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: 10,
+    opacity: 0.4,
+  },
+  ratingSection: {
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+  },
+  secondaryStatsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+  },
+  statBox: {
+    flex: 1,
     alignItems: "flex-start",
+  },
+  hDivider: {
+    height: 1,
+    marginHorizontal: 24,
+  },
+  vDivider: {
+    width: 1,
+    height: 40,
+    marginHorizontal: 24,
   },
   chartSection: {
-    marginTop: 28,
+    marginTop: 32,
   },
-  chartLabel: {
+  sectionTitle: {
     paddingHorizontal: 24,
-    marginBottom: 14,
+    marginBottom: 16,
     fontWeight: "700",
-    letterSpacing: 0.2,
-    textTransform: "uppercase" as any,
-    fontSize: 12,
+    letterSpacing: 0.8,
+    fontSize: 11,
   },
 });

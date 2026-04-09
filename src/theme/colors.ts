@@ -46,21 +46,21 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#0A0A0C", // True deep black
-  surface: "#161618", // Deeper card surface
-  surfaceHighlight: "#1E1E20",
-  border: "#2A2A2E", // Very subtle border
+  background: "#141416", // Softer dark, not pure black
+  surface: "#1C1C1E", // Card surface
+  surfaceHighlight: "#252528",
+  border: "#323236", // Visible but subtle
 
   primary: "#FAFAFA", // White accent
   secondary: "#8E8E93", // iOS gray
   accent: "#B0B0B5", // Lighter neutral
 
   text: {
-    primary: "#F5F5F7", // Warm white
-    secondary: "#8E8E93", // iOS gray
-    muted: "#636366", // Dim gray
-    disabled: "#3A3A3C", // Very dim
-    inverse: "#0A0A0C", // Near black
+    primary: "#F0F0F2", // Warm white
+    secondary: "#98989D", // Softer gray
+    muted: "#6C6C70", // Mid gray
+    disabled: "#48484A", // Dim
+    inverse: "#141416",
   },
 
   status: {
