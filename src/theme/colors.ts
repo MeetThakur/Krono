@@ -22,20 +22,20 @@ const commonStatus = {
 };
 
 export const lightColors = {
-  background: "#FAFAFA", // Zinc 50
+  background: "#F5F5F7", // Warm off-white
   surface: "#FFFFFF", // White
-  surfaceHighlight: "#F4F4F5", // Zinc 100
-  border: "#E4E4E7", // Zinc 200
+  surfaceHighlight: "#F0F0F2", // Subtle highlight
+  border: "#E8E8EC", // Softer border
 
   primary: "#18181B", // Black accent in light mode
-  secondary: "#52525B", // Zinc 600
+  secondary: "#71717A", // Zinc 500 — softer than 600
   accent: "#3F3F46", // Zinc 700
 
   text: {
     primary: "#09090B", // Zinc 950
-    secondary: "#52525B", // Zinc 600
+    secondary: "#71717A", // Zinc 500
     muted: "#A1A1AA", // Zinc 400
-    disabled: "#E4E4E7", // Zinc 200
+    disabled: "#D4D4D8", // Zinc 300
     inverse: "#FFFFFF", // White text
   },
 
@@ -46,29 +46,29 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#0D0D0D", // Near black
-  surface: "#1C1C1E", // Card surface — clearly lighter
-  surfaceHighlight: "#2C2C2E",
-  border: "#3A3A3C", // Subtle border
+  background: "#0A0A0C", // True deep black
+  surface: "#161618", // Deeper card surface
+  surfaceHighlight: "#1E1E20",
+  border: "#2A2A2E", // Very subtle border
 
   primary: "#FAFAFA", // White accent
-  secondary: "#9E9E9E", // Neutral 400
-  accent: "#C0C0C0", // Neutral 300
+  secondary: "#8E8E93", // iOS gray
+  accent: "#B0B0B5", // Lighter neutral
 
   text: {
-    primary: "#FAFAFA", // White
-    secondary: "#9E9E9E", // Neutral gray
-    muted: "#757575", // Mid gray
-    disabled: "#4A4A4A", // Dim
-    inverse: "#0D0D0D", // Near black
+    primary: "#F5F5F7", // Warm white
+    secondary: "#8E8E93", // iOS gray
+    muted: "#636366", // Dim gray
+    disabled: "#3A3A3C", // Very dim
+    inverse: "#0A0A0C", // Near black
   },
 
   status: {
     ...commonStatus,
-    error: "#EF4444", // Red 500
-    success: "#22C55E", // Green 500
-    warning: "#F59E0B", // Amber 500
-    info: "#0EA5E9", // Sky 500
+    error: "#EF4444",
+    success: "#30D158", // iOS green
+    warning: "#FFD60A", // iOS yellow
+    info: "#0A84FF", // iOS blue
   },
   platforms: darkPlatformColors,
 

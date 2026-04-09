@@ -1,9 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View, Pressable } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
-    Appbar,
     Button,
     Card,
     Dialog,
@@ -11,7 +10,6 @@ import {
     IconButton,
     List,
     Portal,
-    Surface,
     Switch,
     Text,
     TextInput,
@@ -24,10 +22,20 @@ import { useSettingsStore } from "../../src/stores/useSettingsStore";
 import { useThemeStore } from "../../src/stores/useThemeStore";
 import { PLATFORMS, PlatformId } from "../../src/types/platform";
 
+const ACCENT_COLORS = [
+  { id: "monochrome" as const, label: "Mono" },
+  { id: "blue" as const, label: "Blue", hex: "#3B82F6" },
+  { id: "emerald" as const, label: "Green", hex: "#10B981" },
+  { id: "violet" as const, label: "Violet", hex: "#8B5CF6" },
+  { id: "rose" as const, label: "Rose", hex: "#F43F5E" },
+  { id: "amber" as const, label: "Amber", hex: "#F59E0B" },
+];
+
 export default function SettingsScreen() {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const router = useRouter();
-  const { isDarkMode, themeColor, toggleTheme, setThemeColor } = useThemeStore();
+  const { isDarkMode, themeColor, toggleTheme, setThemeColor } =
+    useThemeStore();
   const { profiles, addProfile, removeProfile, isLoading } = useProfileStore();
   const { resetOnboarding } = useOnboardingStore();
   const {
@@ -44,9 +52,7 @@ export default function SettingsScreen() {
   const [username, setUsername] = useState("");
 
   const handleAddProfile = async () => {
-    if (!selectedPlatform || !username.trim()) {
-      return;
-    }
+    if (!selectedPlatform || !username.trim()) return;
     await addProfile(selectedPlatform, username.trim());
     setDialogVisible(false);
     setUsername("");
@@ -58,142 +64,140 @@ export default function SettingsScreen() {
     setDialogVisible(true);
   };
 
-  // Get platforms that haven't been added yet
   const availablePlatforms = Object.values(PLATFORMS).filter(
     (platform) => !profiles.some((p) => p.platformId === platform.id),
   );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Appbar.Header
-        style={{
-          backgroundColor: isDarkMode ? "transparent" : "#fff",
-          elevation: 0,
-          height: 54,
-        }}
-      >
-        <Appbar.Content
-          title="Settings"
-          titleStyle={{
-            fontWeight: "900",
-            fontSize: 28,
-            letterSpacing: -1,
-            color: colors.onSurface,
-          }}
-        />
-      </Appbar.Header>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.onSurface }]}>
+          Settings
+        </Text>
+      </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Appearance */}
         <View style={styles.sectionContainer}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 16,
-            }}
+          <Text
+            style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            <View
-              style={{
-                width: 4,
-                height: 18,
-                borderRadius: 2,
-                backgroundColor: colors.primary,
-              }}
-            />
-            <Text
-              variant="titleMedium"
-              style={{
-                fontWeight: "800",
-                color: colors.onSurface,
-              }}
-            >
-              Appearance
-            </Text>
-          </View>
-          <Card style={styles.card} mode="contained">
+            APPEARANCE
+          </Text>
+          <Card
+            style={[
+              styles.card,
+              {
+                borderColor: dark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.04)",
+              },
+            ]}
+            mode="contained"
+          >
             <List.Item
               title="Dark Mode"
-              left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
+              titleStyle={{ fontWeight: "600", fontSize: 15 }}
+              left={(props) => (
+                <List.Icon {...props} icon="moon-waning-crescent" />
+              )}
               right={() => (
                 <Switch value={isDarkMode} onValueChange={toggleTheme} />
               )}
             />
-            <Divider />
-            <View style={{ padding: 16 }}>
-              <Text variant="labelMedium" style={{ marginBottom: 12, fontWeight: "600", color: colors.onSurfaceVariant }}>
+            <Divider style={{ opacity: 0.3 }} />
+            <View style={styles.accentSection}>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "500",
+                  color: colors.onSurfaceVariant,
+                  marginBottom: 14,
+                }}
+              >
                 Accent Color
               </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
-                {[
-                  { id: 'monochrome', hex: isDarkMode ? '#FAFAFA' : '#18181B' },
-                  { id: 'blue', hex: '#3B82F6' },
-                  { id: 'emerald', hex: '#10B981' },
-                  { id: 'violet', hex: '#8B5CF6' },
-                  { id: 'rose', hex: '#F43F5E' },
-                  { id: 'amber', hex: '#F59E0B' },
-                ].map(color => (
-                  <Pressable
-                    key={color.id}
-                    onPress={() => setThemeColor(color.id as any)}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: color.hex,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderWidth: themeColor === color.id ? 2 : 0,
-                      borderColor: colors.onSurface,
-                    }}
-                  >
-                    {themeColor === color.id && (
-                      <MaterialCommunityIcons 
-                        name="check" 
-                        size={20} 
-                        color={color.id === 'monochrome' ? (isDarkMode ? '#000' : '#FFF') : '#FFF'} 
-                      />
-                    )}
-                  </Pressable>
-                ))}
-              </ScrollView>
+              <View style={styles.accentRow}>
+                {ACCENT_COLORS.map((color) => {
+                  const hex =
+                    color.hex ||
+                    (isDarkMode ? "#FAFAFA" : "#18181B");
+                  const isActive = themeColor === color.id;
+                  return (
+                    <Pressable
+                      key={color.id}
+                      onPress={() => setThemeColor(color.id)}
+                      style={styles.accentItem}
+                    >
+                      <View
+                        style={[
+                          styles.accentCircle,
+                          {
+                            backgroundColor: hex,
+                            borderWidth: isActive ? 2.5 : 0,
+                            borderColor: colors.onSurface,
+                          },
+                        ]}
+                      >
+                        {isActive && (
+                          <MaterialCommunityIcons
+                            name="check"
+                            size={16}
+                            color={
+                              color.id === "monochrome"
+                                ? isDarkMode
+                                  ? "#000"
+                                  : "#FFF"
+                                : "#FFF"
+                            }
+                          />
+                        )}
+                      </View>
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: isActive ? "700" : "500",
+                          color: isActive
+                            ? colors.onSurface
+                            : colors.onSurfaceVariant,
+                          marginTop: 6,
+                        }}
+                      >
+                        {color.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           </Card>
         </View>
 
         {/* Notifications */}
         <View style={styles.sectionContainer}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 16,
-            }}
+          <Text
+            style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            <View
-              style={{
-                width: 4,
-                height: 18,
-                borderRadius: 2,
-                backgroundColor: colors.primary,
-              }}
-            />
-            <Text
-              variant="titleMedium"
-              style={{
-                fontWeight: "800",
-                color: colors.onSurface,
-              }}
-            >
-              Notifications
-            </Text>
-          </View>
-          <Card style={styles.card} mode="contained">
+            NOTIFICATIONS
+          </Text>
+          <Card
+            style={[
+              styles.card,
+              {
+                borderColor: dark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.04)",
+              },
+            ]}
+            mode="contained"
+          >
             <List.Item
-              title="Enable Notifications"
-              left={(props) => <List.Icon {...props} icon="bell-outline" />}
+              title="Push Notifications"
+              titleStyle={{ fontWeight: "600", fontSize: 15 }}
+              left={(props) => (
+                <List.Icon {...props} icon="bell-outline" />
+              )}
               right={() => (
                 <Switch
                   value={notificationsEnabled}
@@ -201,51 +205,12 @@ export default function SettingsScreen() {
                 />
               )}
             />
-            <Divider />
-            <View style={{ padding: 16 }}>
-              <Button
-                mode="outlined"
-                icon="bell-ring"
-                onPress={() => notificationService.sendTestNotification()}
-              >
-                Send Test Notification
-              </Button>
-            </View>
-          </Card>
-        </View>
-
-        {/* Sync */}
-        <View style={styles.sectionContainer}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 16,
-            }}
-          >
-            <View
-              style={{
-                width: 4,
-                height: 18,
-                borderRadius: 2,
-                backgroundColor: colors.primary,
-              }}
-            />
-            <Text
-              variant="titleMedium"
-              style={{
-                fontWeight: "800",
-                color: colors.onSurface,
-              }}
-            >
-              Sync
-            </Text>
-          </View>
-          <Card style={styles.card} mode="contained">
+            <Divider style={{ opacity: 0.3 }} />
             <List.Item
               title="Background Sync"
               description="Periodically fetch contests"
+              titleStyle={{ fontWeight: "600", fontSize: 15 }}
+              descriptionStyle={{ fontSize: 12, opacity: 0.6 }}
               left={(props) => <List.Icon {...props} icon="sync" />}
               right={() => (
                 <Switch
@@ -259,172 +224,205 @@ export default function SettingsScreen() {
 
         {/* Connected Profiles */}
         <View style={styles.sectionContainer}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 16,
-            }}
+          <Text
+            style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            <View
-              style={{
-                width: 4,
-                height: 18,
-                borderRadius: 2,
-                backgroundColor: colors.primary,
-              }}
-            />
+            CONNECTED PROFILES
+          </Text>
+          {profiles.length === 0 ? (
             <Text
-              variant="titleMedium"
               style={{
-                fontWeight: "800",
-                color: colors.onSurface,
+                fontStyle: "italic",
+                color: colors.onSurfaceVariant,
+                opacity: 0.5,
+                textAlign: "center",
+                marginVertical: 12,
+                fontSize: 13,
               }}
             >
-              Connected Profiles
+              No profiles connected yet.
             </Text>
-          </View>
-          <Surface style={styles.settingsCard} elevation={0}>
-            <View style={styles.profileList}>
-              {profiles.length === 0 ? (
-                <Text
-                  variant="bodyMedium"
-                  style={{
-                    fontStyle: "italic",
-                    color: colors.outline,
-                    textAlign: "center",
-                    marginVertical: 12,
-                  }}
-                >
-                  No profiles connected yet.
-                </Text>
-              ) : (
-                profiles.map((profile) => {
-                  const platformConfig = PLATFORMS[profile.platformId];
-                  let platformColor = platformConfig?.color || colors.primary;
-                  if (profile.platformId === "atcoder" && !isDarkMode) {
-                    platformColor = "#000000";
-                  }
+          ) : (
+            <Card
+              style={[
+                styles.card,
+                {
+                  borderColor: dark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                },
+              ]}
+              mode="contained"
+            >
+              {profiles.map((profile, i) => {
+                const platformConfig = PLATFORMS[profile.platformId];
+                let platformColor = platformConfig?.color || colors.primary;
+                if (profile.platformId === "atcoder" && !isDarkMode) {
+                  platformColor = "#000000";
+                }
 
-                  return (
-                    <View
-                      key={profile.id}
-                      style={[
-                        styles.profileRow,
-                        { borderLeftColor: platformColor },
-                      ]}
-                    >
+                return (
+                  <React.Fragment key={profile.id}>
+                    {i > 0 && <Divider style={{ opacity: 0.2 }} />}
+                    <View style={styles.profileRow}>
+                      <View
+                        style={[
+                          styles.platformDot,
+                          { backgroundColor: platformColor },
+                        ]}
+                      />
                       <View style={{ flex: 1 }}>
-                        <Text
-                          variant="titleSmall"
-                          style={{ fontWeight: "bold" }}
-                        >
+                        <Text style={{ fontWeight: "600", fontSize: 14 }}>
                           {profile.username}
                         </Text>
                         <Text
-                          variant="bodySmall"
-                          style={{ color: colors.secondary }}
+                          style={{
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                            marginTop: 1,
+                          }}
                         >
-                          {platformConfig?.name} •{" "}
+                          {platformConfig?.name} ·{" "}
                           <Text
-                            style={{ fontWeight: "700", color: platformColor }}
+                            style={{
+                              fontWeight: "600",
+                              color: platformColor,
+                            }}
                           >
                             {profile.rating || "Unrated"}
                           </Text>
                         </Text>
                       </View>
                       <IconButton
-                        icon="trash-can-outline"
-                        size={20}
-                        iconColor={colors.error}
+                        icon="close"
+                        size={16}
+                        iconColor={colors.onSurfaceVariant}
                         onPress={() => removeProfile(profile.id)}
+                        style={{ opacity: 0.5 }}
                       />
                     </View>
-                  );
-                })
-              )}
-            </View>
-          </Surface>
+                  </React.Fragment>
+                );
+              })}
+            </Card>
+          )}
         </View>
 
         {/* Add Profile */}
-        <View style={styles.sectionContainer}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            Add Profile
-          </Text>
-          <View style={styles.grid}>
-            {availablePlatforms.map((platform) => {
-              let platformColor = platform.color;
-              if (platform.id === "atcoder" && !isDarkMode) {
-                platformColor = "#000000";
-              }
-              return (
-                <Card
-                  key={platform.id}
-                  style={[styles.platformCard, { borderColor: platformColor }]}
-                  onPress={() => openAddDialog(platform.id)}
-                  mode="outlined"
-                >
-                  <Card.Content style={styles.platformCardContent}>
+        {availablePlatforms.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <Text
+              style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
+            >
+              ADD PLATFORM
+            </Text>
+            <View style={styles.platformGrid}>
+              {availablePlatforms.map((platform) => {
+                let platformColor = platform.color;
+                if (platform.id === "atcoder" && !isDarkMode) {
+                  platformColor = "#000000";
+                }
+                return (
+                  <Pressable
+                    key={platform.id}
+                    style={({ pressed }) => [
+                      styles.platformTile,
+                      {
+                        backgroundColor: pressed
+                          ? dark
+                            ? "rgba(255,255,255,0.06)"
+                            : "rgba(0,0,0,0.03)"
+                          : colors.surface,
+                        borderColor: dark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.04)",
+                      },
+                    ]}
+                    onPress={() => openAddDialog(platform.id)}
+                  >
                     <View
                       style={[
-                        styles.iconBox,
-                        { backgroundColor: platformColor + "20" },
+                        styles.tileDot,
+                        { backgroundColor: platformColor },
                       ]}
-                    >
-                      <MaterialCommunityIcons
-                        name={(platform.icon as any) || "code-tags"}
-                        size={20}
-                        color={platformColor}
-                      />
-                    </View>
+                    />
                     <Text
-                      variant="labelLarge"
-                      style={{ marginTop: 6, fontWeight: "bold" }}
+                      style={{
+                        fontWeight: "600",
+                        fontSize: 13,
+                        color: colors.onSurface,
+                      }}
                     >
                       {platform.name}
                     </Text>
-                    <Text
-                      variant="bodySmall"
-                      style={{ color: colors.outline, fontSize: 10 }}
-                    >
-                      Connect
-                    </Text>
-                  </Card.Content>
-                </Card>
-              );
-            })}
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* About */}
         <View style={styles.sectionContainer}>
-          <Text variant="titleMedium" style={styles.sectionTitle}>
-            About
+          <Text
+            style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
+          >
+            ABOUT
           </Text>
-          <Card style={styles.card} mode="contained">
+          <Card
+            style={[
+              styles.card,
+              {
+                borderColor: dark
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.04)",
+              },
+            ]}
+            mode="contained"
+          >
             <List.Item
               title="Replay Walkthrough"
-              description="See the intro guide again"
+              titleStyle={{ fontWeight: "600", fontSize: 15 }}
               left={(props) => (
-                <List.Icon {...props} icon="book-open-page-variant-outline" />
+                <List.Icon
+                  {...props}
+                  icon="book-open-page-variant-outline"
+                />
+              )}
+              right={(props) => (
+                <List.Icon {...props} icon="chevron-right" />
               )}
               onPress={async () => {
                 await resetOnboarding();
                 router.replace("/onboarding" as any);
               }}
             />
+            <Divider style={{ opacity: 0.3 }} />
+            <List.Item
+              title="Test Notification"
+              titleStyle={{ fontWeight: "600", fontSize: 15 }}
+              left={(props) => (
+                <List.Icon {...props} icon="bell-ring-outline" />
+              )}
+              right={(props) => (
+                <List.Icon {...props} icon="chevron-right" />
+              )}
+              onPress={() => notificationService.sendTestNotification()}
+            />
           </Card>
         </View>
 
         <View style={styles.footer}>
-          <Text variant="bodySmall" style={{ color: colors.outline }}>
-            v1.2.0 • Krono
+          <Text style={{ color: colors.onSurfaceVariant, fontSize: 12, opacity: 0.4 }}>
+            v1.2.0 · Krono
           </Text>
           <Text
-            variant="bodySmall"
-            style={{ color: colors.outline, marginTop: 4 }}
+            style={{
+              color: colors.onSurfaceVariant,
+              fontSize: 12,
+              opacity: 0.4,
+              marginTop: 4,
+            }}
           >
             Made with ❤️ by Meet
           </Text>
@@ -436,13 +434,15 @@ export default function SettingsScreen() {
         <Dialog
           visible={dialogVisible}
           onDismiss={() => setDialogVisible(false)}
-          style={{ backgroundColor: colors.surface }}
+          style={{ backgroundColor: colors.surface, borderRadius: 20 }}
         >
-          <Dialog.Title>
+          <Dialog.Title style={{ fontWeight: "700" }}>
             Connect {selectedPlatform ? PLATFORMS[selectedPlatform].name : ""}
           </Dialog.Title>
           <Dialog.Content>
-            <Text variant="bodyMedium" style={{ marginBottom: 12 }}>
+            <Text
+              style={{ marginBottom: 12, color: colors.onSurfaceVariant }}
+            >
               Enter your handle to sync stats.
             </Text>
             <TextInput
@@ -451,6 +451,7 @@ export default function SettingsScreen() {
               onChangeText={setUsername}
               mode="outlined"
               autoCapitalize="none"
+              style={{ backgroundColor: colors.surface }}
             />
           </Dialog.Content>
           <Dialog.Actions>
@@ -473,72 +474,87 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 8,
+  },
+  title: {
+    fontWeight: "900",
+    fontSize: 28,
+    letterSpacing: -1,
+  },
   content: {
     paddingBottom: 40,
     paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  card: {
-    paddingVertical: 0,
-    borderRadius: 16,
-    overflow: "hidden",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  platformCard: {
-    width: "48%",
-    marginBottom: 0,
-    borderRadius: 16,
-  },
-  platformCardContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-  },
-  iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  footer: {
-    alignItems: "center",
-    marginTop: 32,
-    marginBottom: 20,
-    opacity: 0.5,
+    paddingTop: 16,
   },
   sectionContainer: {
-    marginBottom: 28,
+    marginBottom: 32,
   },
-  sectionTitle: {
-    fontWeight: "700",
-    marginBottom: 10,
-    marginLeft: 2,
-    textTransform: "uppercase",
+  sectionLabel: {
+    fontWeight: "600",
+    letterSpacing: 1,
     fontSize: 11,
-    letterSpacing: 0.8,
-    opacity: 0.5,
+    marginBottom: 12,
+    marginLeft: 4,
   },
-  settingsCard: {
+  card: {
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(0,0,0,0.06)",
   },
-  profileList: {
-    padding: 0,
+  accentSection: {
+    padding: 16,
+  },
+  accentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  accentItem: {
+    alignItems: "center",
+  },
+  accentCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   profileRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: "rgba(0,0,0,0.05)",
-    borderLeftWidth: 4,
-    backgroundColor: "transparent",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  platformDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  platformGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  platformTile: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  tileDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  footer: {
+    alignItems: "center",
+    marginTop: 24,
+    marginBottom: 20,
   },
 });

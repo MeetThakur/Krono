@@ -8,7 +8,7 @@ import {
     StyleSheet,
     View,
 } from "react-native";
-import { Appbar, Surface, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { ErrorBoundary } from "../../src/components/common/ErrorBoundary";
 import {
     DashboardSkeleton,
@@ -21,17 +21,17 @@ import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 
-// Difficulty → color mapping
+// Difficulty → color
 const getDifficultyColor = (difficulty?: string): string => {
   const d = (difficulty || "").toLowerCase();
   if (d.includes("easy") || d.includes("basic") || d.includes("school"))
-    return "#22C55E";
-  if (d.includes("medium") || d.includes("intermediate")) return "#F59E0B";
-  if (d.includes("hard") || d.includes("advanced")) return "#EF4444";
-  return "#71717A";
+    return "#30D158";
+  if (d.includes("medium") || d.includes("intermediate")) return "#FFD60A";
+  if (d.includes("hard") || d.includes("advanced")) return "#FF453A";
+  return "#8E8E93";
 };
 
-// Time-based greeting
+// Greeting
 const getGreeting = (): string => {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -60,7 +60,6 @@ export default function DashboardScreen() {
   useEffect(() => {
     const initProfiles = async () => {
       await loadProfiles();
-      // Fetch fresh data from APIs on launch (respects TTL if already set)
       refreshProfiles();
     };
     initProfiles();
@@ -79,7 +78,6 @@ export default function DashboardScreen() {
   const now = Date.now();
   const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
 
-  // Split contests into ongoing (live) and upcoming
   const ongoingContests = upcomingContests.filter((c) => {
     if (c.phase === "running") return true;
     const start =
@@ -95,7 +93,6 @@ export default function DashboardScreen() {
   });
 
   const upcomingOnly = upcomingContests.filter((c) => {
-    // Exclude ongoing ones
     if (c.phase === "running") return false;
     const start =
       c.startTime instanceof Date
@@ -113,27 +110,15 @@ export default function DashboardScreen() {
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Appbar.Header
-          style={{
-            backgroundColor: dark ? "transparent" : "#fff",
-            elevation: 0,
-            height: 48,
-          }}
-        >
-          <Appbar.Content
-            title="Krono"
-            titleStyle={{
-              fontWeight: "900",
-              fontSize: 22,
-              letterSpacing: -0.5,
-              color: colors.onSurface,
-            }}
-          />
-          <Appbar.Action
-            icon="cog-outline"
+        <View style={styles.header}>
+          <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
+          <MaterialCommunityIcons
+            name="cog-outline"
+            size={22}
+            color={colors.onSurfaceVariant}
             onPress={() => router.push("/settings")}
           />
-        </Appbar.Header>
+        </View>
         <DashboardSkeleton />
       </View>
     );
@@ -142,27 +127,30 @@ export default function DashboardScreen() {
   return (
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Appbar.Header
-          style={{
-            backgroundColor: dark ? "transparent" : "#fff",
-            elevation: 0,
-            height: 48,
-          }}
-        >
-          <Appbar.Content
-            title="Krono"
-            titleStyle={{
-              fontWeight: "900",
-              fontSize: 26,
-              letterSpacing: -1,
-              color: colors.onSurface,
-            }}
-          />
-          <Appbar.Action
-            icon="cog-outline"
+        {/* Minimal header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.logo, { color: colors.onSurface }]}>
+              Krono
+            </Text>
+            <Text
+              style={{
+                fontSize: 13,
+                color: colors.onSurfaceVariant,
+                fontWeight: "400",
+                marginTop: 1,
+              }}
+            >
+              {getGreeting()} 👋
+            </Text>
+          </View>
+          <MaterialCommunityIcons
+            name="cog-outline"
+            size={22}
+            color={colors.onSurfaceVariant}
             onPress={() => router.push("/settings")}
           />
-        </Appbar.Header>
+        </View>
 
         <ScrollView
           contentContainerStyle={styles.content}
@@ -176,77 +164,48 @@ export default function DashboardScreen() {
             />
           }
         >
-          {/* Profiles — tap a card to see detailed stats */}
+          {/* Profiles */}
           {profiles.length > 0 ? (
             <View style={styles.section}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingHorizontal: 24,
-                  marginBottom: 14,
-                }}
+              <Text
+                style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
               >
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: colors.primary,
-                  }}
-                />
-                <Text
-                  variant="labelMedium"
-                  style={{
-                    fontWeight: "700",
-                    letterSpacing: 0.8,
-                    fontSize: 11,
-                    color: colors.onSurfaceVariant,
-                  }}
-                >
-                  YOUR PROFILES
-                </Text>
-              </View>
+                YOUR PROFILES
+              </Text>
               <ProfileCarousel profiles={profiles} />
             </View>
           ) : (
             <View style={styles.section}>
-              <Surface
+              <View
                 style={[
                   styles.connectCard,
                   {
                     backgroundColor: colors.surface,
                     borderColor: dark
-                      ? "rgba(255,255,255,0.12)"
-                      : "rgba(0,0,0,0.08)",
-                    borderStyle: "dashed",
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.05)",
                   },
                 ]}
-                elevation={0}
                 onTouchEnd={() => router.push("/settings")}
               >
-                <View
-                  style={[
-                    styles.connectIcon,
-                    {
-                      backgroundColor: colors.primary + "12",
-                    },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name="account-plus-outline"
-                    size={22}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text variant="titleSmall" style={{ fontWeight: "700" }}>
+                <MaterialCommunityIcons
+                  name="account-plus-outline"
+                  size={20}
+                  color={colors.onSurfaceVariant}
+                />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text
+                    style={{
+                      fontWeight: "600",
+                      fontSize: 14,
+                      color: colors.onSurface,
+                    }}
+                  >
                     Connect a Profile
                   </Text>
                   <Text
-                    variant="bodySmall"
                     style={{
+                      fontSize: 12,
                       color: colors.onSurfaceVariant,
                       marginTop: 2,
                     }}
@@ -256,194 +215,144 @@ export default function DashboardScreen() {
                 </View>
                 <MaterialCommunityIcons
                   name="chevron-right"
-                  size={20}
-                  color={colors.outline}
+                  size={18}
+                  color={colors.onSurfaceVariant}
+                  style={{ opacity: 0.5 }}
                 />
-              </Surface>
+              </View>
             </View>
           )}
 
-          {/* Cumulative Stats */}
+          {/* Total Stats */}
           {profiles.length > 0 && <CumulativeStats profiles={profiles} />}
 
           {/* Daily Challenge */}
           <View style={styles.section}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingHorizontal: 20,
-                marginBottom: 16,
-              }}
+            <Text
+              style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
             >
+              DAILY CHALLENGE
+            </Text>
+            <View style={{ paddingHorizontal: 20 }}>
               <View
-                style={{
-                  width: 4,
-                  height: 18,
-                  borderRadius: 2,
-                  backgroundColor: "#FFA116",
-                }}
-              />
-              <Text
-                variant="titleMedium"
-                style={{
-                  fontWeight: "800",
-                  color: colors.onSurface,
-                }}
-              >
-                Daily Challenge
-              </Text>
-            </View>
-            <View style={{ paddingHorizontal: 24 }}>
-              {/* LeetCode */}
-              <Surface
                 style={[
                   styles.potdCard,
                   {
                     backgroundColor: colors.surface,
                     borderColor: dark
-                      ? "rgba(255,255,255,0.12)"
-                      : "rgba(0,0,0,0.08)",
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.05)",
                   },
                 ]}
-                elevation={0}
                 onTouchEnd={() =>
                   leetcode?.url && Linking.openURL(leetcode.url)
                 }
               >
-                <View
-                  style={[styles.potdBrand, { backgroundColor: "#FFA11615" }]}
-                >
-                  <MaterialCommunityIcons
-                    name="code-tags"
-                    size={14}
-                    color="#FFA116"
-                  />
-                  <Text
-                    style={{
-                      color: "#FFA116",
-                      fontWeight: "800",
-                      marginLeft: 4,
-                      fontSize: 10,
-                    }}
-                  >
-                    LEETCODE
-                  </Text>
-                </View>
-                <View style={styles.potdBody}>
-                  {isPotdLoading && !leetcode ? (
-                    <View style={{ gap: 8 }}>
-                      <Skeleton width="85%" height={14} />
-                      <Skeleton width="40%" height={12} />
-                    </View>
-                  ) : (
-                    <>
+                {isPotdLoading && !leetcode ? (
+                  <View style={{ gap: 8, padding: 16 }}>
+                    <Skeleton width="85%" height={14} />
+                    <Skeleton width="40%" height={12} />
+                  </View>
+                ) : (
+                  <View style={styles.potdInner}>
+                    <View
+                      style={[
+                        styles.potdDot,
+                        { backgroundColor: "#FFA116" },
+                      ]}
+                    />
+                    <View style={{ flex: 1 }}>
                       <Text
-                        variant="bodyMedium"
-                        numberOfLines={2}
+                        numberOfLines={1}
                         style={{
                           fontWeight: "600",
-                          lineHeight: 20,
+                          fontSize: 14,
+                          color: colors.onSurface,
                         }}
                       >
                         {leetcode?.title || "No problem today"}
                       </Text>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          color: colors.onSurfaceVariant,
+                          marginTop: 3,
+                          fontWeight: "500",
+                        }}
+                      >
+                        LeetCode
+                      </Text>
+                    </View>
+                    {leetcode?.difficulty && (
                       <View
                         style={[
                           styles.diffBadge,
                           {
                             backgroundColor:
-                              getDifficultyColor(leetcode?.difficulty) + "18",
+                              getDifficultyColor(leetcode.difficulty) + "18",
                           },
                         ]}
                       >
                         <Text
                           style={{
-                            color: getDifficultyColor(leetcode?.difficulty),
-                            fontWeight: "700",
-                            fontSize: 10,
+                            color: getDifficultyColor(leetcode.difficulty),
+                            fontWeight: "600",
+                            fontSize: 11,
                           }}
                         >
-                          {leetcode?.difficulty || "—"}
+                          {leetcode.difficulty}
                         </Text>
                       </View>
-                    </>
-                  )}
-                </View>
-              </Surface>
+                    )}
+                    <MaterialCommunityIcons
+                      name="chevron-right"
+                      size={18}
+                      color={colors.onSurfaceVariant}
+                      style={{ opacity: 0.4, marginLeft: 4 }}
+                    />
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 
           {/* Live Now */}
           {ongoingContests.length > 0 && (
             <View style={styles.section}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 8,
-                  paddingHorizontal: 20,
-                  marginBottom: 16,
-                }}
-              >
-                <View
-                  style={{
-                    width: 4,
-                    height: 18,
-                    borderRadius: 2,
-                    backgroundColor: "#EF4444",
-                  }}
-                />
+              <View style={styles.liveHeader}>
+                <View style={styles.liveDot} />
                 <Text
-                  variant="titleMedium"
                   style={{
-                    fontWeight: "800",
-                    color: "#EF4444",
+                    fontWeight: "700",
+                    fontSize: 14,
+                    color: "#FF453A",
+                    letterSpacing: 0.3,
                   }}
                 >
-                  Live Now
+                  LIVE NOW
                 </Text>
               </View>
-              <ContestList contests={ongoingContests} emptyMessage="" />
+              <ContestList contests={ongoingContests} emptyMessage="" compact />
             </View>
           )}
 
-          {/* Upcoming Contests */}
+          {/* Upcoming Contests — compact on dashboard */}
           <View style={styles.section}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingHorizontal: 20,
-                marginBottom: 16,
-              }}
-            >
-              <View
-                style={{
-                  width: 4,
-                  height: 18,
-                  borderRadius: 2,
-                  backgroundColor: colors.primary,
-                }}
-              />
+            <View style={styles.sectionHeader}>
               <Text
-                variant="titleMedium"
-                style={{
-                  fontWeight: "800",
-                  color: colors.onSurface,
-                  flex: 1,
-                }}
+                style={[
+                  styles.sectionLabel,
+                  { color: colors.onSurfaceVariant, paddingHorizontal: 0 },
+                ]}
               >
-                Upcoming Contests
+                UPCOMING
               </Text>
               {upcomingOnly.length > 3 && (
                 <Text
-                  variant="labelMedium"
                   style={{
                     color: colors.primary,
                     fontWeight: "600",
+                    fontSize: 13,
                   }}
                   onPress={() => router.push("/contests")}
                 >
@@ -454,7 +363,8 @@ export default function DashboardScreen() {
             <ContestList
               contests={upcomingOnly}
               emptyMessage="No contests in the next 7 days."
-              limit={3}
+              limit={5}
+              compact
             />
           </View>
         </ScrollView>
@@ -467,78 +377,79 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 12,
+  },
+  logo: {
+    fontWeight: "900",
+    fontSize: 28,
+    letterSpacing: -1,
+  },
   content: {
     paddingBottom: 100,
   },
-  greeting: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 28,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
   section: {
-    marginBottom: 32,
+    marginBottom: 36,
   },
-  label: {
+  sectionLabel: {
+    fontWeight: "600",
+    letterSpacing: 1,
+    fontSize: 11,
     paddingHorizontal: 24,
     marginBottom: 14,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
   },
-  labelRow: {
+  sectionHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    marginBottom: 14,
+    marginBottom: 8,
   },
   connectCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    marginHorizontal: 24,
-    borderRadius: 16,
+    marginHorizontal: 20,
+    borderRadius: 14,
     borderWidth: 1,
-    gap: 14,
-  },
-  connectIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  potdRow: {
-    flexDirection: "row",
-    paddingHorizontal: 24,
-    gap: 12,
   },
   potdCard: {
-    flex: 1,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    elevation: 0,
   },
-  potdBrand: {
+  potdInner: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    padding: 16,
+    gap: 10,
   },
-  potdBody: {
-    paddingHorizontal: 14,
-    paddingBottom: 14,
-    paddingTop: 4,
-    gap: 8,
+  potdDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   diffBadge: {
-    alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
+  },
+  liveHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 24,
+    marginBottom: 8,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF453A",
   },
 });

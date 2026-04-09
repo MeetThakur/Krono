@@ -7,22 +7,22 @@ import { darkColors as customDark, lightColors as customLight } from "./colors";
 import { typography } from "./typography";
 import type { ThemeColor } from "../stores/useThemeStore";
 
-// Light: Clean white with black accent
+// Light: Warm, clean
 const lightColors = {
   ...MD3LightTheme.colors,
-  primary: customLight.primary, // Black
+  primary: customLight.primary,
   onPrimary: "#FFFFFF",
-  primaryContainer: "#F4F4F5", // Zinc 100
-  onPrimaryContainer: "#09090B", // Zinc 950
+  primaryContainer: "#F0F0F2",
+  onPrimaryContainer: "#09090B",
 
-  secondary: customLight.secondary, // Zinc 600
+  secondary: customLight.secondary,
   onSecondary: "#FFFFFF",
-  secondaryContainer: "#F4F4F5",
-  onSecondaryContainer: "#52525B",
+  secondaryContainer: "#F0F0F2",
+  onSecondaryContainer: "#71717A",
 
-  tertiary: customLight.accent, // Zinc 700
+  tertiary: customLight.accent,
   onTertiary: "#FFFFFF",
-  tertiaryContainer: "#E4E4E7",
+  tertiaryContainer: "#E8E8EC",
   onTertiaryContainer: "#3F3F46",
 
   error: customLight.status.error,
@@ -38,20 +38,20 @@ const lightColors = {
   onSurfaceVariant: customLight.text.secondary,
 
   outline: customLight.border,
-  outlineVariant: "#E4E4E7",
+  outlineVariant: "#E8E8EC",
 
   shadow: "transparent",
   scrim: "#000000",
   inverseSurface: "#18181B",
-  inverseOnSurface: "#FAFAFA",
-  inversePrimary: "#FAFAFA",
+  inverseOnSurface: "#F5F5F7",
+  inversePrimary: "#F5F5F7",
 
   elevation: {
     level0: "transparent",
-    level1: "#FAFAFA",
-    level2: "#F4F4F5",
-    level3: "#E4E4E7",
-    level4: "#E4E4E7",
+    level1: "#F5F5F7",
+    level2: "#F0F0F2",
+    level3: "#E8E8EC",
+    level4: "#E8E8EC",
     level5: "#D4D4D8",
   },
   surfaceDisabled: "rgba(0, 0, 0, 0.04)",
@@ -59,26 +59,26 @@ const lightColors = {
   backdrop: "rgba(0, 0, 0, 0.4)",
 };
 
-// Dark: Deep navy blue with white accent
+// Dark: Deep true black
 const darkColors = {
   ...MD3DarkTheme.colors,
-  primary: customDark.primary, // White
-  onPrimary: "#0D0D0D", // Charcoal
-  primaryContainer: "#2A2A2A",
-  onPrimaryContainer: "#FAFAFA",
+  primary: customDark.primary,
+  onPrimary: "#0A0A0C",
+  primaryContainer: "#1E1E20",
+  onPrimaryContainer: "#F5F5F7",
 
-  secondary: customDark.secondary, // Slate 400
-  onSecondary: "#0D0D0D",
-  secondaryContainer: "#2A2A2A",
-  onSecondaryContainer: "#9E9E9E",
+  secondary: customDark.secondary,
+  onSecondary: "#0A0A0C",
+  secondaryContainer: "#1E1E20",
+  onSecondaryContainer: "#8E8E93",
 
-  tertiary: customDark.accent, // Slate 300
-  onTertiary: "#0D0D0D",
-  tertiaryContainer: "#383838",
-  onTertiaryContainer: "#C0C0C0",
+  tertiary: customDark.accent,
+  onTertiary: "#0A0A0C",
+  tertiaryContainer: "#2A2A2E",
+  onTertiaryContainer: "#B0B0B5",
 
   error: customDark.status.error,
-  onError: "#0D0D0D",
+  onError: "#0A0A0C",
   errorContainer: "#7F1D1D",
   onErrorContainer: "#FECACA",
 
@@ -90,25 +90,25 @@ const darkColors = {
   onSurfaceVariant: customDark.text.secondary,
 
   outline: customDark.border,
-  outlineVariant: "#2A2A2A",
+  outlineVariant: "#1E1E20",
 
   shadow: "transparent",
   scrim: "#000000",
-  inverseSurface: "#FAFAFA",
-  inverseOnSurface: "#0D0D0D",
-  inversePrimary: "#0D0D0D",
+  inverseSurface: "#F5F5F7",
+  inverseOnSurface: "#0A0A0C",
+  inversePrimary: "#0A0A0C",
 
   elevation: {
     level0: "transparent",
-    level1: "#141416",
-    level2: "#1C1C1E",
-    level3: "#222224",
-    level4: "#222224",
-    level5: "#2C2C2E",
+    level1: "#111113",
+    level2: "#161618",
+    level3: "#1C1C1E",
+    level4: "#1C1C1E",
+    level5: "#222224",
   },
   surfaceDisabled: "rgba(255, 255, 255, 0.04)",
   onSurfaceDisabled: "rgba(255, 255, 255, 0.38)",
-  backdrop: "rgba(0, 0, 0, 0.5)",
+  backdrop: "rgba(0, 0, 0, 0.6)",
 };
 
 const themePalettes: Record<ThemeColor, { light: string; dark: string }> = {

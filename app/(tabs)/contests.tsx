@@ -5,16 +5,13 @@ import {
     Linking,
     Pressable,
     RefreshControl,
-    ScrollView,
     SectionList,
     StyleSheet,
     View,
 } from "react-native";
 import {
     ActivityIndicator,
-    Appbar,
     Chip,
-    Surface,
     Text,
     useTheme,
 } from "react-native-paper";
@@ -26,7 +23,6 @@ import { PLATFORMS, PlatformId } from "../../src/types/platform";
 
 export default function ContestsScreen() {
   const { colors, dark } = useTheme();
-  const isDarkMode = dark;
   const {
     upcomingContests,
     loadContests,
@@ -49,12 +45,11 @@ export default function ContestsScreen() {
     setRefreshing(false);
   };
 
-  // Filter and Group Data — separate Ongoing from Upcoming
   const sections = useMemo(() => {
     const filtered = upcomingContests.filter((contest) => {
-      const matchesPlatform =
-        selectedPlatform === "all" || contest.platformId === selectedPlatform;
-      return matchesPlatform;
+      return (
+        selectedPlatform === "all" || contest.platformId === selectedPlatform
+      );
     });
 
     const ongoing: Contest[] = [];
@@ -70,7 +65,6 @@ export default function ContestsScreen() {
       const endDate = new Date(contest.endTime);
       if (isNaN(startDate.getTime())) return;
 
-      // Check if contest is currently running
       const isRunning =
         contest.phase === "running" || (startDate <= now && endDate >= now);
 
@@ -93,12 +87,15 @@ export default function ContestsScreen() {
 
     const result = [];
     if (ongoing.length > 0)
-      result.push({ title: "🔴 Live Now", data: ongoing });
-    if (today.length > 0) result.push({ title: "Today", data: today });
-    if (tomorrow.length > 0) result.push({ title: "Tomorrow", data: tomorrow });
+      result.push({ title: "Live Now", data: ongoing, isLive: true });
+    if (today.length > 0)
+      result.push({ title: "Today", data: today, isLive: false });
+    if (tomorrow.length > 0)
+      result.push({ title: "Tomorrow", data: tomorrow, isLive: false });
     if (thisWeek.length > 0)
-      result.push({ title: "This Week", data: thisWeek });
-    if (upcoming.length > 0) result.push({ title: "Later", data: upcoming });
+      result.push({ title: "This Week", data: thisWeek, isLive: false });
+    if (upcoming.length > 0)
+      result.push({ title: "Later", data: upcoming, isLive: false });
 
     return result;
   }, [upcomingContests, selectedPlatform]);
@@ -117,140 +114,121 @@ export default function ContestsScreen() {
 
     const platformConfig = PLATFORMS[item.platformId];
     let platformColor = platformConfig?.color || colors.primary;
-
-    if (item.platformId === "atcoder" && !isDarkMode) {
+    if (item.platformId === "atcoder" && !dark) {
       platformColor = "#000000";
     }
 
     return (
-      <Surface
+      <View
         style={[
           styles.card,
           {
             backgroundColor: colors.surface,
-            borderColor: isDarkMode
-              ? "rgba(255,255,255,0.12)"
-              : "rgba(0,0,0,0.08)",
+            borderColor: dark
+              ? "rgba(255,255,255,0.06)"
+              : "rgba(0,0,0,0.05)",
           },
         ]}
-        elevation={0}
       >
-        {/* Left Tint Bar */}
-        <View style={[styles.tintBar, { backgroundColor: platformColor }]} />
-
         <View style={styles.contentContainer}>
-          <View style={{ flex: 1, gap: 4 }}>
-            {/* Header Row */}
-            <View style={styles.row}>
+          {/* Header */}
+          <View style={styles.row}>
+            <View style={styles.platformRow}>
               <View
                 style={[
-                  styles.platformPill,
-                  { backgroundColor: platformColor + "15" },
+                  styles.platformDot,
+                  { backgroundColor: platformColor },
                 ]}
+              />
+              <Text
+                style={{
+                  color: platformColor,
+                  fontSize: 11,
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
               >
-                <MaterialCommunityIcons
-                  name={platformConfig?.icon as any}
-                  size={10}
-                  color={platformColor}
-                />
-                <Text
-                  style={{
-                    marginLeft: 4,
-                    color: platformColor,
-                    fontSize: 10,
-                    fontWeight: "700",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {item.platformId}
-                </Text>
-              </View>
-              <Text variant="labelSmall" style={{ color: colors.secondary }}>
-                {format(startDate, "HH:mm")}
+                {platformConfig?.name}
               </Text>
             </View>
-
             <Text
-              variant="titleMedium"
-              numberOfLines={1}
-              style={{ fontWeight: "bold", color: colors.onSurface }}
+              style={{
+                fontSize: 12,
+                color: colors.onSurfaceVariant,
+                fontWeight: "500",
+              }}
             >
-              {item.name}
+              {format(startDate, "HH:mm")}
             </Text>
           </View>
 
+          {/* Title */}
+          <Text
+            numberOfLines={1}
+            style={{
+              fontWeight: "700",
+              fontSize: 16,
+              marginTop: 10,
+              marginBottom: 6,
+              color: colors.onSurface,
+            }}
+          >
+            {item.name}
+          </Text>
+
           {/* Duration */}
-          <View style={styles.durationPill}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
             <MaterialCommunityIcons
               name="clock-outline"
-              size={12}
-              color={colors.secondary}
+              size={13}
+              color={colors.onSurfaceVariant}
             />
             <Text
-              variant="labelSmall"
               style={{
                 marginLeft: 4,
-                color: colors.secondary,
-                fontWeight: "600",
+                color: colors.onSurfaceVariant,
+                fontWeight: "500",
+                fontSize: 12,
               }}
             >
               {durationText}
             </Text>
           </View>
 
-          {/* Action Bar */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginTop: 10,
-              paddingTop: 10,
-              borderTopWidth: 1,
-              borderTopColor: isDarkMode
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(0,0,0,0.05)",
-            }}
-          >
+          {/* Actions */}
+          <View style={styles.actionBar}>
             <Pressable
-              style={{
-                flex: 1,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingVertical: 9,
-                borderRadius: 10,
-                backgroundColor: colors.primary,
-              }}
+              style={({ pressed }) => [
+                styles.registerBtn,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
               onPress={() => item.url && Linking.openURL(item.url)}
             >
-              <MaterialCommunityIcons
-                name="open-in-new"
-                size={13}
-                color={colors.onPrimary}
-              />
               <Text
                 style={{
                   color: colors.onPrimary,
-                  fontSize: 12,
-                  fontWeight: "700",
-                  marginLeft: 5,
+                  fontSize: 13,
+                  fontWeight: "600",
                 }}
               >
-                Register Now
+                Open
               </Text>
             </Pressable>
             <Pressable
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: item.reminderSet
-                  ? colors.primary + "15"
-                  : colors.surfaceVariant,
-              }}
+              style={[
+                styles.reminderBtn,
+                {
+                  backgroundColor: item.reminderSet
+                    ? colors.primary + "12"
+                    : dark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                },
+              ]}
               onPress={() => toggleReminder(item.id, !item.reminderSet)}
             >
               <MaterialCommunityIcons
@@ -263,31 +241,18 @@ export default function ContestsScreen() {
             </Pressable>
           </View>
         </View>
-      </Surface>
+      </View>
     );
   };
 
-  // Show skeleton while loading with no data
   if (isLoading && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Appbar.Header
-          style={{
-            backgroundColor: dark ? "transparent" : "#fff",
-            elevation: 0,
-            height: 54,
-          }}
-        >
-          <Appbar.Content
-            title="Schedule"
-            titleStyle={{
-              fontWeight: "900",
-              fontSize: 28,
-              letterSpacing: -1,
-              color: colors.onSurface,
-            }}
-          />
-        </Appbar.Header>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.onSurface }]}>
+            Contests
+          </Text>
+        </View>
         <ContestsSkeleton />
       </View>
     );
@@ -296,120 +261,90 @@ export default function ContestsScreen() {
   return (
     <ErrorBoundary fallbackTitle="Contests Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Appbar.Header
-          style={{
-            backgroundColor: dark ? "transparent" : "#fff",
-            elevation: 0,
-            height: 54,
-          }}
-        >
-          <Appbar.Content
-            title="Schedule"
-            titleStyle={{
-              fontWeight: "900",
-              fontSize: 28,
-              letterSpacing: -1,
-              color: colors.onSurface,
-            }}
-          />
-        </Appbar.Header>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.onSurface }]}>
+            Contests
+          </Text>
+        </View>
 
         {/* Chips Filter */}
-        <View style={{ backgroundColor: colors.surface }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsContainer}
-          >
-            <Chip
-              selected={selectedPlatform === "all"}
-              onPress={() => setSelectedPlatform("all")}
-              style={[
-                styles.chip,
+        <View style={styles.chipsContainer}>
+          <Chip
+            selected={selectedPlatform === "all"}
+            onPress={() => setSelectedPlatform("all")}
+            style={[
+              styles.chip,
+              selectedPlatform === "all"
+                ? { backgroundColor: colors.onSurface }
+                : {
+                    backgroundColor: dark
+                      ? "rgba(255,255,255,0.06)"
+                      : "rgba(0,0,0,0.04)",
+                  },
+            ]}
+            textStyle={{
+              color:
                 selectedPlatform === "all"
-                  ? { backgroundColor: colors.onSurface }
-                  : { backgroundColor: colors.surfaceVariant, borderWidth: 0 },
-              ]}
-              textStyle={{
-                color:
-                  selectedPlatform === "all"
-                    ? colors.surface
-                    : colors.onSurfaceVariant,
-                fontWeight: "700",
-              }}
-              showSelectedOverlay
-            >
-              All
-            </Chip>
-            {Object.values(PLATFORMS).map((platform) => {
-              let platformColor = platform.color;
-              if (platform.id === "atcoder" && !isDarkMode) {
-                platformColor = "#000000";
-              }
-              const isSelected = selectedPlatform === platform.id;
-              return (
-                <Chip
-                  key={platform.id}
-                  selected={isSelected}
-                  onPress={() => setSelectedPlatform(platform.id)}
-                  style={[
-                    styles.chip,
-                    isSelected
-                      ? { backgroundColor: platformColor }
-                      : {
-                          backgroundColor: colors.surfaceVariant,
-                          borderWidth: 0,
-                        },
-                  ]}
-                  textStyle={{
-                    color: isSelected ? "#FFFFFF" : colors.onSurfaceVariant,
-                    fontWeight: isSelected ? "700" : "500",
-                  }}
-                  showSelectedOverlay
-                >
-                  {platform.name}
-                </Chip>
-              );
-            })}
-          </ScrollView>
+                  ? colors.surface
+                  : colors.onSurfaceVariant,
+              fontWeight: "600",
+              fontSize: 12,
+            }}
+            showSelectedOverlay
+          >
+            All
+          </Chip>
+          {Object.values(PLATFORMS).map((platform) => {
+            let platformColor = platform.color;
+            if (platform.id === "atcoder" && !dark) {
+              platformColor = "#000000";
+            }
+            const isSelected = selectedPlatform === platform.id;
+            return (
+              <Chip
+                key={platform.id}
+                selected={isSelected}
+                onPress={() => setSelectedPlatform(platform.id)}
+                style={[
+                  styles.chip,
+                  isSelected
+                    ? { backgroundColor: platformColor }
+                    : {
+                        backgroundColor: dark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.04)",
+                      },
+                ]}
+                textStyle={{
+                  color: isSelected ? "#FFFFFF" : colors.onSurfaceVariant,
+                  fontWeight: "600",
+                  fontSize: 12,
+                }}
+                showSelectedOverlay
+              >
+                {platform.name}
+              </Chip>
+            );
+          })}
         </View>
 
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
           renderItem={renderContestItem}
-          renderSectionHeader={({ section: { title } }) => (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                paddingHorizontal: 20,
-                paddingTop: 16,
-                paddingBottom: 12,
-                backgroundColor: colors.background,
-              }}
-            >
-              <View
-                style={{
-                  width: 4,
-                  height: 18,
-                  borderRadius: 2,
-                  backgroundColor: title.includes("Live Now")
-                    ? "#EF4444"
-                    : colors.primary,
-                }}
-              />
+          renderSectionHeader={({ section }) => (
+            <View style={styles.sectionHeaderRow}>
+              {section.isLive && <View style={styles.liveDot} />}
               <Text
-                variant="titleMedium"
                 style={{
-                  color: title.includes("Live Now")
-                    ? "#EF4444"
-                    : colors.onSurface,
-                  fontWeight: "800",
+                  color: section.isLive ? "#FF453A" : colors.onSurfaceVariant,
+                  fontWeight: "600",
+                  fontSize: 12,
+                  letterSpacing: 0.8,
+                  textTransform: "uppercase",
                 }}
               >
-                {title}
+                {section.title}
               </Text>
             </View>
           )}
@@ -429,25 +364,29 @@ export default function ContestsScreen() {
               <View style={styles.emptyContainer}>
                 <MaterialCommunityIcons
                   name="trophy-broken"
-                  size={64}
+                  size={48}
                   color={colors.onSurfaceVariant}
-                  style={{ opacity: 0.3, marginBottom: 16 }}
+                  style={{ opacity: 0.2, marginBottom: 12 }}
                 />
                 <Text
-                  variant="titleMedium"
-                  style={{ color: colors.onSurfaceVariant, fontWeight: "bold" }}
+                  style={{
+                    color: colors.onSurfaceVariant,
+                    fontWeight: "600",
+                    fontSize: 15,
+                  }}
                 >
                   No contests found
                 </Text>
                 <Text
-                  variant="bodyMedium"
                   style={{
-                    color: colors.outline,
+                    color: colors.onSurfaceVariant,
+                    opacity: 0.6,
                     textAlign: "center",
                     marginTop: 4,
+                    fontSize: 13,
                   }}
                 >
-                  Try changing filters or sync to update.
+                  Try changing filters or pull to refresh.
                 </Text>
               </View>
             ) : (
@@ -467,63 +406,90 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 8,
+  },
+  title: {
+    fontWeight: "900",
+    fontSize: 28,
+    letterSpacing: -1,
+  },
   chipsContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16, // Extra padding for shadow
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     gap: 8,
   },
   chip: {
-    marginRight: 8,
+    borderRadius: 20,
+    borderWidth: 0,
   },
   listContent: {
     paddingBottom: 20,
     paddingHorizontal: 20,
-    gap: 16,
+    gap: 12,
   },
-  sectionHeader: {
-    paddingVertical: 12,
-    marginTop: 8,
-    marginBottom: 4,
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FF453A",
   },
   card: {
     borderRadius: 16,
     overflow: "hidden",
-    position: "relative",
-    borderWidth: 1.5,
-  },
-  tintBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    zIndex: 2,
+    borderWidth: 1,
   },
   contentContainer: {
-    padding: 14,
-    paddingLeft: 18,
-    zIndex: 2,
+    padding: 16,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+  },
+  platformRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  platformDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  actionBar: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(150,150,150,0.1)",
   },
-  platformPill: {
-    flexDirection: "row",
+  registerBtn: {
+    flex: 1,
     alignItems: "center",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  durationPill: {
-    flexDirection: "row",
+  reminderBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.03)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    justifyContent: "center",
   },
   emptyContainer: {
     alignItems: "center",

@@ -1,7 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { UnifiedProfile } from "../../types/user";
 
 interface CumulativeStatsProps {
@@ -17,7 +16,7 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
     (acc, p) => acc + (p.problemsSolved || 0),
     0
   );
-  
+
   const totalSubmissions = profiles.reduce(
     (acc, p) => acc + (p.totalSubmissions || 0),
     0
@@ -28,182 +27,95 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
     0
   );
 
+  const stats = [
+    { value: totalSolved, label: "Solved" },
+    { value: totalSubmissions, label: "Submissions" },
+    { value: totalContests, label: "Contests" },
+  ];
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View
-          style={[styles.indicator, { backgroundColor: colors.secondary }]}
-        />
-        <Text
-          variant="labelMedium"
-          style={[styles.headerText, { color: colors.onSurfaceVariant }]}
-        >
-          TOTAL STATS
-        </Text>
-      </View>
-
-      <Surface
+      <View
         style={[
-          styles.surface,
+          styles.card,
           {
             backgroundColor: dark
-              ? "rgba(255,255,255,0.03)"
+              ? "rgba(255,255,255,0.04)"
               : "rgba(0,0,0,0.02)",
-            borderColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+            borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
           },
         ]}
-        elevation={0}
       >
-        <View style={styles.statGroup}>
-          <View style={styles.statItem}>
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: "rgba(34, 197, 94, 0.12)" }, // Green
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="check-circle-outline"
-                size={22}
-                color="#22C55E"
+        {stats.map((stat, i) => (
+          <React.Fragment key={stat.label}>
+            {i > 0 && (
+              <View
+                style={[
+                  styles.divider,
+                  {
+                    backgroundColor: dark
+                      ? "rgba(255,255,255,0.08)"
+                      : "rgba(0,0,0,0.06)",
+                  },
+                ]}
               />
-            </View>
-            <View style={styles.textContainer}>
-              <Text variant="titleMedium" style={styles.valueText}>
-                {totalSolved}
+            )}
+            <View style={styles.statItem}>
+              <Text
+                style={[
+                  styles.value,
+                  { color: colors.onSurface },
+                ]}
+              >
+                {stat.value.toLocaleString()}
               </Text>
               <Text
-                variant="labelSmall"
-                style={[styles.labelText, { color: colors.onSurfaceVariant }]}
+                style={[
+                  styles.label,
+                  { color: colors.onSurfaceVariant },
+                ]}
               >
-                Total Solved
+                {stat.label}
               </Text>
             </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.statItem}>
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: "rgba(168, 85, 247, 0.12)" }, // Purple
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="code-tags"
-                size={22}
-                color="#A855F7"
-              />
-            </View>
-            <View style={styles.textContainer}>
-              <Text variant="titleMedium" style={styles.valueText}>
-                {totalSubmissions}
-              </Text>
-              <Text
-                variant="labelSmall"
-                style={[styles.labelText, { color: colors.onSurfaceVariant }]}
-              >
-                Submissions
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.statItem}>
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: "rgba(59, 130, 246, 0.12)" }, // Blue
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="medal-outline"
-                size={22}
-                color="#3B82F6"
-              />
-            </View>
-            <View style={styles.textContainer}>
-              <Text variant="titleMedium" style={styles.valueText}>
-                {totalContests}
-              </Text>
-              <Text
-                variant="labelSmall"
-                style={[styles.labelText, { color: colors.onSurfaceVariant }]}
-              >
-                Contests
-              </Text>
-            </View>
-          </View>
-        </View>
-      </Surface>
+          </React.Fragment>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 32,
+    paddingHorizontal: 20,
+    marginBottom: 36,
   },
-  headerRow: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 24,
-    marginBottom: 14,
-  },
-  indicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  headerText: {
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
-  },
-  surface: {
-    marginHorizontal: 24,
+    justifyContent: "space-evenly",
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
-  },
-  statGroup: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 8,
   },
   statItem: {
     alignItems: "center",
     flex: 1,
-    gap: 10,
   },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textContainer: {
-    alignItems: "center",
-  },
-  valueText: {
+  value: {
+    fontSize: 24,
     fontWeight: "800",
-    fontSize: 18,
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
-  labelText: {
-    marginTop: 2,
-    fontWeight: "600",
-    fontSize: 10,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+  label: {
+    fontSize: 11,
+    fontWeight: "500",
+    marginTop: 4,
+    letterSpacing: 0.3,
   },
   divider: {
     width: 1,
-    height: 40,
-    backgroundColor: "rgba(150,150,150,0.2)",
+    height: 32,
   },
 });

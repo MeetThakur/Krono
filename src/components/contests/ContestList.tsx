@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import React from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Surface, Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import { useContestStore } from "../../stores/useContestStore";
 import { Contest } from "../../types/contest";
 import { PLATFORMS } from "../../types/platform";
@@ -12,6 +12,7 @@ interface ContestListProps {
   emptyMessage?: string;
   limit?: number;
   isLoading?: boolean;
+  compact?: boolean;
 }
 
 export const ContestList: React.FC<ContestListProps> = ({
@@ -19,11 +20,10 @@ export const ContestList: React.FC<ContestListProps> = ({
   emptyMessage = "No contests found.",
   limit,
   isLoading = false,
+  compact = false,
 }) => {
   const { colors, dark } = useTheme();
   const { toggleReminder } = useContestStore();
-  // Map 'dark' property to 'isDarkMode' variable for compatibility with existing logic
-  const isDarkMode = dark;
 
   const displayedContests = limit ? contests.slice(0, limit) : contests;
 
@@ -40,19 +40,76 @@ export const ContestList: React.FC<ContestListProps> = ({
   if (contests.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <MaterialCommunityIcons
-          name="calendar-remove"
-          size={40}
-          color={colors.onSurfaceVariant}
-          style={{ opacity: 0.5, marginBottom: 8 }}
-        />
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
+        <Text
+          variant="bodyMedium"
+          style={{ color: colors.onSurfaceVariant, opacity: 0.6 }}
+        >
           {emptyMessage}
         </Text>
       </View>
     );
   }
 
+  // Compact mode for dashboard — minimal contest rows
+  if (compact) {
+    return (
+      <View style={styles.compactContainer}>
+        {displayedContests.map((contest) => {
+          const startTime = new Date(contest.startTime);
+          const platformConfig = PLATFORMS[contest.platformId];
+          let platformColor = platformConfig?.color || colors.primary;
+          if (contest.platformId === "atcoder" && !dark) {
+            platformColor = "#000000";
+          }
+
+          return (
+            <Pressable
+              key={contest.id}
+              style={({ pressed }) => [
+                styles.compactRow,
+                {
+                  backgroundColor: pressed
+                    ? dark
+                      ? "rgba(255,255,255,0.04)"
+                      : "rgba(0,0,0,0.02)"
+                    : "transparent",
+                },
+              ]}
+              onPress={() => contest.url && Linking.openURL(contest.url)}
+            >
+              <View
+                style={[styles.platformDot, { backgroundColor: platformColor }]}
+              />
+              <View style={{ flex: 1 }}>
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.onSurface,
+                  }}
+                >
+                  {contest.name}
+                </Text>
+              </View>
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "500",
+                  color: colors.onSurfaceVariant,
+                  marginLeft: 12,
+                }}
+              >
+                {format(startTime, "MMM d, HH:mm")}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    );
+  }
+
+  // Full card mode for Contests tab
   return (
     <View style={styles.container}>
       {displayedContests.map((contest) => {
@@ -60,8 +117,7 @@ export const ContestList: React.FC<ContestListProps> = ({
         const platformConfig = PLATFORMS[contest.platformId];
         let platformColor = platformConfig?.color || colors.primary;
 
-        // AtCoder Light Mode Visibility Fix
-        if (contest.platformId === "atcoder" && !isDarkMode) {
+        if (contest.platformId === "atcoder" && !dark) {
           platformColor = "#000000";
         }
 
@@ -76,125 +132,105 @@ export const ContestList: React.FC<ContestListProps> = ({
             : `${minutes}m`;
 
         return (
-          <Surface
+          <View
             key={contest.id}
             style={[
               styles.card,
               {
                 backgroundColor: colors.surface,
                 borderColor: dark
-                  ? "rgba(255,255,255,0.12)"
-                  : "rgba(0,0,0,0.08)",
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.05)",
               },
             ]}
-            elevation={0}
-            mode="flat"
           >
-            {/* Left Tint Bar */}
-            <View
-              style={[
-                styles.tintBar,
-                { backgroundColor: platformColor, opacity: 0.8 },
-              ]}
-            />
-
             <View style={styles.contentContainer}>
-              {/* Header: Platform & Date */}
+              {/* Header */}
               <View style={styles.row}>
-                <View
-                  style={[
-                    styles.platformPill,
-                    { backgroundColor: platformColor + "15" },
-                  ]}
-                >
-                  <MaterialCommunityIcons
-                    name={platformConfig?.icon as any}
-                    size={12}
-                    color={platformColor}
+                <View style={styles.platformRow}>
+                  <View
+                    style={[
+                      styles.platformDot,
+                      { backgroundColor: platformColor },
+                    ]}
                   />
                   <Text
                     style={{
-                      marginLeft: 4,
                       color: platformColor,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: "700",
                       textTransform: "uppercase",
+                      letterSpacing: 0.5,
                     }}
                   >
-                    {contest.platformId}
+                    {platformConfig?.name}
                   </Text>
                 </View>
-                <Text variant="labelSmall" style={{ color: colors.secondary }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                    fontWeight: "500",
+                  }}
+                >
                   {format(startTime, "MMM d, HH:mm")}
                 </Text>
               </View>
 
               {/* Title */}
               <Text
-                variant="titleMedium"
-                style={{
-                  fontWeight: "bold",
-                  marginVertical: 8,
-                  color: colors.onSurface,
-                }}
                 numberOfLines={2}
+                style={{
+                  fontWeight: "700",
+                  fontSize: 16,
+                  marginTop: 10,
+                  marginBottom: 6,
+                  color: colors.onSurface,
+                  lineHeight: 22,
+                }}
               >
                 {contest.name}
               </Text>
 
-              {/* Footer: Duration */}
-              <View style={styles.row}>
-                <View style={styles.durationPill}>
-                  <MaterialCommunityIcons
-                    name="clock-outline"
-                    size={12}
-                    color={colors.secondary}
-                  />
-                  <Text
-                    variant="labelSmall"
-                    style={{
-                      marginLeft: 4,
-                      color: colors.secondary,
-                      fontWeight: "600",
-                    }}
-                  >
-                    {durationText}
-                  </Text>
-                </View>
+              {/* Duration */}
+              <View style={styles.metaRow}>
+                <MaterialCommunityIcons
+                  name="clock-outline"
+                  size={13}
+                  color={colors.onSurfaceVariant}
+                />
+                <Text
+                  style={{
+                    marginLeft: 4,
+                    color: colors.onSurfaceVariant,
+                    fontWeight: "500",
+                    fontSize: 12,
+                  }}
+                >
+                  {durationText}
+                </Text>
               </View>
 
-              {/* Action Bar */}
-              <View
-                style={[
-                  styles.actionBar,
-                  {
-                    borderTopColor: dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.05)",
-                  },
-                ]}
-              >
+              {/* Actions */}
+              <View style={styles.actionBar}>
                 <Pressable
-                  style={[
+                  style={({ pressed }) => [
                     styles.registerBtn,
-                    { backgroundColor: colors.primary },
+                    {
+                      backgroundColor: colors.primary,
+                      opacity: pressed ? 0.85 : 1,
+                    },
                   ]}
                   onPress={() => contest.url && Linking.openURL(contest.url)}
                 >
-                  <MaterialCommunityIcons
-                    name="open-in-new"
-                    size={14}
-                    color={colors.onPrimary}
-                  />
                   <Text
                     style={{
                       color: colors.onPrimary,
                       fontSize: 13,
-                      fontWeight: "700",
-                      marginLeft: 6,
+                      fontWeight: "600",
                     }}
                   >
-                    Register Now
+                    Open
                   </Text>
                 </Pressable>
                 <Pressable
@@ -202,8 +238,10 @@ export const ContestList: React.FC<ContestListProps> = ({
                     styles.reminderBtn,
                     {
                       backgroundColor: contest.reminderSet
-                        ? colors.primary + "15"
-                        : colors.surfaceVariant,
+                        ? colors.primary + "12"
+                        : dark
+                          ? "rgba(255,255,255,0.06)"
+                          : "rgba(0,0,0,0.04)",
                     },
                   ]}
                   onPress={() =>
@@ -212,7 +250,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                 >
                   <MaterialCommunityIcons
                     name={contest.reminderSet ? "bell-ring" : "bell-outline"}
-                    size={18}
+                    size={16}
                     color={
                       contest.reminderSet
                         ? colors.primary
@@ -222,7 +260,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                 </Pressable>
               </View>
             </View>
-          </Surface>
+          </View>
         );
       })}
     </View>
@@ -231,74 +269,71 @@ export const ContestList: React.FC<ContestListProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: 12,
     paddingHorizontal: 20,
+  },
+  compactContainer: {
+    paddingHorizontal: 20,
+  },
+  compactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    gap: 12,
   },
   card: {
     borderRadius: 16,
     overflow: "hidden",
-    position: "relative",
-    borderWidth: 1.5,
-    marginBottom: 0,
-  },
-  tintBar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    zIndex: 2,
+    borderWidth: 1,
   },
   contentContainer: {
     padding: 16,
-    paddingLeft: 20,
-    zIndex: 2,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  platformPill: {
+  platformRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
+    gap: 6,
   },
-  durationPill: {
+  platformDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  metaRow: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.03)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  emptyContainer: {
-    paddingVertical: 20,
     alignItems: "center",
   },
   actionBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginTop: 12,
-    paddingTop: 12,
+    gap: 8,
+    marginTop: 14,
+    paddingTop: 14,
     borderTopWidth: 1,
+    borderTopColor: "rgba(150,150,150,0.1)",
   },
   registerBtn: {
     flex: 1,
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
     borderRadius: 10,
   },
   reminderBtn: {
-    width: 42,
-    height: 42,
+    width: 40,
+    height: 40,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  emptyContainer: {
+    paddingVertical: 24,
+    alignItems: "center",
   },
 });

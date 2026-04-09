@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/hooks/useTheme";
 
 export default function TabLayout() {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
@@ -13,17 +13,16 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: "transparent",
-          borderTopWidth: 0,
-          height: 64 + (Platform.OS === "android" ? 0 : insets.bottom),
-          paddingBottom: 8 + (Platform.OS === "android" ? 4 : insets.bottom),
-          paddingTop: 10,
-          elevation: 8,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
+          backgroundColor: dark ? colors.surface : "#FFFFFF",
+          borderTopColor: dark
+            ? "rgba(255,255,255,0.06)"
+            : "rgba(0,0,0,0.06)",
+          borderTopWidth: 0.5,
+          height: 56 + (Platform.OS === "android" ? 0 : insets.bottom),
+          paddingBottom: 6 + (Platform.OS === "android" ? 4 : insets.bottom),
+          paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.muted,
@@ -31,7 +30,8 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
-          marginTop: 2,
+          letterSpacing: 0.2,
+          marginTop: 1,
         },
         tabBarHideOnKeyboard: true,
       }}
@@ -39,11 +39,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
+          title: "Home",
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="view-dashboard-outline"
-              size={28}
+              size={24}
               color={color}
             />
           ),
@@ -53,10 +53,10 @@ export default function TabLayout() {
         name="contests"
         options={{
           title: "Contests",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="trophy-variant-outline"
-              size={28}
+              size={24}
               color={color}
             />
           ),
@@ -68,10 +68,10 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           href: null,
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons
               name="cog-outline"
-              size={28}
+              size={24}
               color={color}
             />
           ),
