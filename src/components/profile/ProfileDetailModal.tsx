@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import * as Sharing from "expo-sharing";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Modal,
     Pressable,
@@ -9,6 +10,7 @@ import {
 } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ViewShot from "react-native-view-shot";
 import { leetcodeApi } from "../../api/leetcode";
 import { PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
@@ -29,6 +31,24 @@ export function ProfileDetailModal({
   const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
   const [contestCount, setContestCount] = useState<number | null>(null);
+  const viewRef = useRef<ViewShot>(null);
+
+  const shareProfile = async () => {
+    try {
+      if (viewRef.current && viewRef.current.capture) {
+        const uri = await viewRef.current.capture();
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(uri, {
+            dialogTitle: `Share ${profile?.username}'s Profile`,
+            mimeType: "image/png",
+          });
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to share profile", e);
+    }
+  };
 
   useEffect(() => {
     if (profile && visible) {
@@ -92,27 +112,58 @@ export function ProfileDetailModal({
             </Text>
           </View>
           
-          <Pressable
-            onPress={onDismiss}
-            style={[
-              styles.closeBtn,
-              { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="close"
-              size={18}
-              color={colors.onSurfaceVariant}
-            />
-          </Pressable>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Pressable
+              onPress={shareProfile}
+              style={[
+                styles.closeBtn,
+                { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="export-variant"
+                size={18}
+                color={colors.onSurfaceVariant}
+              />
+            </Pressable>
+            <Pressable
+              onPress={onDismiss}
+              style={[
+                styles.closeBtn,
+                { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="close"
+                size={18}
+                color={colors.onSurfaceVariant}
+              />
+            </Pressable>
+          </View>
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <ViewShot
+            ref={viewRef}
+            options={{ format: "png", quality: 0.9 }}
+            style={{ backgroundColor: colors.background, paddingTop: 16 }}
+          >
           {/* Identity Section */}
           <View style={styles.identitySection}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "700",
+                color: effectivePlatformColor,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              {platformConfig?.name}
+            </Text>
             <Text
               style={{
                 fontSize: 40,
@@ -223,7 +274,9 @@ export function ProfileDetailModal({
               RATING HISTORY
             </Text>
             <RatingChart profiles={[profile]} />
+            <View style={{ height: 16 }} />
           </View>
+          </ViewShot>
 
           <View style={styles.chartSection}>
             <Text

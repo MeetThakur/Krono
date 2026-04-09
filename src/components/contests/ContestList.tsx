@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format } from "date-fns";
+import * as Haptics from "expo-haptics";
 import React from "react";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
@@ -75,7 +76,10 @@ export const ContestList: React.FC<ContestListProps> = ({
                     : "transparent",
                 },
               ]}
-              onPress={() => contest.url && Linking.openURL(contest.url)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                if (contest.url) Linking.openURL(contest.url);
+              }}
             >
               <View
                 style={[styles.platformDot, { backgroundColor: platformColor }]}
@@ -221,7 +225,10 @@ export const ContestList: React.FC<ContestListProps> = ({
                       opacity: pressed ? 0.85 : 1,
                     },
                   ]}
-                  onPress={() => contest.url && Linking.openURL(contest.url)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (contest.url) Linking.openURL(contest.url);
+                  }}
                 >
                   <Text
                     style={{
@@ -244,9 +251,10 @@ export const ContestList: React.FC<ContestListProps> = ({
                           : "rgba(0,0,0,0.04)",
                     },
                   ]}
-                  onPress={() =>
-                    toggleReminder(contest.id, !contest.reminderSet)
-                  }
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    toggleReminder(contest.id, !contest.reminderSet);
+                  }}
                 >
                   <MaterialCommunityIcons
                     name={contest.reminderSet ? "bell-ring" : "bell-outline"}

@@ -31,13 +31,7 @@ const getDifficultyColor = (difficulty?: string): string => {
   return "#8E8E93";
 };
 
-// Greeting
-const getGreeting = (): string => {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-};
+
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -129,21 +123,9 @@ export default function DashboardScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Minimal header */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.logo, { color: colors.onSurface }]}>
-              Krono
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: colors.onSurfaceVariant,
-                fontWeight: "400",
-                marginTop: 1,
-              }}
-            >
-              {getGreeting()} 👋
-            </Text>
-          </View>
+          <Text style={[styles.logo, { color: colors.onSurface }]}>
+            Krono
+          </Text>
           <MaterialCommunityIcons
             name="cog-outline"
             size={22}

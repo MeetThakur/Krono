@@ -414,7 +414,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={{ color: colors.onSurfaceVariant, fontSize: 12, opacity: 0.4 }}>
-            v1.2.0 · Krono
+            v1.3.0 · Krono
           </Text>
           <Text
             style={{
