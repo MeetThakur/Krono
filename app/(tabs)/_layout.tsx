@@ -62,6 +62,19 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="rivals"
+        options={{
+          title: "Rivals",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="sword-cross"
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
 
       <Tabs.Screen
         name="settings"
