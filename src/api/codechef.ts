@@ -54,31 +54,34 @@ export const codechefApi = {
 
       const html = response.data as string;
 
-      // Extract data using Regex
-      // 1. Rating
-      const ratingMatch = html.match(/<div class="rating-number">(\d+)<\/div>/);
-      const rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0;
+      // 1. Rating History and Rating (via Drupal.settings JSON)
+      let rating = 0;
+      let maxRating = 0;
+      let ratingHistory: any[] = [];
+      const settingsMatch = html.match(/jQuery\.extend\(Drupal\.settings,\s*(\{.*?\})\);/s);
+      if (settingsMatch) {
+        try {
+          const ccData = JSON.parse(settingsMatch[1]);
+          ratingHistory = ccData.date_versus_rating?.all || [];
+          if (ratingHistory.length > 0) {
+             rating = parseInt(ratingHistory[ratingHistory.length - 1].rating, 10);
+             maxRating = Math.max(...ratingHistory.map((x: any) => parseInt(x.rating, 10)));
+          }
+        } catch(e) {
+          console.warn("CodeChef rating parsing failed", e);
+        }
+      }
 
-      // 2. Max Rating (Usually in <small>(Highest Rating 1234)</small>)
-      const maxRatingMatch = html.match(/\(Highest Rating (\d+)\)/);
-      const maxRating = maxRatingMatch
-        ? parseInt(maxRatingMatch[1], 10)
-        : rating;
+      // If json is missing, fallback to regex
+      if (!rating) {
+        const ratingMatch = html.match(/<div class="rating-number">(\d+)<\/div>/);
+        rating = ratingMatch ? parseInt(ratingMatch[1], 10) : 0;
+      }
 
-      // 3. Stars (e.g. "3★")
-      // We try multiple patterns to be robust against HTML changes
+      // 3. Stars
       let starRating: string | undefined;
-
-      // Pattern A: Standard "rating-star" block
-      // <div class="rating-star"> \n <span> \n 3★ \n </span> </div>
-      const standardMatch = html.match(
-        /class="rating-star"[\s\S]*?>\s*(\d+)\s*★/,
-      );
-
-      // Pattern B: Simple "<span>3★</span>" or similar
-      const simpleMatch = html.match(/>\s*(\d+)\s*★\s*</);
-
-      // Pattern C: Text based "3 Star"
+      const standardMatch = html.match(/>\s*(\d+)&#9733;/);
+      const simpleMatch = html.match(/>\s*(\d+)\s*★/);
       const textMatch = html.match(/(\d+)\s*Star/i);
 
       if (standardMatch) {
@@ -89,17 +92,8 @@ export const codechefApi = {
         starRating = textMatch[1];
       }
 
-      // 4. Rank (Global and Country)
-      const globalRankMatch = html.match(/Global Rank:<\/strong>\s*(\d+)/i);
-
-      // Determine the "Named Rank" based on rating points (Verified via User Image)
-      // <= 1399 : 1 Star
-      // 1400 - 1599 : 2 Stars
-      // 1600 - 1799 : 3 Stars
-      // 1800 - 1999 : 4 Stars
-      // 2000 - 2199 : 5 Stars
-      // 2200 - 2499 : 6 Stars
-      // >= 2500 : 7 Stars
+      // 4. Rank (Global)
+      const globalRankMatch = html.match(/Global Rank:.*?<strong[^>]*>\s*(\d+)/is);
 
       let calculatedStar = 1;
       if (rating >= 2500) calculatedStar = 7;
@@ -109,19 +103,15 @@ export const codechefApi = {
       else if (rating >= 1600) calculatedStar = 3;
       else if (rating >= 1400) calculatedStar = 2;
 
-      // Handle "Star" suffix - User requested singular "Star" always
-      const starSuffix = "Star";
-      let parsedRank = `${calculatedStar} ${starSuffix}`;
+      let parsedRank = `${starRating || calculatedStar} Star`;
 
       // 5. Problems Solved
       let problemsSolved = 0;
       const solvedPatterns = [
-        /Fully Solved\s*\((\d+)\)/i, // Standard: Fully Solved (595)
-        /Problems Solved\s*:\s*(\d+)/i, // Variation
+        /Fully Solved\s*\((\d+)\)/i,
+        /Problems Solved\s*:\s*(\d+)/i,
         />\s*Solved\s*:\s*(\d+)/i,
-        /class="content"\s*>\s*(\d+)\s*<\/h5>/, // Sometimes inside h5 content block
       ];
-
       for (const pattern of solvedPatterns) {
         const match = html.match(pattern);
         if (match) {
@@ -131,36 +121,19 @@ export const codechefApi = {
       }
 
       // 6. Name and Avatar
-      const avatarMatch = html.match(/<img src="([^"]+)"[^>]*class="user-img/);
-
-      // 7. Name
-      const nameMatch = html.match(
-        /<h1[^>]*>(?:<span[^>]*>)?([^<]+)(?:<\/span>)?<\/h1>/,
-      );
+      const avatarMatch = html.match(/<img[^>]*class=['"]profileImage['"][^>]*src=['"]([^'"]+)['"]/) || html.match(/<img src="([^"]+)"[^>]*class="user-img/);
+      const nameMatch = html.match(/<h1[^>]*>\s*([^<]+)\s*<\/h1>/) || html.match(/<h1[^>]*>(?:<span[^>]*>)?([^<]+)(?:<\/span>)?<\/h1>/);
 
       // 8. Total Contests
-      const contestsMatch = html.match(/Contests[a-zA-Z\s<>]*:\s*(?:<strong>|<b>)?\s*(\d+)/i) || html.match(/"contests"\s*:\s*(\d+)/i) || html.match(/Contests[^0-9]*(\d+)/i);
-      const totalContests = contestsMatch ? parseInt(contestsMatch[1], 10) : 0;
-
-      // 9. Rating History (Scrape all_rating array)
-      let ratingHistory: any[] = [];
-      const ratingHistoryMatch = html.match(/var all_rating = (\[.*?\]);/s);
-      if (ratingHistoryMatch) {
-        try {
-          ratingHistory = JSON.parse(ratingHistoryMatch[1]);
-        } catch(e) {
-          console.warn("CodeChef rating parsing failed", e);
-        }
-      }
+      const contestsMatch = html.match(/Contests \((.*?)\)/i) || html.match(/Contests[a-zA-Z\s<>]*:\s*(?:<strong>|<b>)?\s*(\d+)/i);
+      const totalContests = contestsMatch ? parseInt(contestsMatch[1], 10) : ratingHistory.length;
 
       return {
         handle,
         rating,
-        maxRating,
-        rank: parsedRank, // Return "3 Star" instead of "1234"
-        globalRank: globalRankMatch
-          ? parseInt(globalRankMatch[1], 10)
-          : undefined,
+        maxRating: maxRating || rating,
+        rank: parsedRank,
+        globalRank: globalRankMatch ? parseInt(globalRankMatch[1], 10) : undefined,
         problemsSolved,
         totalContests,
         ratingHistory,
