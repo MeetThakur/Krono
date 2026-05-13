@@ -113,35 +113,4 @@ Customize via the in-app **Settings** screen:
 
 ---
 
-## Changelog
-
-### v1.2.0 — April 2026
-
-#### ✨ New Features
-- **Total Stats Panel** — Dashboard now shows a combined "Total Stats" panel aggregating solved problems, total submissions, and total contests participated across all connected platforms.
-- **Accent Color Themes** — Added 6 curated color accents (Monochrome, Blue, Emerald, Violet, Rose, Amber) selectable from the Settings screen. Your choice is persisted across app restarts.
-
-#### ⚡ API & Performance Improvements
-- **Codeforces** — Contest history and rating charts now use the official Codeforces `user.rating` API directly, eliminating the Clist.by dependency for profile data.
-- **AtCoder** — Contest history and rating charts now use AtCoder's official `/history/json` endpoint directly.
-- **CodeChef** — Rating history is now scraped natively from the CodeChef profile page (`all_rating` JSON array), removing the last Clist.by dependency for profile stats.
-- **Auto-refresh on launch** — Profiles are automatically synced when the app opens so stats are always up to date.
-
-#### 🐛 Bug Fixes
-- Fixed **Total Contests showing 0** — Added `totalContests` column to the SQLite schema with auto-migration for existing users.
-- Fixed **AtCoder contest history not loading** — Now fetched directly from the official API.
-- Fixed `401 Unauthorized` warnings from Clist.by appearing in logs for Codeforces and CodeChef profile data.
-
----
-
-### v1.1.0 — March 2026
-
-- Initial release with Codeforces, LeetCode, AtCoder, and CodeChef profile sync.
-- Contest schedule with live, upcoming, and past contest listing.
-- Rating history charts.
-- Push notification reminders for upcoming contests.
-- Dark / Light mode toggle.
-
----
-
 Made with ❤️ by Meet
