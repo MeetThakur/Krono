@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -8,7 +9,7 @@ import {
     Pressable,
     StyleSheet,
     View,
-    ViewToken,
+    ViewToken
 } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -100,6 +101,12 @@ export default function OnboardingScreen() {
 
   const renderSlide = ({ item }: { item: OnboardingSlide }) => (
     <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
+      <LinearGradient
+        colors={[item.accent + "1A", item.accent + "00"]}
+        style={styles.gradientBackground}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      />
       {/* Icon circle */}
       <View
         style={[
@@ -107,6 +114,11 @@ export default function OnboardingScreen() {
           {
             backgroundColor: item.accent + "15",
             borderColor: item.accent + "30",
+            shadowColor: item.accent,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 10,
           },
         ]}
       >
@@ -120,7 +132,7 @@ export default function OnboardingScreen() {
       {/* Title */}
       <Text
         variant="headlineMedium"
-        style={[styles.title, { color: colors.onBackground }]}
+        style={[styles.title, { color: colors.onBackground, fontFamily: "Inter_900Black" }]}
       >
         {item.title}
       </Text>
@@ -128,7 +140,7 @@ export default function OnboardingScreen() {
       {/* Subtitle */}
       <Text
         variant="bodyLarge"
-        style={[styles.subtitle, { color: colors.onSurfaceVariant }]}
+        style={[styles.subtitle, { color: colors.onSurfaceVariant, fontFamily: "Inter_400Regular" }]}
       >
         {item.subtitle}
       </Text>
@@ -256,6 +268,9 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
+  gradientBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
   container: {
     flex: 1,
   },

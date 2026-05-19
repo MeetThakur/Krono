@@ -1,24 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlatformSelector } from "../../src/components/contests/PlatformSelector";
-import { PLATFORMS } from "../../src/types/platform";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 import { useRivalsStore } from "../../src/stores/useRivalsStore";
-import { useTheme } from "react-native-paper";
-import { PlatformId } from "../../src/types/platform";
-import { UnifiedProfile } from "../../src/types/user";
+import { PlatformId, PLATFORMS } from "../../src/types/platform";
 
 export default function RivalsScreen() {
   const { colors, dark: isDarkMode } = useTheme() as any;
@@ -84,6 +82,8 @@ export default function RivalsScreen() {
           platforms={Object.values(PLATFORMS)}
           selectedPlatform={activePlatform}
           onSelectPlatform={setActivePlatform}
+          hideAllOption={true}
+          hideAllOption={true}
         />
       </View>
 
@@ -170,6 +170,7 @@ export default function RivalsScreen() {
                 platforms={Object.values(PLATFORMS)}
                 selectedPlatform={addingPlatform}
                 onSelectPlatform={(p) => p !== 'all' && setAddingPlatform(p)}
+                hideAllOption={true}
               />
             </View>
 

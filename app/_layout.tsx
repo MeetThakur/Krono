@@ -9,10 +9,13 @@ import {
     JetBrainsMono_400Regular,
     JetBrainsMono_700Bold,
 } from "@expo-google-fonts/jetbrains-mono";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { registerBackgroundTask } from "../src/services/backgroundTask";
 import {
@@ -65,11 +68,20 @@ export default function RootLayout() {
     notificationService.requestPermissions();
   }, []);
 
+  const activeTheme = getTheme(isDarkMode, themeColor);
+
+  useEffect(() => {
+    // Make sure the bottom navigation bar and root background matches the theme
+    SystemUI.setBackgroundColorAsync(activeTheme.colors.background);
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync(activeTheme.colors.background);
+      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
+    }
+  }, [activeTheme, isDarkMode]);
+
   if (!fontsLoaded || isLoading) {
     return null;
   }
-
-  const activeTheme = getTheme(isDarkMode, themeColor);
 
   return (
     <PaperProvider theme={activeTheme}>

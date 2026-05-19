@@ -7,12 +7,14 @@ interface PlatformSelectorProps {
   platforms: Platform[];
   selectedPlatform: PlatformId | "all";
   onSelectPlatform: (id: PlatformId | "all") => void;
+  hideAllOption?: boolean;
 }
 
 export function PlatformSelector({
   platforms,
   selectedPlatform,
   onSelectPlatform,
+  hideAllOption = false,
 }: PlatformSelectorProps) {
   const { colors, dark } = useTheme();
 
@@ -22,28 +24,30 @@ export function PlatformSelector({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.container}
     >
-      <Chip
-        selected={selectedPlatform === "all"}
-        onPress={() => onSelectPlatform("all")}
-        style={[
-          styles.chip,
-          selectedPlatform === "all"
-            ? { backgroundColor: colors.onSurface }
-            : {
-                backgroundColor: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.04)",
-              },
-        ]}
-        textStyle={{
-          color: selectedPlatform === "all" ? colors.surface : colors.onSurfaceVariant,
-          fontWeight: "600",
-          fontSize: 12,
-        }}
-        showSelectedOverlay
-      >
-        All
-      </Chip>
+      {!hideAllOption && (
+        <Chip
+          selected={selectedPlatform === "all"}
+          onPress={() => onSelectPlatform("all")}
+          style={[
+            styles.chip,
+            selectedPlatform === "all"
+              ? { backgroundColor: colors.onSurface }
+              : {
+                  backgroundColor: dark
+                    ? "rgba(255,255,255,0.06)"
+                    : "rgba(0,0,0,0.04)",
+                },
+          ]}
+          textStyle={{
+            color: selectedPlatform === "all" ? colors.surface : colors.onSurfaceVariant,
+            fontWeight: "600",
+            fontSize: 12,
+          }}
+          showSelectedOverlay
+        >
+          All
+        </Chip>
+      )}
       {platforms.map((platform) => {
         let platformColor = platform.color;
         if (platform.id === "atcoder" && !dark) {
