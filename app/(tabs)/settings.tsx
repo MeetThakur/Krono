@@ -255,34 +255,7 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Danger Zone */}
-        <View style={[styles.sectionContainer, { marginTop: 40 }]}>
-          <Text
-            style={[styles.sectionLabel, { color: colors.error, opacity: 0.8 }]}
-          >
-            DANGER ZONE
-          </Text>
-          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.settingRow,
-                { opacity: pressed ? 0.6 : 1 },
-              ]}
-              onPress={() => {
-                resetOnboarding();
-                router.replace("/onboarding");
-              }}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: colors.error + "15" }]}>
-                <MaterialCommunityIcons name="refresh" size={22} color={colors.error} />
-              </View>
-              <View style={{ flex: 1, paddingHorizontal: 12 }}>
-                <Text style={{ fontWeight: "700", fontSize: 15, color: colors.error }}>Reset Onboarding</Text>
-                <Text style={{ fontSize: 12, color: colors.error, opacity: 0.8, marginTop: 2, fontWeight: "500" }}>Show tutorial slides again</Text>
-              </View>
-            </Pressable>
-          </Surface>
-        </View>
+
 
         <View style={{ height: 60 }} />
       </ScrollView>
