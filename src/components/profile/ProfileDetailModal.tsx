@@ -6,9 +6,10 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
+    Text,
     View,
 } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Surface, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { leetcodeApi } from "../../api/leetcode";
 import { PLATFORMS } from "../../types/platform";
