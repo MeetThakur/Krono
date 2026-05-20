@@ -101,6 +101,8 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 24,
+    lineHeight: 30,
+    includeFontPadding: false,
     fontWeight: "800",
     letterSpacing: -1,
   },

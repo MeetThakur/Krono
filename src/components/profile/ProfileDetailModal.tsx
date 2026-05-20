@@ -1,6 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as Sharing from "expo-sharing";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dimensions,
     Modal,
@@ -11,7 +10,6 @@ import {
 } from "react-native";
 import { Surface, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import ViewShot from "react-native-view-shot";
 import { leetcodeApi } from "../../api/leetcode";
 import { PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
@@ -34,24 +32,6 @@ export function ProfileDetailModal({
   const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
   const [contestCount, setContestCount] = useState<number | null>(null);
-  const viewRef = useRef<ViewShot>(null);
-
-  const shareProfile = async () => {
-    try {
-      if (viewRef.current && viewRef.current.capture) {
-        const uri = await viewRef.current.capture();
-        const isAvailable = await Sharing.isAvailableAsync();
-        if (isAvailable) {
-          await Sharing.shareAsync(uri, {
-            dialogTitle: `Share ${profile?.username}'s Profile`,
-            mimeType: "image/png",
-          });
-        }
-      }
-    } catch (e) {
-      console.warn("Failed to share profile", e);
-    }
-  };
 
   useEffect(() => {
     if (profile && visible) {
@@ -95,47 +75,28 @@ export function ProfileDetailModal({
         {/* Header Navigation */}
         <View style={[styles.header, { paddingTop: 16 }]}>
           {/* Empty view for flex balancing */}
-          <View style={{ width: 64 }} /> 
+          <View style={{ width: 40 }} /> 
           
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Pressable
-              onPress={shareProfile}
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.surface },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="export-variant"
-                size={20}
-                color={colors.onSurface}
-              />
-            </Pressable>
-            <Pressable
-              onPress={onDismiss}
-              style={[
-                styles.iconBtn,
-                { backgroundColor: colors.surface },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name="close"
-                size={20}
-                color={colors.onSurface}
-              />
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={onDismiss}
+            style={[
+              styles.iconBtn,
+              { backgroundColor: colors.surface },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name="close"
+              size={20}
+              color={colors.onSurface}
+            />
+          </Pressable>
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         >
-          <ViewShot
-            ref={viewRef}
-            options={{ format: "png", quality: 0.9 }}
-            style={{ backgroundColor: colors.background }}
-          >
+          <View style={{ backgroundColor: colors.background }}>
             {/* Hero Section */}
             <View style={styles.heroSection}>
               <View style={[styles.platformIconContainer, { backgroundColor: effectivePlatformColor + "15" }]}>
@@ -163,6 +124,8 @@ export function ProfileDetailModal({
               <Text
                 style={{
                   fontSize: 36,
+                  lineHeight: 42,
+                  includeFontPadding: false,
                   fontWeight: "900",
                   color: colors.onSurface,
                   letterSpacing: -1,
@@ -200,7 +163,7 @@ export function ProfileDetailModal({
                 <Text style={{ fontSize: 12, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 1 }}>
                   Current Rating
                 </Text>
-                <Text style={{ fontSize: 56, fontWeight: "900", color: effectivePlatformColor, marginTop: 4, letterSpacing: -2 }}>
+                <Text style={{ fontSize: 56, lineHeight: 64, includeFontPadding: false, fontWeight: "900", color: effectivePlatformColor, marginTop: 4, letterSpacing: -2 }}>
                   {profile.rating ?? "—"}
                 </Text>
               </Surface>
@@ -211,7 +174,7 @@ export function ProfileDetailModal({
                   <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
                     Problems Solved
                   </Text>
-                  <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                  <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
                     {profile.problemsSolved ?? 0}
                   </Text>
                 </Surface>
@@ -219,7 +182,7 @@ export function ProfileDetailModal({
                   <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
                     Contests
                   </Text>
-                  <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                  <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
                     {profile.totalContests ?? contestCount ?? "—"}
                   </Text>
                 </Surface>
@@ -235,7 +198,7 @@ export function ProfileDetailModal({
                 <RatingChart profiles={[profile]} />
               </Surface>
             </View>
-          </ViewShot>
+          </View>
 
           <View style={styles.chartSection}>
             <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
