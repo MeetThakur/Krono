@@ -93,7 +93,7 @@ export function ProfileDetailModal({
         ]}
       >
         {/* Header Navigation */}
-        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+        <View style={[styles.header, { paddingTop: 16 }]}>
           {/* Empty view for flex balancing */}
           <View style={{ width: 64 }} /> 
           
