@@ -39,10 +39,8 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
         style={[
           styles.card,
           {
-            backgroundColor: dark
-              ? "rgba(255,255,255,0.04)"
-              : "rgba(0,0,0,0.02)",
-            borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
           },
         ]}
       >
@@ -53,9 +51,7 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
                 style={[
                   styles.divider,
                   {
-                    backgroundColor: dark
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(0,0,0,0.06)",
+                    backgroundColor: colors.border,
                   },
                 ]}
               />

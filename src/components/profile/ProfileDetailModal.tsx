@@ -2,13 +2,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Sharing from "expo-sharing";
 import React, { useEffect, useRef, useState } from "react";
 import {
+    Dimensions,
     Modal,
     Pressable,
     ScrollView,
     StyleSheet,
     View,
 } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Surface, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import ViewShot from "react-native-view-shot";
 import { leetcodeApi } from "../../api/leetcode";
@@ -16,6 +17,8 @@ import { PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
 import { ContestHistory } from "../charts/ContestHistory";
 import { RatingChart } from "../charts/RatingChart";
+
+const { width } = Dimensions.get("window");
 
 interface ProfileDetailModalProps {
   profile: UnifiedProfile | null;
@@ -71,7 +74,6 @@ export function ProfileDetailModal({
 
   const platformConfig = PLATFORMS[profile.platformId];
   
-  // Handle AtCoder color based on theme (Black in light mode, White in dark mode)
   let effectivePlatformColor = platformConfig?.color || colors.primary;
   if (profile.platformId === "atcoder") {
     effectivePlatformColor = dark ? "#FFFFFF" : "#18181B";
@@ -91,52 +93,35 @@ export function ProfileDetailModal({
         ]}
       >
         {/* Header Navigation */}
-        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-          <View style={[styles.platformPill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-            <MaterialCommunityIcons
-              name={(platformConfig?.icon as any) || "code-tags"}
-              size={14}
-              color={effectivePlatformColor}
-            />
-            <Text
-              style={{
-                color: effectivePlatformColor,
-                fontWeight: "700",
-                fontSize: 11,
-                marginLeft: 6,
-                letterSpacing: 0.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {platformConfig?.name}
-            </Text>
-          </View>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          {/* Empty view for flex balancing */}
+          <View style={{ width: 64 }} /> 
           
           <View style={{ flexDirection: "row", gap: 12 }}>
             <Pressable
               onPress={shareProfile}
               style={[
-                styles.closeBtn,
-                { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+                styles.iconBtn,
+                { backgroundColor: colors.surface },
               ]}
             >
               <MaterialCommunityIcons
                 name="export-variant"
-                size={18}
-                color={colors.onSurfaceVariant}
+                size={20}
+                color={colors.onSurface}
               />
             </Pressable>
             <Pressable
               onPress={onDismiss}
               style={[
-                styles.closeBtn,
-                { backgroundColor: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" },
+                styles.iconBtn,
+                { backgroundColor: colors.surface },
               ]}
             >
               <MaterialCommunityIcons
                 name="close"
-                size={18}
-                color={colors.onSurfaceVariant}
+                size={20}
+                color={colors.onSurface}
               />
             </Pressable>
           </View>
@@ -144,153 +129,123 @@ export function ProfileDetailModal({
 
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         >
           <ViewShot
             ref={viewRef}
             options={{ format: "png", quality: 0.9 }}
-            style={{ backgroundColor: colors.background, paddingTop: 16 }}
+            style={{ backgroundColor: colors.background }}
           >
-          {/* Identity Section */}
-          <View style={styles.identitySection}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "700",
-                color: effectivePlatformColor,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
-              {platformConfig?.name}
-            </Text>
-            <Text
-              style={{
-                fontSize: 40,
-                fontWeight: "900",
-                color: colors.onSurface,
-                letterSpacing: -1.5,
-                marginBottom: 6,
-              }}
-              numberOfLines={1}
-            >
-              {profile.username}
-            </Text>
-            
-            <View style={styles.rankRow}>
-              {profile.rank ? (
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "600",
-                    color: effectivePlatformColor,
-                  }}
-                >
-                  {profile.rank}
+            {/* Hero Section */}
+            <View style={styles.heroSection}>
+              <View style={[styles.platformIconContainer, { backgroundColor: effectivePlatformColor + "15" }]}>
+                <MaterialCommunityIcons
+                  name={(platformConfig?.icon as any) || "code-tags"}
+                  size={42}
+                  color={effectivePlatformColor}
+                />
+              </View>
+
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: effectivePlatformColor,
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
+                  marginTop: 16,
+                  marginBottom: 8,
+                }}
+              >
+                {platformConfig?.name}
+              </Text>
+
+              <Text
+                style={{
+                  fontSize: 36,
+                  fontWeight: "900",
+                  color: colors.onSurface,
+                  letterSpacing: -1,
+                  textAlign: "center",
+                }}
+                numberOfLines={1}
+              >
+                {profile.username}
+              </Text>
+
+              <View style={styles.tagsContainer}>
+                {profile.rank ? (
+                  <View style={[styles.tag, { backgroundColor: effectivePlatformColor + "1A" }]}>
+                    <Text style={{ color: effectivePlatformColor, fontWeight: "700", fontSize: 12 }}>
+                      {profile.rank}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {profile.globalRank ? (
+                  <View style={[styles.tag, { backgroundColor: colors.surface }]}>
+                    <MaterialCommunityIcons name="earth" size={14} color={colors.onSurfaceVariant} />
+                    <Text style={{ color: colors.onSurfaceVariant, fontWeight: "600", fontSize: 12, marginLeft: 4 }}>
+                      #{profile.globalRank.toLocaleString()}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
+
+            {/* Stats Grid */}
+            <View style={styles.statsGrid}>
+              {/* Primary Stat */}
+              <Surface style={[styles.statCard, { backgroundColor: colors.surface, width: "100%", paddingVertical: 24 }]} elevation={0}>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 1 }}>
+                  Current Rating
                 </Text>
-              ) : null}
-
-              {profile.rank && profile.globalRank ? (
-                <View style={[styles.dot, { backgroundColor: colors.onSurfaceVariant }]} />
-              ) : null}
-
-              {profile.globalRank ? (
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: colors.onSurfaceVariant,
-                  }}
-                >
-                  Global Rank <Text style={{ fontWeight: "700", color: colors.onSurface }}>#{profile.globalRank.toLocaleString()}</Text>
+                <Text style={{ fontSize: 56, fontWeight: "900", color: effectivePlatformColor, marginTop: 4, letterSpacing: -2 }}>
+                  {profile.rating ?? "—"}
                 </Text>
-              ) : null}
-            </View>
-          </View>
+              </Surface>
 
-          <View style={[styles.hDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
-
-          {/* Primary Stat: Rating */}
-          <View style={styles.ratingSection}>
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: colors.onSurfaceVariant,
-                letterSpacing: 1,
-                marginBottom: 4,
-                textTransform: "uppercase",
-              }}
-            >
-              Current Rating
-            </Text>
-            <Text
-              style={{
-                fontSize: 84,
-                fontWeight: "900",
-                color: effectivePlatformColor,
-                letterSpacing: -3,
-                lineHeight: 96,
-                includeFontPadding: false,
-              }}
-            >
-              {profile.rating ?? "—"}
-            </Text>
-          </View>
-
-          {/* Secondary Stats */}
-          <View style={styles.secondaryStatsRow}>
-            <View style={styles.statBox}>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, letterSpacing: -0.5 }}>
-                {profile.problemsSolved ?? 0}
-              </Text>
-              <Text style={{ fontSize: 11, fontWeight: "600", color: colors.onSurfaceVariant, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                Problems Solved
-              </Text>
+              {/* Secondary Stats Row */}
+              <View style={styles.statsRow}>
+                <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Problems Solved
+                  </Text>
+                  <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                    {profile.problemsSolved ?? 0}
+                  </Text>
+                </Surface>
+                <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Contests
+                  </Text>
+                  <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                    {profile.totalContests ?? contestCount ?? "—"}
+                  </Text>
+                </Surface>
+              </View>
             </View>
 
-            <View style={[styles.vDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
-
-            <View style={styles.statBox}>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: colors.onSurface, letterSpacing: -0.5 }}>
-                {profile.totalContests ?? contestCount ?? "—"}
+            {/* Charts Section */}
+            <View style={styles.chartSection}>
+              <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
+                RATING HISTORY
               </Text>
-              <Text style={{ fontSize: 11, fontWeight: "600", color: colors.onSurfaceVariant, marginTop: 4, letterSpacing: 0.5, textTransform: "uppercase" }}>
-                Contests Played
-              </Text>
+              <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+                <RatingChart profiles={[profile]} />
+              </Surface>
             </View>
-          </View>
-
-          <View style={[styles.hDivider, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]} />
-
-          {/* Charts */}
-          <View style={styles.chartSection}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: colors.onSurfaceVariant },
-              ]}
-            >
-              RATING HISTORY
-            </Text>
-            <RatingChart profiles={[profile]} />
-            <View style={{ height: 16 }} />
-          </View>
           </ViewShot>
 
           <View style={styles.chartSection}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: colors.onSurfaceVariant },
-              ]}
-            >
+            <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
               RECENT ACTIVITY
             </Text>
-            <ContestHistory profiles={[profile]} />
+            <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+              <ContestHistory profiles={[profile]} />
+            </Surface>
           </View>
 
-          <View style={{ height: 60 }} />
         </ScrollView>
       </View>
     </Modal>
@@ -305,73 +260,72 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
   },
-  platformPill: {
+  iconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  heroSection: {
+    alignItems: "center",
+    paddingTop: 16,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+  },
+  platformIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tagsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  tag: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 100,
   },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  statsGrid: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  statCard: {
+    padding: 20,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
-  scrollContent: {
-    paddingTop: 16,
-  },
-  identitySection: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  rankRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    marginHorizontal: 10,
-    opacity: 0.4,
-  },
-  ratingSection: {
-    paddingHorizontal: 24,
-    paddingVertical: 32,
-  },
-  secondaryStatsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: "flex-start",
-  },
-  hDivider: {
-    height: 1,
-    marginHorizontal: 24,
-  },
-  vDivider: {
-    width: 1,
-    height: 40,
-    marginHorizontal: 24,
-  },
   chartSection: {
     marginTop: 32,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
-    paddingHorizontal: 24,
-    marginBottom: 16,
     fontWeight: "700",
-    letterSpacing: 0.8,
-    fontSize: 11,
+    letterSpacing: 1,
+    fontSize: 12,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  chartContainer: {
+    borderRadius: 20,
+    paddingVertical: 20,
+    overflow: "hidden",
   },
 });

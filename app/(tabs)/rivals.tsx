@@ -11,7 +11,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Surface, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlatformSelector } from "../../src/components/contests/PlatformSelector";
 import { useProfileStore } from "../../src/stores/useProfileStore";
@@ -19,7 +19,7 @@ import { useRivalsStore } from "../../src/stores/useRivalsStore";
 import { PlatformId, PLATFORMS } from "../../src/types/platform";
 
 export default function RivalsScreen() {
-  const { colors, dark: isDarkMode } = useTheme() as any;
+  const { colors, dark: isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
 
   const [activePlatform, setActivePlatform] = useState<PlatformId | "all">("codeforces");
@@ -67,28 +67,28 @@ export default function RivalsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: colors.surface }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Rivals</Text>
         <TouchableOpacity 
           onPress={() => setAddModalVisible(true)}
           style={[styles.addButton, { backgroundColor: colors.primary }]}
         >
-          <Ionicons name="add" size={24} color={colors.onPrimary} />
+          <Ionicons name="add" size={24} color={isDarkMode ? "#111111" : "#FFFFFF"} />
         </TouchableOpacity>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, backgroundColor: colors.surface }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 }}>
         <PlatformSelector
           platforms={Object.values(PLATFORMS)}
           selectedPlatform={activePlatform}
           onSelectPlatform={setActivePlatform}
-          hideAllOption={true}
           hideAllOption={true}
         />
       </View>
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={refreshRivals} tintColor={colors.primary} />
         }
@@ -108,38 +108,54 @@ export default function RivalsScreen() {
         ) : (
           <View style={styles.leaderboard}>
             {leaderboard.map((user, index) => {
-              const platformColor = currentPlatformConfig?.color || colors.primary;
+              let platformColor = currentPlatformConfig?.color || colors.primary;
+              if (activePlatform === "atcoder" && !isDarkMode) {
+                platformColor = "#111111";
+              }
+              const isUserMe = user.isMe;
+              const isFirst = index === 0;
+
               return (
-                <View 
+                <Surface 
                   key={user.rivalId} 
                   style={[
                     styles.leaderboardCard, 
                     { 
-                      backgroundColor: user.isMe ? platformColor + '15' : colors.surfaceVariant,
-                      borderColor: user.isMe ? platformColor + '50' : 'transparent',
-                      borderWidth: 1
+                      backgroundColor: colors.surface,
+                      borderWidth: isUserMe ? 2 : 0,
+                      borderColor: isUserMe ? platformColor : "transparent"
                     }
                   ]}
+                  elevation={0}
                 >
-                  <View style={styles.rankBadge}>
-                    <Text style={[styles.rankText, { color: user.isMe ? platformColor : colors.onSurfaceVariant }]}>
+                  <View style={[
+                    styles.rankBadge, 
+                    { backgroundColor: isFirst ? platformColor + "20" : colors.background }
+                  ]}>
+                    <Text style={[
+                      styles.rankText, 
+                      { color: isFirst ? platformColor : colors.onSurfaceVariant, fontSize: isFirst ? 14 : 13 }
+                    ]}>
                       #{index + 1}
                     </Text>
                   </View>
+                  
                   <View style={styles.userInfo}>
-                    <Text style={[styles.username, { color: colors.onSurface }]}>
-                      {user.username} {user.isMe && " (You)"}
+                    <Text style={[styles.username, { color: colors.onSurface }]} numberOfLines={1}>
+                      {user.username} {isUserMe && " (You)"}
                     </Text>
-                    <Text style={[styles.userRank, { color: colors.onSurfaceVariant }]}>
+                    <Text style={[styles.userRank, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
                       {user.rank || "Unrated"} • {user.problemsSolved} Solved
                     </Text>
                   </View>
+                  
                   <View style={styles.ratingInfo}>
                     <Text style={[styles.ratingText, { color: platformColor }]}>
                       {user.rating || "—"}
                     </Text>
                   </View>
-                  {!user.isMe && (
+                  
+                  {!isUserMe && (
                     <TouchableOpacity 
                       onPress={() => {
                         Alert.alert("Remove Rival", "Are you sure?", [
@@ -147,12 +163,12 @@ export default function RivalsScreen() {
                           { text: "Remove", style: "destructive", onPress: () => removeRival(user.rivalId) }
                         ]);
                       }}
-                      style={{ marginLeft: 12 }}
+                      style={styles.deleteBtn}
                     >
                       <Ionicons name="trash-outline" size={20} color={colors.error} />
                     </TouchableOpacity>
                   )}
-                </View>
+                </Surface>
               );
             })}
           </View>
@@ -165,7 +181,7 @@ export default function RivalsScreen() {
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Add Rival</Text>
             
-            <View style={{ marginBottom: 16 }}>
+            <View style={{ marginBottom: 24 }}>
                <PlatformSelector
                 platforms={Object.values(PLATFORMS)}
                 selectedPlatform={addingPlatform}
@@ -175,7 +191,13 @@ export default function RivalsScreen() {
             </View>
 
             <TextInput
-              style={[styles.input, { color: colors.onSurface, borderColor: colors.outline }]}
+              style={[
+                styles.input, 
+                { 
+                  color: colors.onSurface, 
+                  backgroundColor: colors.background,
+                }
+              ]}
               placeholder="Enter handle..."
               placeholderTextColor={colors.onSurfaceVariant}
               value={newRivalHandle}
@@ -186,14 +208,14 @@ export default function RivalsScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity onPress={() => setAddModalVisible(false)} style={styles.modalBtn}>
-                <Text style={{ color: colors.onSurfaceVariant, fontSize: 16, fontWeight: "600" }}>Cancel</Text>
+                <Text style={{ color: colors.onSurfaceVariant, fontSize: 16, fontWeight: "700" }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleAddRival} 
-                style={[styles.modalBtn, { backgroundColor: colors.primary, borderRadius: 8 }]}
+                style={[styles.modalBtn, { backgroundColor: colors.primary, borderRadius: 100 }]}
               >
-                <Text style={{ color: colors.onPrimary, fontSize: 16, fontWeight: "600" }}>
-                  {isLoading ? "Adding..." : "Add"}
+                <Text style={{ color: isDarkMode ? "#111111" : "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
+                  {isLoading ? "Adding..." : "Add Rival"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -212,70 +234,81 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: -0.5,
+    fontSize: 32,
+    fontWeight: "900",
+    letterSpacing: -1,
   },
   addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
   },
   leaderboard: {
-    gap: 12,
+    gap: 16,
   },
   leaderboardCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 24,
   },
   rankBadge: {
-    width: 32,
-    alignItems: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+    marginRight: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 44,
   },
   rankText: {
-    fontSize: 18,
     fontWeight: "800",
   },
   userInfo: {
     flex: 1,
-    paddingHorizontal: 12,
   },
   username: {
     fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 4,
+    fontWeight: "800",
+    letterSpacing: -0.2,
   },
   userRank: {
     fontSize: 12,
-    fontWeight: "500",
+    marginTop: 4,
+    fontWeight: "600",
   },
   ratingInfo: {
     alignItems: "flex-end",
+    justifyContent: "center",
+    marginLeft: 12,
   },
   ratingText: {
     fontSize: 24,
     fontWeight: "900",
-    letterSpacing: -0.5,
+    letterSpacing: -1,
+  },
+  deleteBtn: {
+    marginLeft: 16,
+    padding: 8,
   },
   emptyContainer: {
-    padding: 32,
+    paddingTop: 60,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: "center",
-    lineHeight: 24,
+    fontWeight: "600",
+    opacity: 0.7,
   },
   modalOverlay: {
     flex: 1,
@@ -283,30 +316,31 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: 24,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    paddingBottom: 48,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 16,
+    fontSize: 24,
+    fontWeight: "900",
+    marginBottom: 24,
+    letterSpacing: -0.5,
   },
   input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 16,
     paddingHorizontal: 16,
     fontSize: 16,
-    marginBottom: 24,
+    fontWeight: "600",
+    marginBottom: 32,
   },
   modalActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
     gap: 16,
-    marginBottom: 24,
   },
   modalBtn: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     justifyContent: "center",
     alignItems: "center",

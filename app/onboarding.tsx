@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -32,7 +31,7 @@ const SLIDES: OnboardingSlide[] = [
     title: "Welcome to Krono",
     subtitle:
       "Your competitive programming companion.\nTrack contests, sync profiles, and never miss a round.",
-    accent: "#6C63FF",
+    accent: "#3B82F6",
   },
   {
     id: "2",
@@ -40,7 +39,7 @@ const SLIDES: OnboardingSlide[] = [
     title: "All Contests, One Place",
     subtitle:
       "Upcoming contests from Codeforces, LeetCode, AtCoder, and CodeChef — all in a single timeline.",
-    accent: "#FF6B6B",
+    accent: "#EF4444",
   },
   {
     id: "3",
@@ -48,7 +47,7 @@ const SLIDES: OnboardingSlide[] = [
     title: "Track Your Progress",
     subtitle:
       "Connect your profiles to see live ratings, rating graphs, contest history, and detailed analytics.",
-    accent: "#22C55E",
+    accent: "#10B981",
   },
   {
     id: "4",
@@ -99,53 +98,61 @@ export default function OnboardingScreen() {
     router.replace("/(tabs)");
   };
 
-  const renderSlide = ({ item }: { item: OnboardingSlide }) => (
-    <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
-      <LinearGradient
-        colors={[item.accent + "1A", item.accent + "00"]}
-        style={styles.gradientBackground}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      />
-      {/* Icon circle */}
-      <View
-        style={[
-          styles.iconCircle,
-          {
-            backgroundColor: item.accent + "15",
-            borderColor: item.accent + "30",
-            shadowColor: item.accent,
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.2,
-            shadowRadius: 20,
-            elevation: 10,
-          },
-        ]}
-      >
-        <MaterialCommunityIcons
-          name={item.icon as any}
-          size={64}
-          color={item.accent}
-        />
+  const renderSlide = ({ item, index }: { item: OnboardingSlide, index: number }) => {
+    const inputRange = [
+      (index - 1) * SCREEN_WIDTH,
+      index * SCREEN_WIDTH,
+      (index + 1) * SCREEN_WIDTH,
+    ];
+
+    const translateY = scrollX.interpolate({
+      inputRange,
+      outputRange: [40, 0, 40],
+      extrapolate: "clamp",
+    });
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0, 1, 0],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
+        <Animated.View style={{ alignItems: "center", transform: [{ translateY }], opacity }}>
+          {/* Icon */}
+          <View
+            style={[
+              styles.iconCircle,
+              {
+                backgroundColor: item.accent + "1A",
+              },
+            ]}
+          >
+            <MaterialCommunityIcons
+              name={item.icon as any}
+              size={56}
+              color={item.accent}
+            />
+          </View>
+
+          {/* Title */}
+          <Text
+            style={[styles.title, { color: colors.onBackground }]}
+          >
+            {item.title}
+          </Text>
+
+          {/* Subtitle */}
+          <Text
+            style={[styles.subtitle, { color: colors.onSurfaceVariant }]}
+          >
+            {item.subtitle}
+          </Text>
+        </Animated.View>
       </View>
-
-      {/* Title */}
-      <Text
-        variant="headlineMedium"
-        style={[styles.title, { color: colors.onBackground, fontFamily: "Inter_900Black" }]}
-      >
-        {item.title}
-      </Text>
-
-      {/* Subtitle */}
-      <Text
-        variant="bodyLarge"
-        style={[styles.subtitle, { color: colors.onSurfaceVariant, fontFamily: "Inter_400Regular" }]}
-      >
-        {item.subtitle}
-      </Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <View
@@ -154,7 +161,7 @@ export default function OnboardingScreen() {
         {
           backgroundColor: colors.background,
           paddingTop: insets.top,
-          paddingBottom: insets.bottom + 16,
+          paddingBottom: insets.bottom + 24,
         },
       ]}
     >
@@ -162,14 +169,14 @@ export default function OnboardingScreen() {
       {!isLast && (
         <Pressable
           onPress={handleSkip}
-          style={[styles.skipButton, { top: insets.top + 12 }]}
+          style={[styles.skipButton, { top: insets.top + 16 }]}
           hitSlop={12}
         >
           <Text
-            variant="labelLarge"
             style={{
               color: colors.onSurfaceVariant,
-              fontWeight: "600",
+              fontWeight: "700",
+              fontSize: 15,
             }}
           >
             Skip
@@ -209,13 +216,13 @@ export default function OnboardingScreen() {
 
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 28, 8],
+              outputRange: [6, 24, 6],
               extrapolate: "clamp",
             });
 
             const dotOpacity = scrollX.interpolate({
               inputRange,
-              outputRange: [0.3, 1, 0.3],
+              outputRange: [0.25, 1, 0.25],
               extrapolate: "clamp",
             });
 
@@ -227,7 +234,7 @@ export default function OnboardingScreen() {
                   {
                     width: dotWidth,
                     opacity: dotOpacity,
-                    backgroundColor: SLIDES[currentIndex].accent,
+                    backgroundColor: colors.onSurface,
                   },
                 ]}
               />
@@ -238,26 +245,28 @@ export default function OnboardingScreen() {
         {/* Next / Get Started button */}
         <Pressable
           onPress={handleNext}
-          style={[
+          style={({ pressed }) => [
             styles.nextButton,
             {
-              backgroundColor: SLIDES[currentIndex].accent,
+              backgroundColor: colors.onSurface,
+              opacity: pressed ? 0.8 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
             },
           ]}
         >
           {isLast ? (
-            <Text variant="titleMedium" style={styles.buttonText}>
+            <Text style={[styles.buttonText, { color: colors.background }]}>
               Get Started
             </Text>
           ) : (
             <View style={styles.nextButtonInner}>
-              <Text variant="titleMedium" style={styles.buttonText}>
+              <Text style={[styles.buttonText, { color: colors.background }]}>
                 Next
               </Text>
               <MaterialCommunityIcons
                 name="arrow-right"
                 size={20}
-                color="#FFFFFF"
+                color={colors.background}
               />
             </View>
           )}
@@ -268,9 +277,6 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  gradientBackground: {
-    ...StyleSheet.absoluteFillObject,
-  },
   container: {
     flex: 1,
   },
@@ -291,28 +297,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   iconCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
     marginBottom: 40,
   },
   title: {
+    fontSize: 32,
     fontWeight: "900",
     textAlign: "center",
-    letterSpacing: -0.5,
+    letterSpacing: -1,
     marginBottom: 16,
   },
   subtitle: {
+    fontSize: 16,
     textAlign: "center",
     lineHeight: 24,
-    opacity: 0.8,
+    fontWeight: "500",
+    opacity: 0.7,
   },
   bottomArea: {
     paddingHorizontal: 32,
-    gap: 28,
+    gap: 32,
     alignItems: "center",
   },
   pagination: {
@@ -321,13 +329,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dot: {
-    height: 8,
-    borderRadius: 4,
+    height: 6,
+    borderRadius: 3,
   },
   nextButton: {
     width: "100%",
     height: 56,
-    borderRadius: 16,
+    borderRadius: 100,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -337,7 +345,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonText: {
-    color: "#FFFFFF",
+    fontSize: 18,
     fontWeight: "800",
   },
 });

@@ -1,8 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Surface, useTheme } from "react-native-paper";
 import { PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
 
@@ -16,17 +16,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   onPress,
 }) => {
   const { colors, dark } = useTheme();
-  const isDarkMode = dark;
 
   const platformConfig = PLATFORMS[profile.platformId];
-  let platformColor = platformConfig?.color || colors.primary;
-
-  if (profile.platformId === "atcoder" && !isDarkMode) {
-    platformColor = "#000000";
+  
+  let platformColor = platformConfig?.color || "#1A1A1A";
+  if (profile.platformId === "atcoder") {
+    platformColor = dark ? "#333333" : "#1C1917";
+  } else if (profile.platformId === "leetcode") {
+    platformColor = "#8B5000"; // Dark amber/brown for contrast with white text
   }
 
-  const onPlatformColor =
-    profile.platformId === "atcoder" && isDarkMode ? "#000000" : "#FFFFFF";
+  const textColor = "#FFFFFF";
+  const textMuted = "rgba(255, 255, 255, 0.7)";
+  const textFaint = "rgba(255, 255, 255, 0.5)";
 
   const handle = profile.username || "Unknown";
   const rating = profile.rating !== undefined ? profile.rating : "—";
@@ -40,107 +42,108 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         onPress?.();
       }}
       style={({ pressed }) => [
-        { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
+        { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] },
       ]}
     >
       <Surface
-        style={[styles.card, { backgroundColor: platformColor }]}
+        style={[
+          styles.card,
+          { backgroundColor: platformColor },
+        ]}
         elevation={0}
       >
-        {/* Subtle watermark */}
-        <View style={styles.watermarkContainer}>
+        <View style={styles.cardInner}>
+          {/* Background Watermark Icon */}
           <MaterialCommunityIcons
             name={(platformConfig?.icon as any) || "code-tags"}
-            size={100}
-            color={onPlatformColor}
-            style={{ opacity: 0.06 }}
+            size={180}
+            color="#FFFFFF"
+            style={styles.watermarkIcon}
           />
-        </View>
 
-        <View style={styles.cardInner}>
-          {/* Platform label */}
-          <Text
-            variant="labelSmall"
-            style={{
-              color: onPlatformColor,
-              fontWeight: "600",
-              fontSize: 11,
-              letterSpacing: 1.5,
-              opacity: 0.7,
-            }}
-          >
-            {profile.platformId?.toUpperCase()}
-          </Text>
-
-          {/* Rating hero */}
-          <View style={styles.heroContainer}>
+          {/* Card Details */}
+          <View style={{ flex: 1, justifyContent: "space-between" }}>
+            {/* Platform label */}
             <Text
               style={{
-                fontWeight: "900",
-                color: onPlatformColor,
-                fontSize: 42,
-                lineHeight: 48,
-                letterSpacing: -2,
-                includeFontPadding: false,
+                color: textMuted,
+                fontWeight: "700",
+                fontSize: 10,
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
               }}
             >
-              {rating}
+              {platformConfig?.name || profile.platformId}
             </Text>
 
-            {rank ? (
+            {/* Rating hero */}
+            <View style={styles.heroContainer}>
               <Text
                 style={{
-                  color: onPlatformColor,
-                  fontWeight: "600",
-                  fontSize: 13,
-                  letterSpacing: 0.5,
-                  opacity: 0.8,
-                  marginTop: 2,
+                  fontWeight: "800",
+                  color: textColor,
+                  fontSize: 36,
+                  lineHeight: 42,
+                  letterSpacing: -1,
+                  includeFontPadding: false,
                 }}
               >
-                {rank}
+                {rating}
               </Text>
-            ) : null}
-          </View>
 
-          {/* Footer: handle + stats */}
-          <View style={styles.footer}>
-            <Text
-              style={{
-                fontWeight: "500",
-                color: onPlatformColor,
-                opacity: 0.65,
-                fontSize: 13,
-              }}
-            >
-              @{handle}
-            </Text>
-            <View style={styles.statRow}>
-              {maxRating !== undefined && maxRating > 0 && (
+              {rank ? (
                 <Text
                   style={{
-                    color: onPlatformColor,
-                    opacity: 0.5,
-                    fontSize: 11,
+                    color: textMuted,
                     fontWeight: "600",
+                    fontSize: 12,
+                    marginTop: 2,
                   }}
+                  numberOfLines={1}
                 >
-                  Peak {maxRating}
+                  {rank}
                 </Text>
-              )}
-              {(profile.problemsSolved || 0) > 0 && (
-                <Text
-                  style={{
-                    color: onPlatformColor,
-                    opacity: 0.5,
-                    fontSize: 11,
-                    fontWeight: "600",
-                    marginLeft: maxRating ? 12 : 0,
-                  }}
-                >
-                  {profile.problemsSolved} solved
-                </Text>
-              )}
+              ) : null}
+            </View>
+
+            {/* Footer: handle + stats */}
+            <View style={styles.footer}>
+              <Text
+                style={{
+                  fontWeight: "600",
+                  color: textMuted,
+                  fontSize: 12,
+                  maxWidth: "50%",
+                }}
+                numberOfLines={1}
+              >
+                @{handle}
+              </Text>
+              <View style={styles.statRow}>
+                {maxRating !== undefined && maxRating > 0 && (
+                  <Text
+                    style={{
+                      color: textFaint,
+                      fontSize: 11,
+                      fontWeight: "700",
+                    }}
+                  >
+                    Peak {maxRating}
+                  </Text>
+                )}
+                {(profile.problemsSolved || 0) > 0 && (
+                  <Text
+                    style={{
+                      color: textFaint,
+                      fontSize: 11,
+                      fontWeight: "700",
+                      marginLeft: maxRating ? 10 : 0,
+                    }}
+                  >
+                    {profile.problemsSolved} solved
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -153,21 +156,20 @@ const styles = StyleSheet.create({
   card: {
     width: 260,
     height: 165,
-    borderRadius: 22,
+    borderRadius: 16,
     overflow: "hidden",
   },
   cardInner: {
     flex: 1,
     padding: 18,
-    zIndex: 2,
-    justifyContent: "space-between",
+    position: "relative",
   },
-  watermarkContainer: {
+  watermarkIcon: {
     position: "absolute",
-    right: -15,
-    bottom: -15,
-    zIndex: 1,
-    transform: [{ rotate: "-12deg" }],
+    right: -40,
+    bottom: -40,
+    opacity: 0.1,
+    transform: [{ rotate: "-15deg" }],
   },
   heroContainer: {
     flex: 1,

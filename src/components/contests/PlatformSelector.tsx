@@ -1,6 +1,6 @@
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { Chip, useTheme } from "react-native-paper";
+import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import { Platform, PlatformId } from "../../types/platform";
 
 interface PlatformSelectorProps {
@@ -25,59 +25,55 @@ export function PlatformSelector({
       contentContainerStyle={styles.container}
     >
       {!hideAllOption && (
-        <Chip
-          selected={selectedPlatform === "all"}
+        <Pressable
           onPress={() => onSelectPlatform("all")}
           style={[
             styles.chip,
-            selectedPlatform === "all"
-              ? { backgroundColor: colors.onSurface }
-              : {
-                  backgroundColor: dark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                },
+            {
+              backgroundColor: selectedPlatform === "all" ? colors.onSurface : colors.surface,
+            },
           ]}
-          textStyle={{
-            color: selectedPlatform === "all" ? colors.surface : colors.onSurfaceVariant,
-            fontWeight: "600",
-            fontSize: 12,
-          }}
-          showSelectedOverlay
         >
-          All
-        </Chip>
+          <Text
+            style={{
+              color: selectedPlatform === "all" ? colors.background : colors.onSurfaceVariant,
+              fontWeight: "700",
+              fontSize: 12,
+            }}
+          >
+            All
+          </Text>
+        </Pressable>
       )}
       {platforms.map((platform) => {
         let platformColor = platform.color;
         if (platform.id === "atcoder" && !dark) {
-          platformColor = "#000000";
+          platformColor = "#111111";
         }
         const isSelected = selectedPlatform === platform.id;
+        const isLightBg = platformColor.toUpperCase() === "#FFFFFF";
+
         return (
-          <Chip
+          <Pressable
             key={platform.id}
-            selected={isSelected}
             onPress={() => onSelectPlatform(platform.id)}
             style={[
               styles.chip,
-              isSelected
-                ? { backgroundColor: platformColor }
-                : {
-                    backgroundColor: dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
+              {
+                backgroundColor: isSelected ? platformColor : colors.surface,
+              },
             ]}
-            textStyle={{
-              color: isSelected ? "#FFFFFF" : colors.onSurfaceVariant,
-              fontWeight: "600",
-              fontSize: 12,
-            }}
-            showSelectedOverlay
           >
-            {platform.name}
-          </Chip>
+            <Text
+              style={{
+                color: isSelected ? (isLightBg ? "#111111" : "#FFFFFF") : colors.onSurfaceVariant,
+                fontWeight: "700",
+                fontSize: 12,
+              }}
+            >
+              {platform.name}
+            </Text>
+          </Pressable>
         );
       })}
     </ScrollView>
@@ -91,7 +87,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   chip: {
-    borderRadius: 20,
-    borderWidth: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
   },
 });

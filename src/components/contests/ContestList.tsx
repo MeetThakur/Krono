@@ -51,7 +51,7 @@ export const ContestList: React.FC<ContestListProps> = ({
     );
   }
 
-  // Compact mode for dashboard — minimal contest rows
+  // Compact mode for dashboard
   if (compact) {
     return (
       <View style={styles.compactContainer}>
@@ -69,11 +69,9 @@ export const ContestList: React.FC<ContestListProps> = ({
               style={({ pressed }) => [
                 styles.compactRow,
                 {
-                  backgroundColor: pressed
-                    ? dark
-                      ? "rgba(255,255,255,0.04)"
-                      : "rgba(0,0,0,0.02)"
-                    : "transparent",
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  opacity: pressed ? 0.85 : 1,
                 },
               ]}
               onPress={() => {
@@ -88,17 +86,29 @@ export const ContestList: React.FC<ContestListProps> = ({
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: "600",
                     color: colors.onSurface,
                   }}
                 >
                   {contest.name}
                 </Text>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontWeight: "600",
+                    color: colors.onSurfaceVariant,
+                    marginTop: 2,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {platformConfig?.name}
+                </Text>
               </View>
               <Text
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: "500",
                   color: colors.onSurfaceVariant,
                   marginLeft: 12,
@@ -142,9 +152,7 @@ export const ContestList: React.FC<ContestListProps> = ({
               styles.card,
               {
                 backgroundColor: colors.surface,
-                borderColor: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.05)",
+                borderColor: colors.border,
               },
             ]}
           >
@@ -160,9 +168,9 @@ export const ContestList: React.FC<ContestListProps> = ({
                   />
                   <Text
                     style={{
-                      color: platformColor,
+                      color: colors.onSurfaceVariant,
                       fontSize: 11,
-                      fontWeight: "700",
+                      fontWeight: "600",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
                     }}
@@ -172,7 +180,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                 </View>
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     color: colors.onSurfaceVariant,
                     fontWeight: "500",
                   }}
@@ -185,12 +193,12 @@ export const ContestList: React.FC<ContestListProps> = ({
               <Text
                 numberOfLines={2}
                 style={{
-                  fontWeight: "700",
-                  fontSize: 16,
+                  fontWeight: "600",
+                  fontSize: 15,
                   marginTop: 10,
                   marginBottom: 6,
                   color: colors.onSurface,
-                  lineHeight: 22,
+                  lineHeight: 20,
                 }}
               >
                 {contest.name}
@@ -208,7 +216,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                     marginLeft: 4,
                     color: colors.onSurfaceVariant,
                     fontWeight: "500",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   {durationText}
@@ -216,7 +224,7 @@ export const ContestList: React.FC<ContestListProps> = ({
               </View>
 
               {/* Actions */}
-              <View style={styles.actionBar}>
+              <View style={[styles.actionBar, { borderTopColor: colors.border }]}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.registerBtn,
@@ -232,8 +240,8 @@ export const ContestList: React.FC<ContestListProps> = ({
                 >
                   <Text
                     style={{
-                      color: colors.onPrimary,
-                      fontSize: 13,
+                      color: dark ? "#111111" : "#FFFFFF",
+                      fontSize: 12,
                       fontWeight: "600",
                     }}
                   >
@@ -245,7 +253,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                     styles.reminderBtn,
                     {
                       backgroundColor: contest.reminderSet
-                        ? colors.primary + "12"
+                        ? colors.primary + "18"
                         : dark
                           ? "rgba(255,255,255,0.06)"
                           : "rgba(0,0,0,0.04)",
@@ -282,13 +290,16 @@ const styles = StyleSheet.create({
   },
   compactContainer: {
     paddingHorizontal: 20,
+    gap: 8,
   },
   compactRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14,
-    paddingHorizontal: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     gap: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   card: {
     borderRadius: 16,
@@ -324,7 +335,6 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: "rgba(150,150,150,0.1)",
   },
   registerBtn: {
     flex: 1,

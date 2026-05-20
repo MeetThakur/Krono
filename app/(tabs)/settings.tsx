@@ -4,12 +4,11 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
     Button,
-    Card,
     Dialog,
     Divider,
     IconButton,
-    List,
     Portal,
+    Surface,
     Switch,
     Text,
     TextInput,
@@ -22,20 +21,10 @@ import { useSettingsStore } from "../../src/stores/useSettingsStore";
 import { useThemeStore } from "../../src/stores/useThemeStore";
 import { PLATFORMS, PlatformId } from "../../src/types/platform";
 
-const ACCENT_COLORS = [
-  { id: "monochrome" as const, label: "Mono" },
-  { id: "blue" as const, label: "Blue", hex: "#3B82F6" },
-  { id: "emerald" as const, label: "Green", hex: "#10B981" },
-  { id: "violet" as const, label: "Violet", hex: "#8B5CF6" },
-  { id: "rose" as const, label: "Rose", hex: "#F43F5E" },
-  { id: "amber" as const, label: "Amber", hex: "#F59E0B" },
-];
-
 export default function SettingsScreen() {
   const { colors, dark } = useTheme();
   const router = useRouter();
-  const { isDarkMode, themeColor, toggleTheme, setThemeColor } =
-    useThemeStore();
+  const { isDarkMode, toggleTheme } = useThemeStore();
   const { profiles, addProfile, removeProfile, isLoading } = useProfileStore();
   const { resetOnboarding } = useOnboardingStore();
   const {
@@ -68,6 +57,21 @@ export default function SettingsScreen() {
     (platform) => !profiles.some((p) => p.platformId === platform.id),
   );
 
+  const SettingRow = ({ icon, title, description, control }: any) => (
+    <View style={styles.settingRow}>
+      <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+        <MaterialCommunityIcons name={icon} size={22} color={colors.primary} />
+      </View>
+      <View style={{ flex: 1, paddingHorizontal: 12 }}>
+        <Text style={{ fontWeight: "700", fontSize: 15, color: colors.onSurface }}>{title}</Text>
+        {description && (
+          <Text style={{ fontSize: 12, color: colors.onSurfaceVariant, marginTop: 2, fontWeight: "500" }}>{description}</Text>
+        )}
+      </View>
+      {control}
+    </View>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
@@ -77,7 +81,7 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Appearance */}
         <View style={styles.sectionContainer}>
           <Text
@@ -85,93 +89,13 @@ export default function SettingsScreen() {
           >
             APPEARANCE
           </Text>
-          <Card
-            style={[
-              styles.card,
-              {
-                borderColor: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.04)",
-              },
-            ]}
-            mode="contained"
-          >
-            <List.Item
+          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
+            <SettingRow
+              icon="moon-waning-crescent"
               title="Dark Mode"
-              titleStyle={{ fontWeight: "600", fontSize: 15 }}
-              left={(props) => (
-                <List.Icon {...props} icon="moon-waning-crescent" />
-              )}
-              right={() => (
-                <Switch value={isDarkMode} onValueChange={toggleTheme} />
-              )}
+              control={<Switch value={isDarkMode} onValueChange={toggleTheme} color={colors.primary} />}
             />
-            <Divider style={{ opacity: 0.3 }} />
-            <View style={styles.accentSection}>
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "500",
-                  color: colors.onSurfaceVariant,
-                  marginBottom: 14,
-                }}
-              >
-                Accent Color
-              </Text>
-              <View style={styles.accentRow}>
-                {ACCENT_COLORS.map((color) => {
-                  const hex =
-                    color.hex ||
-                    (isDarkMode ? "#FAFAFA" : "#18181B");
-                  const isActive = themeColor === color.id;
-                  return (
-                    <Pressable
-                      key={color.id}
-                      onPress={() => setThemeColor(color.id)}
-                      style={styles.accentItem}
-                    >
-                      <View
-                        style={[
-                          styles.accentCircle,
-                          {
-                            backgroundColor: hex,
-                            borderWidth: isActive ? 2.5 : 0,
-                            borderColor: colors.onSurface,
-                          },
-                        ]}
-                      >
-                        {isActive && (
-                          <MaterialCommunityIcons
-                            name="check"
-                            size={16}
-                            color={
-                              color.id === "monochrome"
-                                ? isDarkMode
-                                  ? "#000"
-                                  : "#FFF"
-                                : "#FFF"
-                            }
-                          />
-                        )}
-                      </View>
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          fontWeight: isActive ? "700" : "500",
-                          color: isActive
-                            ? colors.onSurface
-                            : colors.onSurfaceVariant,
-                          marginTop: 6,
-                        }}
-                      >
-                        {color.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          </Card>
+          </Surface>
         </View>
 
         {/* Notifications */}
@@ -181,45 +105,20 @@ export default function SettingsScreen() {
           >
             NOTIFICATIONS
           </Text>
-          <Card
-            style={[
-              styles.card,
-              {
-                borderColor: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.04)",
-              },
-            ]}
-            mode="contained"
-          >
-            <List.Item
+          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
+            <SettingRow
+              icon="bell-outline"
               title="Push Notifications"
-              titleStyle={{ fontWeight: "600", fontSize: 15 }}
-              left={(props) => (
-                <List.Icon {...props} icon="bell-outline" />
-              )}
-              right={() => (
-                <Switch
-                  value={notificationsEnabled}
-                  onValueChange={toggleNotifications}
-                />
-              )}
+              control={<Switch value={notificationsEnabled} onValueChange={toggleNotifications} color={colors.primary} />}
             />
-            <Divider style={{ opacity: 0.3 }} />
-            <List.Item
+            <Divider style={{ opacity: 0.3, marginVertical: 12 }} />
+            <SettingRow
+              icon="sync"
               title="Background Sync"
               description="Periodically fetch contests"
-              titleStyle={{ fontWeight: "600", fontSize: 15 }}
-              descriptionStyle={{ fontSize: 12, opacity: 0.6 }}
-              left={(props) => <List.Icon {...props} icon="sync" />}
-              right={() => (
-                <Switch
-                  value={backgroundSyncEnabled}
-                  onValueChange={toggleBackgroundSync}
-                />
-              )}
+              control={<Switch value={backgroundSyncEnabled} onValueChange={toggleBackgroundSync} color={colors.primary} />}
             />
-          </Card>
+          </Surface>
         </View>
 
         {/* Connected Profiles */}
@@ -232,7 +131,7 @@ export default function SettingsScreen() {
           {profiles.length === 0 ? (
             <Text
               style={{
-                fontStyle: "italic",
+                fontWeight: "600",
                 color: colors.onSurfaceVariant,
                 opacity: 0.5,
                 textAlign: "center",
@@ -243,27 +142,17 @@ export default function SettingsScreen() {
               No profiles connected yet.
             </Text>
           ) : (
-            <Card
-              style={[
-                styles.card,
-                {
-                  borderColor: dark
-                    ? "rgba(255,255,255,0.06)"
-                    : "rgba(0,0,0,0.04)",
-                },
-              ]}
-              mode="contained"
-            >
+            <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface, paddingVertical: 8 }]} elevation={0}>
               {profiles.map((profile, i) => {
                 const platformConfig = PLATFORMS[profile.platformId];
                 let platformColor = platformConfig?.color || colors.primary;
                 if (profile.platformId === "atcoder" && !isDarkMode) {
-                  platformColor = "#000000";
+                  platformColor = "#111111";
                 }
 
                 return (
                   <React.Fragment key={profile.id}>
-                    {i > 0 && <Divider style={{ opacity: 0.2 }} />}
+                    {i > 0 && <Divider style={{ opacity: 0.2, marginVertical: 8 }} />}
                     <View style={styles.profileRow}>
                       <View
                         style={[
@@ -272,20 +161,21 @@ export default function SettingsScreen() {
                         ]}
                       />
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: "600", fontSize: 14 }}>
+                        <Text style={{ fontWeight: "700", fontSize: 15, color: colors.onSurface }}>
                           {profile.username}
                         </Text>
                         <Text
                           style={{
                             fontSize: 12,
                             color: colors.onSurfaceVariant,
-                            marginTop: 1,
+                            fontWeight: "600",
+                            marginTop: 2,
                           }}
                         >
                           {platformConfig?.name} ·{" "}
                           <Text
                             style={{
-                              fontWeight: "600",
+                              fontWeight: "700",
                               color: platformColor,
                             }}
                           >
@@ -295,16 +185,16 @@ export default function SettingsScreen() {
                       </View>
                       <IconButton
                         icon="close"
-                        size={16}
+                        size={20}
                         iconColor={colors.onSurfaceVariant}
                         onPress={() => removeProfile(profile.id)}
-                        style={{ opacity: 0.5 }}
+                        style={{ opacity: 0.7 }}
                       />
                     </View>
                   </React.Fragment>
                 );
               })}
-            </Card>
+            </Surface>
           )}
         </View>
 
@@ -320,37 +210,40 @@ export default function SettingsScreen() {
               {availablePlatforms.map((platform) => {
                 let platformColor = platform.color;
                 if (platform.id === "atcoder" && !isDarkMode) {
-                  platformColor = "#000000";
+                  platformColor = "#111111";
                 }
+
                 return (
                   <Pressable
                     key={platform.id}
                     style={({ pressed }) => [
                       styles.platformTile,
                       {
-                        backgroundColor: pressed
-                          ? dark
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(0,0,0,0.03)"
-                          : colors.surface,
-                        borderColor: dark
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(0,0,0,0.04)",
+                        backgroundColor: colors.surface,
+                        opacity: pressed ? 0.8 : 1,
+                        transform: [{ scale: pressed ? 0.98 : 1 }],
                       },
                     ]}
                     onPress={() => openAddDialog(platform.id)}
                   >
                     <View
                       style={[
-                        styles.tileDot,
-                        { backgroundColor: platformColor },
+                        styles.platformIconBg,
+                        { backgroundColor: platformColor + "15" },
                       ]}
-                    />
+                    >
+                      <MaterialCommunityIcons
+                        name={platform.icon as any}
+                        size={24}
+                        color={platformColor}
+                      />
+                    </View>
                     <Text
                       style={{
-                        fontWeight: "600",
-                        fontSize: 13,
+                        fontWeight: "700",
                         color: colors.onSurface,
+                        marginTop: 12,
+                        fontSize: 13,
                       }}
                     >
                       {platform.name}
@@ -362,106 +255,86 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* About */}
-        <View style={styles.sectionContainer}>
+        {/* Danger Zone */}
+        <View style={[styles.sectionContainer, { marginTop: 40 }]}>
           <Text
-            style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
+            style={[styles.sectionLabel, { color: colors.error, opacity: 0.8 }]}
           >
-            ABOUT
+            DANGER ZONE
           </Text>
-          <Card
-            style={[
-              styles.card,
-              {
-                borderColor: dark
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.04)",
-              },
-            ]}
-            mode="contained"
-          >
-            <List.Item
-              title="Replay Walkthrough"
-              titleStyle={{ fontWeight: "600", fontSize: 15 }}
-              left={(props) => (
-                <List.Icon
-                  {...props}
-                  icon="book-open-page-variant-outline"
-                />
-              )}
-              right={(props) => (
-                <List.Icon {...props} icon="chevron-right" />
-              )}
-              onPress={async () => {
-                await resetOnboarding();
-                router.replace("/onboarding" as any);
+          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingRow,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+              onPress={() => {
+                resetOnboarding();
+                router.replace("/onboarding");
               }}
-            />
-            <Divider style={{ opacity: 0.3 }} />
-            <List.Item
-              title="Test Notification"
-              titleStyle={{ fontWeight: "600", fontSize: 15 }}
-              left={(props) => (
-                <List.Icon {...props} icon="bell-ring-outline" />
-              )}
-              right={(props) => (
-                <List.Icon {...props} icon="chevron-right" />
-              )}
-              onPress={() => notificationService.sendTestNotification()}
-            />
-          </Card>
+            >
+              <View style={[styles.iconContainer, { backgroundColor: colors.error + "15" }]}>
+                <MaterialCommunityIcons name="refresh" size={22} color={colors.error} />
+              </View>
+              <View style={{ flex: 1, paddingHorizontal: 12 }}>
+                <Text style={{ fontWeight: "700", fontSize: 15, color: colors.error }}>Reset Onboarding</Text>
+                <Text style={{ fontSize: 12, color: colors.error, opacity: 0.8, marginTop: 2, fontWeight: "500" }}>Show tutorial slides again</Text>
+              </View>
+            </Pressable>
+          </Surface>
         </View>
 
-        <View style={styles.footer}>
-          <Text style={{ color: colors.onSurfaceVariant, fontSize: 12, opacity: 0.4 }}>
-            v1.3.0 · Krono
-          </Text>
-          <Text
-            style={{
-              color: colors.onSurfaceVariant,
-              fontSize: 12,
-              opacity: 0.4,
-              marginTop: 4,
-            }}
-          >
-            Made with ❤️ by Meet
-          </Text>
-        </View>
+        <View style={{ height: 60 }} />
       </ScrollView>
 
-      {/* Add Profile Dialog */}
       <Portal>
         <Dialog
           visible={dialogVisible}
           onDismiss={() => setDialogVisible(false)}
-          style={{ backgroundColor: colors.surface, borderRadius: 20 }}
+          style={{ backgroundColor: colors.surface, borderRadius: 24 }}
         >
-          <Dialog.Title style={{ fontWeight: "700" }}>
-            Connect {selectedPlatform ? PLATFORMS[selectedPlatform].name : ""}
+          <Dialog.Title style={{ fontWeight: "800", color: colors.onSurface }}>
+            Add {PLATFORMS[selectedPlatform as PlatformId]?.name}
           </Dialog.Title>
           <Dialog.Content>
             <Text
-              style={{ marginBottom: 12, color: colors.onSurfaceVariant }}
+              style={{
+                marginBottom: 16,
+                color: colors.onSurfaceVariant,
+                fontWeight: "500",
+              }}
             >
-              Enter your handle to sync stats.
+              Enter your handle to track your profile and ratings.
             </Text>
             <TextInput
-              label="Username"
+              mode="outlined"
+              label="Username / Handle"
               value={username}
               onChangeText={setUsername}
-              mode="outlined"
               autoCapitalize="none"
+              autoCorrect={false}
+              outlineColor={colors.border}
+              activeOutlineColor={colors.primary}
               style={{ backgroundColor: colors.surface }}
             />
           </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
+          <Dialog.Actions style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
             <Button
+              onPress={() => setDialogVisible(false)}
+              textColor={colors.onSurfaceVariant}
+              labelStyle={{ fontWeight: "700" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              mode="contained"
               onPress={handleAddProfile}
               loading={isLoading}
-              disabled={!username.trim()}
+              disabled={isLoading || !username.trim()}
+              style={{ borderRadius: 100, paddingHorizontal: 12 }}
+              labelStyle={{ fontWeight: "800", color: dark ? "#111111" : "#FFFFFF" }}
             >
-              Connect
+              Add Profile
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -475,46 +348,39 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 56,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   title: {
     fontWeight: "900",
-    fontSize: 28,
+    fontSize: 32,
     letterSpacing: -1,
   },
   content: {
-    paddingBottom: 40,
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
   },
   sectionContainer: {
     marginBottom: 32,
   },
   sectionLabel: {
-    fontWeight: "600",
-    letterSpacing: 1,
     fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.5,
     marginBottom: 12,
-    marginLeft: 4,
+    marginLeft: 8,
   },
-  card: {
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
-  },
-  accentSection: {
+  surfaceCard: {
+    borderRadius: 24,
     padding: 16,
   },
-  accentRow: {
+  settingRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  accentItem: {
     alignItems: "center",
+    paddingVertical: 4,
   },
-  accentCircle: {
+  iconContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -524,37 +390,32 @@ const styles = StyleSheet.create({
   profileRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
   },
   platformDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 16,
   },
   platformGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
+    gap: 12,
   },
   platformTile: {
-    flexDirection: "row",
+    flex: 1,
+    minWidth: "45%",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingVertical: 20,
+    borderRadius: 24,
   },
-  tileDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  footer: {
+  platformIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 20,
+    justifyContent: "center",
   },
 });

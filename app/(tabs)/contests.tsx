@@ -1,17 +1,19 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format, isSameDay, isTomorrow } from "date-fns";
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
     Linking,
     Pressable,
     RefreshControl,
+    ScrollView,
     SectionList,
     StyleSheet,
     View,
 } from "react-native";
 import {
     ActivityIndicator,
-    Chip,
+    Surface,
     Text,
     useTheme,
 } from "react-native-paper";
@@ -115,133 +117,119 @@ export default function ContestsScreen() {
     const platformConfig = PLATFORMS[item.platformId];
     let platformColor = platformConfig?.color || colors.primary;
     if (item.platformId === "atcoder" && !dark) {
-      platformColor = "#000000";
+      platformColor = "#111111";
     }
 
     return (
-      <View
+      <Surface
         style={[
           styles.card,
           {
             backgroundColor: colors.surface,
-            borderColor: dark
-              ? "rgba(255,255,255,0.06)"
-              : "rgba(0,0,0,0.05)",
           },
         ]}
+        elevation={0}
       >
-        <View style={styles.contentContainer}>
-          {/* Header */}
-          <View style={styles.row}>
-            <View style={styles.platformRow}>
-              <View
-                style={[
-                  styles.platformDot,
-                  { backgroundColor: platformColor },
-                ]}
-              />
-              <Text
-                style={{
-                  color: platformColor,
-                  fontSize: 11,
-                  fontWeight: "700",
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
-                {platformConfig?.name}
-              </Text>
-            </View>
+        <View style={styles.cardHeader}>
+          <View style={[styles.platformBadge, { backgroundColor: platformColor + "15" }]}>
+            <MaterialCommunityIcons
+              name={(platformConfig?.icon as any) || "code-tags"}
+              size={12}
+              color={platformColor}
+            />
             <Text
               style={{
-                fontSize: 12,
-                color: colors.onSurfaceVariant,
-                fontWeight: "500",
+                color: platformColor,
+                fontSize: 10,
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
               }}
             >
-              {format(startDate, "MMM d, HH:mm")}
+              {platformConfig?.name}
             </Text>
           </View>
-
-          {/* Title */}
           <Text
-            numberOfLines={1}
             style={{
-              fontWeight: "700",
-              fontSize: 16,
-              marginTop: 10,
-              marginBottom: 6,
-              color: colors.onSurface,
+              fontSize: 12,
+              color: colors.onSurfaceVariant,
+              fontWeight: "600",
             }}
           >
-            {item.name}
+            {format(startDate, "MMM d, HH:mm")}
           </Text>
+        </View>
 
-          {/* Duration */}
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Text
+          numberOfLines={2}
+          style={{
+            fontWeight: "800",
+            fontSize: 16,
+            marginTop: 12,
+            marginBottom: 16,
+            color: colors.onSurface,
+            lineHeight: 22,
+          }}
+        >
+          {item.name}
+        </Text>
+
+        <View style={styles.cardFooter}>
+          <View style={[styles.durationBadge, { backgroundColor: colors.background }]}>
             <MaterialCommunityIcons
               name="clock-outline"
-              size={13}
+              size={14}
               color={colors.onSurfaceVariant}
             />
             <Text
               style={{
-                marginLeft: 4,
                 color: colors.onSurfaceVariant,
-                fontWeight: "500",
-                fontSize: 12,
+                fontWeight: "700",
+                fontSize: 11,
               }}
             >
               {durationText}
             </Text>
           </View>
 
-          {/* Actions */}
-          <View style={styles.actionBar}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.registerBtn,
-                {
-                  backgroundColor: colors.primary,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-              onPress={() => item.url && Linking.openURL(item.url)}
-            >
-              <Text
-                style={{
-                  color: colors.onPrimary,
-                  fontSize: 13,
-                  fontWeight: "600",
-                }}
-              >
-                Open
-              </Text>
-            </Pressable>
+          <View style={styles.actionsRow}>
             <Pressable
               style={[
-                styles.reminderBtn,
+                styles.actionBtn,
                 {
                   backgroundColor: item.reminderSet
-                    ? colors.primary + "12"
-                    : dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
+                    ? colors.primary + "1A"
+                    : colors.background,
                 },
               ]}
               onPress={() => toggleReminder(item.id, !item.reminderSet)}
             >
               <MaterialCommunityIcons
                 name={item.reminderSet ? "bell-ring" : "bell-outline"}
-                size={16}
+                size={18}
                 color={
                   item.reminderSet ? colors.primary : colors.onSurfaceVariant
                 }
               />
             </Pressable>
+            <Pressable
+              style={[
+                styles.actionBtn,
+                {
+                  backgroundColor: colors.primary,
+                },
+              ]}
+              onPress={() => item.url && Linking.openURL(item.url)}
+            >
+              <MaterialCommunityIcons
+                name="arrow-top-right"
+                size={18}
+                color={dark ? "#111111" : "#FFFFFF"}
+              />
+            </Pressable>
           </View>
         </View>
-      </View>
+      </Surface>
     );
   };
 
@@ -268,64 +256,63 @@ export default function ContestsScreen() {
         </View>
 
         {/* Chips Filter */}
-        <View style={styles.chipsContainer}>
-          <Chip
-            selected={selectedPlatform === "all"}
-            onPress={() => setSelectedPlatform("all")}
-            style={[
-              styles.chip,
-              selectedPlatform === "all"
-                ? { backgroundColor: colors.onSurface }
-                : {
-                    backgroundColor: dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.04)",
-                  },
-            ]}
-            textStyle={{
-              color:
-                selectedPlatform === "all"
-                  ? colors.surface
-                  : colors.onSurfaceVariant,
-              fontWeight: "600",
-              fontSize: 12,
-            }}
-            showSelectedOverlay
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipsContainer}
           >
-            All
-          </Chip>
-          {Object.values(PLATFORMS).map((platform) => {
-            let platformColor = platform.color;
-            if (platform.id === "atcoder" && !dark) {
-              platformColor = "#000000";
-            }
-            const isSelected = selectedPlatform === platform.id;
-            return (
-              <Chip
-                key={platform.id}
-                selected={isSelected}
-                onPress={() => setSelectedPlatform(platform.id)}
-                style={[
-                  styles.chip,
-                  isSelected
-                    ? { backgroundColor: platformColor }
-                    : {
-                        backgroundColor: dark
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(0,0,0,0.04)",
-                      },
-                ]}
-                textStyle={{
-                  color: isSelected ? "#FFFFFF" : colors.onSurfaceVariant,
-                  fontWeight: "600",
+            <Pressable
+              onPress={() => setSelectedPlatform("all")}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: selectedPlatform === "all" ? colors.onSurface : colors.surface,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: selectedPlatform === "all" ? colors.background : colors.onSurfaceVariant,
+                  fontWeight: "700",
                   fontSize: 12,
                 }}
-                showSelectedOverlay
               >
-                {platform.name}
-              </Chip>
-            );
-          })}
+                All
+              </Text>
+            </Pressable>
+            {Object.values(PLATFORMS).map((platform) => {
+              let platformColor = platform.color;
+              if (platform.id === "atcoder" && !dark) {
+                platformColor = "#111111";
+              }
+              const isSelected = selectedPlatform === platform.id;
+              const isLightBg = platformColor.toUpperCase() === "#FFFFFF";
+              
+              return (
+                <Pressable
+                  key={platform.id}
+                  onPress={() => setSelectedPlatform(platform.id)}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: isSelected ? platformColor : colors.surface,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={{
+                      color: isSelected ? (isLightBg ? "#111111" : "#FFFFFF") : colors.onSurfaceVariant,
+                      fontWeight: "700",
+                      fontSize: 12,
+                    }}
+                  >
+                    {platform.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         <SectionList
@@ -333,14 +320,14 @@ export default function ContestsScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderContestItem}
           renderSectionHeader={({ section }) => (
-            <View style={styles.sectionHeaderRow}>
+            <View style={[styles.sectionHeaderRow, { backgroundColor: colors.background }]}>
               {section.isLive && <View style={styles.liveDot} />}
               <Text
                 style={{
                   color: section.isLive ? "#FF453A" : colors.onSurfaceVariant,
-                  fontWeight: "600",
+                  fontWeight: "800",
                   fontSize: 12,
-                  letterSpacing: 0.8,
+                  letterSpacing: 1.5,
                   textTransform: "uppercase",
                 }}
               >
@@ -350,7 +337,7 @@ export default function ContestsScreen() {
           )}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          stickySectionHeadersEnabled={false}
+          stickySectionHeadersEnabled={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -366,13 +353,13 @@ export default function ContestsScreen() {
                   name="trophy-broken"
                   size={48}
                   color={colors.onSurfaceVariant}
-                  style={{ opacity: 0.2, marginBottom: 12 }}
+                  style={{ opacity: 0.2, marginBottom: 16 }}
                 />
                 <Text
                   style={{
                     color: colors.onSurfaceVariant,
-                    fontWeight: "600",
-                    fontSize: 15,
+                    fontWeight: "800",
+                    fontSize: 16,
                   }}
                 >
                   No contests found
@@ -382,8 +369,8 @@ export default function ContestsScreen() {
                     color: colors.onSurfaceVariant,
                     opacity: 0.6,
                     textAlign: "center",
-                    marginTop: 4,
-                    fontSize: 13,
+                    marginTop: 8,
+                    fontSize: 14,
                   }}
                 >
                   Try changing filters or pull to refresh.
@@ -407,37 +394,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 56,
-    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   title: {
     fontWeight: "900",
-    fontSize: 28,
+    fontSize: 32,
     letterSpacing: -1,
   },
   chipsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingBottom: 16,
     gap: 8,
   },
   chip: {
-    borderRadius: 20,
-    borderWidth: 0,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 100,
   },
   listContent: {
-    paddingBottom: 20,
+    paddingBottom: 100,
     paddingHorizontal: 20,
-    gap: 12,
   },
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 24,
+    paddingBottom: 12,
   },
   liveDot: {
     width: 8,
@@ -446,54 +431,50 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF453A",
   },
   card: {
-    borderRadius: 16,
-    overflow: "hidden",
-    borderWidth: 1,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
   },
-  contentContainer: {
-    padding: 16,
-  },
-  row: {
+  cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  platformRow: {
+  platformBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 100,
   },
-  platformDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  actionBar: {
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginTop: 14,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(150,150,150,0.1)",
+    justifyContent: "space-between",
   },
-  registerBtn: {
-    flex: 1,
+  durationBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 100,
   },
-  reminderBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+  actionsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 60,
+    paddingTop: 80,
   },
 });

@@ -15,7 +15,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import React, { useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, LogBox } from "react-native";
 import { PaperProvider } from "react-native-paper";
 import { registerBackgroundTask } from "../src/services/backgroundTask";
 import {
@@ -27,6 +27,15 @@ import { useThemeStore } from "../src/stores/useThemeStore";
 import { getTheme } from "../src/theme/md3-theme";
 
 setupNotificationHandler();
+
+// Ignore Expo Go specific warnings and errors (SDK 53)
+LogBox.ignoreLogs([
+  "`expo-notifications` functionality is not fully supported in Expo Go",
+  "expo-notifications: Android Push notifications (remote notifications) functionality",
+  "`setBackgroundColorAsync` is not supported with edge-to-edge enabled",
+  "expo-background-fetch: This library is deprecated",
+  "`Background Fetch` functionality is not available in Expo Go",
+]);
 
 SplashScreen.preventAutoHideAsync();
 

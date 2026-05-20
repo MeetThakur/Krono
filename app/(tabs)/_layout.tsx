@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/hooks/useTheme";
 
@@ -13,25 +13,23 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDarkMode ? colors.surface : "#FFFFFF",
-          borderTopColor: isDarkMode
-            ? "rgba(255,255,255,0.06)"
-            : "rgba(0,0,0,0.06)",
-          borderTopWidth: 0.5,
-          height: 56 + (Platform.OS === "android" ? 0 : insets.bottom),
-          paddingBottom: 6 + (Platform.OS === "android" ? 4 : insets.bottom),
-          paddingTop: 8,
+          backgroundColor: isDarkMode ? "rgba(17,17,17,0.95)" : "rgba(248,249,250,0.95)",
+          position: "absolute",
+          borderTopWidth: 0,
           elevation: 0,
-          shadowOpacity: 0,
+          height: 64 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+          paddingTop: 10,
         },
+        tabBarBackground: () => (
+          <View style={{ flex: 1, backgroundColor: isDarkMode ? "rgba(17,17,17,0.98)" : "rgba(248,249,250,0.98)" }} />
+        ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.muted,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontSize: 10,
-          fontWeight: "600",
-          letterSpacing: 0.2,
-          marginTop: 1,
+          marginTop: 4,
         },
         tabBarHideOnKeyboard: true,
       }}

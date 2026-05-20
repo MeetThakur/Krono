@@ -22,21 +22,21 @@ const commonStatus = {
 };
 
 export const lightColors = {
-  background: "#F5F5F7", // Warm off-white
-  surface: "#FFFFFF", // White
-  surfaceHighlight: "#F0F0F2", // Subtle highlight
-  border: "#E8E8EC", // Softer border
+  background: "#F8F9FA", // Warm neutral off-white
+  surface: "#FFFFFF",
+  surfaceHighlight: "#F1F3F5",
+  border: "rgba(0, 0, 0, 0.08)",
 
-  primary: "#18181B", // Black accent in light mode
-  secondary: "#71717A", // Zinc 500 — softer than 600
-  accent: "#3F3F46", // Zinc 700
+  primary: "#1A1A1A", // Near-black
+  secondary: "#6B7280",
+  accent: "#3B82F6", // Calm blue
 
   text: {
-    primary: "#09090B", // Zinc 950
-    secondary: "#71717A", // Zinc 500
-    muted: "#A1A1AA", // Zinc 400
-    disabled: "#D4D4D8", // Zinc 300
-    inverse: "#FFFFFF", // White text
+    primary: "#1A1A1A",
+    secondary: "#6B7280",
+    muted: "#9CA3AF",
+    disabled: "#D1D5DB",
+    inverse: "#FFFFFF",
   },
 
   status: commonStatus,
@@ -46,29 +46,29 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#141416", // Softer dark, not pure black
-  surface: "#1C1C1E", // Card surface
-  surfaceHighlight: "#252528",
-  border: "#323236", // Visible but subtle
+  background: "#111111", // True dark charcoal
+  surface: "#1A1A1A", // Neutral dark surface
+  surfaceHighlight: "#222222",
+  border: "rgba(255, 255, 255, 0.08)",
 
-  primary: "#FAFAFA", // White accent
-  secondary: "#8E8E93", // iOS gray
-  accent: "#B0B0B5", // Lighter neutral
+  primary: "#F5F5F5", // Clean white primary
+  secondary: "#9CA3AF",
+  accent: "#60A5FA", // Soft blue accent
 
   text: {
-    primary: "#F0F0F2", // Warm white
-    secondary: "#98989D", // Softer gray
-    muted: "#6C6C70", // Mid gray
-    disabled: "#48484A", // Dim
-    inverse: "#141416",
+    primary: "#F5F5F5",
+    secondary: "#9CA3AF",
+    muted: "#6B7280",
+    disabled: "#4B5563",
+    inverse: "#111111",
   },
 
   status: {
     ...commonStatus,
     error: "#EF4444",
-    success: "#30D158", // iOS green
-    warning: "#FFD60A", // iOS yellow
-    info: "#0A84FF", // iOS blue
+    success: "#10B981",
+    warning: "#F59E0B",
+    info: "#3B82F6",
   },
   platforms: darkPlatformColors,
 

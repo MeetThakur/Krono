@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+
 import React, { useEffect } from "react";
 import {
     Linking,
@@ -15,8 +16,8 @@ import {
     Skeleton,
 } from "../../src/components/common/SkeletonLoader";
 import { ContestList } from "../../src/components/contests/ContestList";
-import { ProfileCarousel } from "../../src/components/profile/ProfileCarousel";
 import { CumulativeStats } from "../../src/components/profile/CumulativeStats";
+import { ProfileCarousel } from "../../src/components/profile/ProfileCarousel";
 import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
@@ -25,10 +26,10 @@ import { useProfileStore } from "../../src/stores/useProfileStore";
 const getDifficultyColor = (difficulty?: string): string => {
   const d = (difficulty || "").toLowerCase();
   if (d.includes("easy") || d.includes("basic") || d.includes("school"))
-    return "#30D158";
-  if (d.includes("medium") || d.includes("intermediate")) return "#FFD60A";
-  if (d.includes("hard") || d.includes("advanced")) return "#FF453A";
-  return "#8E8E93";
+    return "#10B981"; // Vibrant green
+  if (d.includes("medium") || d.includes("intermediate")) return "#F59E0B"; // Vibrant amber
+  if (d.includes("hard") || d.includes("advanced")) return "#EF4444"; // Vibrant red
+  return "#6B7280";
 };
 
 
@@ -101,11 +102,16 @@ export default function DashboardScreen() {
     return start <= sevenDaysFromNow;
   });
 
+
+
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
-          <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
+          <View>
+            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>TODAY</Text>
+            <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
+          </View>
           <MaterialCommunityIcons
             name="cog-outline"
             size={22}
@@ -118,17 +124,24 @@ export default function DashboardScreen() {
     );
   }
 
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Minimal header */}
         <View style={styles.header}>
-          <Text style={[styles.logo, { color: colors.onSurface }]}>
-            Krono
-          </Text>
+          <View>
+            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
+              {currentDate}
+            </Text>
+            <Text style={[styles.logo, { color: colors.onSurface }]}>
+              Krono
+            </Text>
+          </View>
           <MaterialCommunityIcons
             name="cog-outline"
-            size={22}
+            size={24}
             color={colors.onSurfaceVariant}
             onPress={() => router.push("/settings")}
           />
@@ -163,9 +176,12 @@ export default function DashboardScreen() {
                   styles.connectCard,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.05)",
+                    borderColor: colors.border,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: dark ? 0.04 : 0.02,
+                    shadowRadius: 4,
+                    elevation: 2,
                   },
                 ]}
                 onTouchEnd={() => router.push("/settings")}
@@ -178,7 +194,7 @@ export default function DashboardScreen() {
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text
                     style={{
-                      fontWeight: "600",
+                      fontWeight: "700",
                       fontSize: 14,
                       color: colors.onSurface,
                     }}
@@ -221,9 +237,12 @@ export default function DashboardScreen() {
                   styles.potdCard,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: dark
-                      ? "rgba(255,255,255,0.06)"
-                      : "rgba(0,0,0,0.05)",
+                    borderColor: colors.border,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: dark ? 0.04 : 0.02,
+                    shadowRadius: 4,
+                    elevation: 2,
                   },
                 ]}
                 onTouchEnd={() =>
@@ -247,7 +266,7 @@ export default function DashboardScreen() {
                       <Text
                         numberOfLines={1}
                         style={{
-                          fontWeight: "600",
+                          fontWeight: "700",
                           fontSize: 14,
                           color: colors.onSurface,
                         }}
@@ -259,7 +278,7 @@ export default function DashboardScreen() {
                           fontSize: 11,
                           color: colors.onSurfaceVariant,
                           marginTop: 3,
-                          fontWeight: "500",
+                          fontWeight: "600",
                         }}
                       >
                         LeetCode
@@ -278,7 +297,7 @@ export default function DashboardScreen() {
                         <Text
                           style={{
                             color: getDifficultyColor(leetcode.difficulty),
-                            fontWeight: "600",
+                            fontWeight: "700",
                             fontSize: 11,
                           }}
                         >
@@ -371,6 +390,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     fontSize: 28,
     letterSpacing: -1,
+  },
+  greeting: {
+    opacity: 0.8,
   },
   content: {
     paddingBottom: 100,
