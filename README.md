@@ -23,10 +23,11 @@
 ## 📱 Screenshots
 
 <p align="center">
-  <img src="assets/images/dashboard.jpg" width="200" alt="Dashboard" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/schedule.jpg" width="200" alt="Contest Schedule" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/profile1.jpg" width="200" alt="Profile Overview" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/profile2.jpg" width="200" alt="Contest History" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/dashboard.jpg" width="180" alt="Dashboard" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/schedule.jpg" width="180" alt="Contest Schedule" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/profile1.jpg" width="180" alt="Profile Overview" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/profile2.jpg" width="180" alt="Contest History" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/rivals.jpg" width="180" alt="Rivals Leaderboard" style="margin: 5px; border-radius: 12px;" />
 </p>
 
 ---
