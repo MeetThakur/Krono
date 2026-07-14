@@ -24,10 +24,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Generate .expo/types & expo-env.d.ts so typed routes resolve correctly
-      - name: Generate Expo types
-        run: npx expo customize tsconfig.json --force
-
       - name: TypeScript check
         run: npx tsc --noEmit
 
