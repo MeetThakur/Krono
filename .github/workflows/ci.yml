@@ -56,14 +56,11 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Generate Native Android Directory
-        run: npx expo prebuild --platform android --no-install
-
       - name: Build Android Release APK (arm64-v8a)
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
