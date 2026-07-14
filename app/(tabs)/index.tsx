@@ -176,7 +176,7 @@ export default function DashboardScreen() {
                   styles.connectCard,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    borderColor: colors.outline,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: dark ? 0.04 : 0.02,
@@ -237,7 +237,7 @@ export default function DashboardScreen() {
                   styles.potdCard,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    borderColor: colors.outline,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: dark ? 0.04 : 0.02,

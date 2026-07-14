@@ -40,7 +40,7 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
           styles.card,
           {
             backgroundColor: colors.surface,
-            borderColor: colors.border,
+            borderColor: colors.outline,
           },
         ]}
       >
@@ -51,7 +51,7 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
                 style={[
                   styles.divider,
                   {
-                    backgroundColor: colors.border,
+                    backgroundColor: colors.outline,
                   },
                 ]}
               />

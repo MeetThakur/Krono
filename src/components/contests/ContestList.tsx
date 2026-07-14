@@ -70,7 +70,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                 styles.compactRow,
                 {
                   backgroundColor: colors.surface,
-                  borderColor: colors.border,
+                  borderColor: colors.outline,
                   opacity: pressed ? 0.85 : 1,
                 },
               ]}
@@ -152,7 +152,7 @@ export const ContestList: React.FC<ContestListProps> = ({
               styles.card,
               {
                 backgroundColor: colors.surface,
-                borderColor: colors.border,
+                borderColor: colors.outline,
               },
             ]}
           >
@@ -224,7 +224,7 @@ export const ContestList: React.FC<ContestListProps> = ({
               </View>
 
               {/* Actions */}
-              <View style={[styles.actionBar, { borderTopColor: colors.border }]}>
+              <View style={[styles.actionBar, { borderTopColor: colors.outline }]}>
                 <Pressable
                   style={({ pressed }) => [
                     styles.registerBtn,

@@ -1,71 +1,81 @@
-name: Krono CI/CD Build Pipeline
+name: Krono CI/CD
 
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [master, main]
   pull_request:
-    branches:
-      - master
-      - main
+    branches: [master, main]
 
 jobs:
-  lint-and-typecheck:
-    name: Code Quality & Type Check
+  # ─── Job 1: TypeScript type check ────────────────────────────────────────────
+  typecheck:
+    name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-      - name: TypeScript Compile Check
+      # Generate .expo/types & expo-env.d.ts so typed routes resolve correctly
+      - name: Generate Expo types
+        run: npx expo customize tsconfig.json --force
+
+      - name: TypeScript check
         run: npx tsc --noEmit
 
+  # ─── Job 2: Build arm64-v8a release APK ──────────────────────────────────────
   build-android:
-    name: Build Android Release APK
-    needs: lint-and-typecheck
+    name: Build Android APK (arm64-v8a)
+    needs: typecheck
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java JDK 17
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      - name: Install Dependencies
-        run: npm install
+      # node_modules must exist before Gradle runs because settings.gradle
+      # calls `node --print require.resolve(...)` to locate native packages.
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Setup Gradle
+      - name: Cache Gradle packages
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
 
-      - name: Build Android Release APK (arm64-v8a)
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
-      - name: Upload Release APK
+      - name: Build release APK (arm64-v8a)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        env:
+          # architecture is already locked to arm64-v8a in gradle.properties
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: krono-release-apk
+          name: krono-arm64-v8a-release
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7

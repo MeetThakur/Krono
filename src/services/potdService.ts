@@ -54,7 +54,7 @@ export const potdService = {
             platform: 'geeksforgeeks',
             title: "Solve Today's Problem",
             url: "https://practice.geeksforgeeks.org/problem-of-the-day",
-            difficulty: 'Click to Open',
+            difficulty: 'Click to Solve',
             date: new Date().toISOString().split('T')[0],
         };
     }

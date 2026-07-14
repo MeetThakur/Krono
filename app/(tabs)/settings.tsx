@@ -286,7 +286,7 @@ export default function SettingsScreen() {
               onChangeText={setUsername}
               autoCapitalize="none"
               autoCorrect={false}
-              outlineColor={colors.border}
+              outlineColor={colors.outline}
               activeOutlineColor={colors.primary}
               style={{ backgroundColor: colors.surface }}
             />
