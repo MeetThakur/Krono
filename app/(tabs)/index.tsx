@@ -409,14 +409,14 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   section: {
-    marginBottom: 36,
+    marginBottom: 44,
   },
   sectionLabel: {
-    fontWeight: "600",
-    letterSpacing: 1,
-    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    fontSize: 12,
     paddingHorizontal: 24,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: "row",

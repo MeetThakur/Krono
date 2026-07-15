@@ -22,12 +22,12 @@ const commonStatus = {
 };
 
 export const lightColors = {
-  background: "#F8F9FA", // Warm neutral off-white
+  background: "#F4F4F5", // Crisp off-white
   surface: "#FFFFFF",
-  surfaceHighlight: "#F1F3F5",
-  border: "rgba(0, 0, 0, 0.08)",
+  surfaceHighlight: "#F4F4F5",
+  border: "rgba(0, 0, 0, 0.12)",
 
-  primary: "#1A1A1A", // Near-black
+  primary: "#09090B", // High contrast black
   secondary: "#6B7280",
   accent: "#3B82F6", // Calm blue
 
@@ -46,12 +46,12 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#111111", // True dark charcoal
-  surface: "#1A1A1A", // Neutral dark surface
-  surfaceHighlight: "#222222",
-  border: "rgba(255, 255, 255, 0.08)",
+  background: "#000000", // True OLED black
+  surface: "#121212", // Clean dark surface
+  surfaceHighlight: "#1E1E1E",
+  border: "rgba(255, 255, 255, 0.15)", // Sharper border
 
-  primary: "#F5F5F5", // Clean white primary
+  primary: "#FAFAFA", // Crisp white primary
   secondary: "#9CA3AF",
   accent: "#60A5FA", // Soft blue accent
 

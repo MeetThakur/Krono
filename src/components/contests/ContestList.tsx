@@ -74,6 +74,8 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                 styles.compactRow,
                 {
                   backgroundColor: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  borderLeftWidth: 3,
+                  borderLeftColor: platformColor,
                   opacity: pressed ? 0.95 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }]
                 },
@@ -157,6 +159,8 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.outline,
+                borderLeftWidth: 4,
+                borderLeftColor: platformColor,
                 opacity: pressed ? 0.95 : 1,
                 transform: [{ scale: pressed ? 0.98 : 1 }]
               },
