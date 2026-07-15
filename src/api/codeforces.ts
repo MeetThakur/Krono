@@ -1,4 +1,10 @@
 import axios from 'axios';
+import {
+  CodeforcesUserInfo,
+  CodeforcesUserRating,
+  CodeforcesSubmission,
+  CodeforcesContest,
+} from '../types/api';
 
 const BASE_URL = 'https://codeforces.com/api';
 
@@ -7,7 +13,7 @@ export const codeforcesApi = {
    * Returns information about one or more users.
    * @param handles Semicolon-separated list of handles
    */
-  getUserInfo: async (handles: string) => {
+  getUserInfo: async (handles: string): Promise<CodeforcesUserInfo[]> => {
     try {
       const response = await axios.get(`${BASE_URL}/user.info`, {
         params: { handles },
@@ -25,7 +31,7 @@ export const codeforcesApi = {
   /**
    * Returns rating history of the specified user.
    */
-  getUserRating: async (handle: string) => {
+  getUserRating: async (handle: string): Promise<CodeforcesUserRating[]> => {
     try {
       const response = await axios.get(`${BASE_URL}/user.rating`, {
         params: { handle },
@@ -44,7 +50,7 @@ export const codeforcesApi = {
    * Returns submissions of specified user.
    * count can be up to 10000.
    */
-  getUserSubmissions: async (handle: string, count: number = 50) => {
+  getUserSubmissions: async (handle: string, count: number = 50): Promise<CodeforcesSubmission[]> => {
     try {
       const response = await axios.get(`${BASE_URL}/user.status`, {
         params: { handle, from: 1, count },
@@ -62,7 +68,7 @@ export const codeforcesApi = {
   /**
    * Returns information about all available contests.
    */
-  getContestList: async (gym: boolean = false) => {
+  getContestList: async (gym: boolean = false): Promise<CodeforcesContest[]> => {
     try {
       const response = await axios.get(`${BASE_URL}/contest.list`, {
         params: { gym },

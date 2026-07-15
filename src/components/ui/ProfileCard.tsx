@@ -63,18 +63,28 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
           {/* Card Details */}
           <View style={{ flex: 1, justifyContent: "space-between" }}>
-            {/* Platform label */}
-            <Text
-              style={{
-                color: textMuted,
-                fontWeight: "700",
-                fontSize: 10,
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-              }}
-            >
-              {platformConfig?.name || profile.platformId}
-            </Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+              {/* Platform label */}
+              <Text
+                style={{
+                  color: textMuted,
+                  fontWeight: "700",
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  textTransform: "uppercase",
+                }}
+              >
+                {platformConfig?.name || profile.platformId}
+              </Text>
+              {profile.isStale && (
+                <MaterialCommunityIcons 
+                  name="cloud-off-outline" 
+                  size={16} 
+                  color={textMuted} 
+                  style={{ opacity: 0.8 }}
+                />
+              )}
+            </View>
 
             {/* Rating hero */}
             <View style={styles.heroContainer}>

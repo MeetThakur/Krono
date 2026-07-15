@@ -71,7 +71,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: krono-arm64-v8a-release
+          name: krono-arm64-v8a-release-${{ github.sha }}
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7

@@ -15,6 +15,7 @@ import {
     normalizeLeetCodeContest,
 } from "../services/dataNormalizer";
 import { Contest } from "../types/contest";
+import { getErrorMessage } from "../utils/errors";
 
 interface ContestState {
   upcomingContests: Contest[];
@@ -114,10 +115,10 @@ export const useContestStore = create<ContestState>((set, get) => ({
       } catch (e) {
         console.warn("⚠️ Failed to schedule notifications:", e);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to sync contests:", error);
       set({
-        error: error.message || "Failed to sync contests",
+        error: getErrorMessage(error) || "Failed to sync contests",
         isLoading: false,
       });
     }

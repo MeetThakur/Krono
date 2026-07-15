@@ -1,4 +1,5 @@
 import axios from "axios";
+import { CodeChefContest, CodeChefUserInfo } from "../types/api";
 
 const BASE_URL = "https://www.codechef.com";
 
@@ -7,7 +8,7 @@ export const codechefApi = {
    * Returns information about upcoming contests.
    * Uses CodeChef's internal API.
    */
-  getContestList: async () => {
+  getContestList: async (): Promise<CodeChefContest[]> => {
     try {
       const response = await axios.get(`${BASE_URL}/api/list/contests/all`, {
         params: {
@@ -40,7 +41,7 @@ export const codechefApi = {
    * Since there is no official public API, this scrapes the user profile page.
    * Fallback to basic info if scraping is blocked.
    */
-  getUserInfo: async (handle: string) => {
+  getUserInfo: async (handle: string): Promise<CodeChefUserInfo> => {
     try {
       // NOTE: This is a scraper. It may break if CodeChef changes their UI.
       // We rely on simple string matching (Regex) to avoid heavy DOM parsers.

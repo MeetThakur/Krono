@@ -51,6 +51,7 @@ export default function DashboardScreen() {
     isLoading: isContestLoading,
   } = useContestStore();
   const { leetcode, refreshPotd, isLoading: isPotdLoading } = usePotdStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const initProfiles = async () => {
@@ -63,9 +64,13 @@ export default function DashboardScreen() {
   }, []);
 
   const handleSync = async () => {
-    refreshProfiles(true);
-    refreshPotd();
-    syncContests();
+    setIsRefreshing(true);
+    await Promise.all([
+      refreshProfiles(true),
+      refreshPotd(),
+      syncContests()
+    ]);
+    setIsRefreshing(false);
   };
 
   const isLoading = isProfileLoading || isContestLoading || isPotdLoading;
@@ -152,7 +157,7 @@ export default function DashboardScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading}
+              refreshing={isRefreshing}
               onRefresh={handleSync}
               colors={[colors.primary]}
               tintColor={colors.primary}

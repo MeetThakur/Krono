@@ -28,7 +28,18 @@ export default function RivalsScreen() {
   const [addingPlatform, setAddingPlatform] = useState<PlatformId>("codeforces");
 
   const { profiles: myProfiles } = useProfileStore();
-  const { rivals, addRival, removeRival, refreshRivals, isLoading, error } = useRivalsStore();
+  const { rivals, loadRivals, addRival, removeRival, refreshRivals, isLoading, error } = useRivalsStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshRivals();
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    loadRivals();
+  }, []);
 
   useEffect(() => {
     if (error) {
@@ -90,7 +101,7 @@ export default function RivalsScreen() {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refreshRivals} tintColor={colors.primary} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {activePlatform === "all" ? (

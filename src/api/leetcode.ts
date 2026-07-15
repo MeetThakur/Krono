@@ -1,4 +1,10 @@
 import axios from 'axios';
+import {
+  LeetCodeUserProfile,
+  LeetCodeContestRanking,
+  LeetCodeContestHistory,
+  LeetCodeUpcomingContest,
+} from '../types/api';
 
 const LEETCODE_GRAPHQL_URL = 'https://leetcode.com/graphql';
 
@@ -61,7 +67,7 @@ export const leetcodeApi = {
   /**
    * Get user profile and submission stats
    */
-  getUserProfile: async (username: string) => {
+  getUserProfile: async (username: string): Promise<LeetCodeUserProfile> => {
     try {
       const response = await axios.post(
         LEETCODE_GRAPHQL_URL,
@@ -90,7 +96,7 @@ export const leetcodeApi = {
   /**
    * Get user contest ranking and history
    */
-  getUserContestRanking: async (username: string) => {
+  getUserContestRanking: async (username: string): Promise<{ ranking: LeetCodeContestRanking; history: LeetCodeContestHistory[] }> => {
     try {
       const response = await axios.post(
         LEETCODE_GRAPHQL_URL,
@@ -122,7 +128,7 @@ export const leetcodeApi = {
   /**
    * Get upcoming contests (top 2)
    */
-  getUpcomingContests: async () => {
+  getUpcomingContests: async (): Promise<LeetCodeUpcomingContest[]> => {
     try {
       const response = await axios.post(
         LEETCODE_GRAPHQL_URL,

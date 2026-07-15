@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AtCoderContest, AtCoderUserInfo } from '../types/api';
 
 const KENKOOO_BASE_URL = 'https://kenkoooo.com/atcoder/atcoder-api';
 const ATCODER_BASE_URL = 'https://atcoder.jp';
@@ -8,7 +9,7 @@ export const atcoderApi = {
    * Returns information about upcoming contests.
    * Uses Kenkoooo's resources/contests.json
    */
-  getContestList: async () => {
+  getContestList: async (): Promise<AtCoderContest[]> => {
     let upcoming: any[] = [];
     const nowSeconds = Math.floor(Date.now() / 1000);
 
@@ -92,7 +93,7 @@ export const atcoderApi = {
    * Returns information about a user.
    * Combines data from AtCoder's hidden history API and Kenkoooo's V2 user info API.
    */
-  getUserInfo: async (handle: string) => {
+  getUserInfo: async (handle: string): Promise<AtCoderUserInfo> => {
     try {
       // Fetch in parallel: History, Kenkoooo, AND Official Profile Page (for Rank)
       const [historyResponse, kenkooooResponse, profileResponse] = await Promise.allSettled([

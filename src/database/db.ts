@@ -57,6 +57,32 @@ const initDatabase = async (database: SQLite.SQLiteDatabase) => {
     }
 
     await database.execAsync(`
+      CREATE TABLE IF NOT EXISTS rivals (
+        id TEXT PRIMARY KEY,
+        platformId TEXT NOT NULL,
+        username TEXT NOT NULL,
+        displayName TEXT,
+        avatar TEXT,
+        rating INTEGER,
+        maxRating INTEGER,
+        rank TEXT,
+        problemsSolved INTEGER DEFAULT 0,
+        totalSubmissions INTEGER DEFAULT 0,
+        totalContests INTEGER DEFAULT 0,
+        badges TEXT,
+        lastUpdated INTEGER,
+        isStale INTEGER DEFAULT 0
+      );
+    `);
+
+    // Migration for adding totalContests to rivals
+    try {
+      await database.execAsync('ALTER TABLE rivals ADD COLUMN totalContests INTEGER DEFAULT 0;');
+    } catch (e) {
+      // Column likely already exists
+    }
+
+    await database.execAsync(`
       CREATE TABLE IF NOT EXISTS contests (
         id TEXT PRIMARY KEY,
         externalId TEXT,

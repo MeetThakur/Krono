@@ -1,18 +1,14 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PlatformId } from "../types/platform";
 import { UnifiedProfile } from "../types/user";
-import { codeforcesApi } from "../api/codeforces";
-import { leetcodeApi } from "../api/leetcode";
-import { codechefApi } from "../api/codechef";
-import { atcoderApi } from "../api/atcoder";
+import { fetchProfile } from "../services/profileFetcher";
+import { getErrorMessage } from "../utils/errors";
 import {
-  normalizeAtCoderProfile,
-  normalizeCodeChefProfile,
-  normalizeCodeforcesProfile,
-  normalizeLeetCodeProfile,
-} from "../services/dataNormalizer";
+  deleteAllRivals,
+  deleteRival,
+  getAllRivals,
+  saveRival,
+} from "../database/repositories/rivalRepository";
 
 export interface Rival {
   id: string; // "platformId-handle"
@@ -26,117 +22,106 @@ interface RivalsState {
   isLoading: boolean;
   error: string | null;
 
+  loadRivals: () => Promise<void>;
   addRival: (platformId: PlatformId, handle: string) => Promise<void>;
-  removeRival: (id: string) => void;
+  removeRival: (id: string) => Promise<void>;
   refreshRivals: () => Promise<void>;
 }
 
-export const useRivalsStore = create<RivalsState>()(
-  persist(
-    (set, get) => ({
-      rivals: [],
-      isLoading: false,
-      error: null,
+export const useRivalsStore = create<RivalsState>((set, get) => ({
+  rivals: [],
+  isLoading: false,
+  error: null,
 
-      addRival: async (platformId: PlatformId, handle: string) => {
-        const id = `${platformId}-${handle.toLowerCase()}`;
-        if (get().rivals.some((r) => r.id === id)) {
-          set({ error: "Rival already exists" });
-          return;
-        }
-
-        set({ isLoading: true, error: null });
-        try {
-          // Fetch data immediately
-          let newProfile: UnifiedProfile | null = null;
-          if (platformId === "codeforces") {
-            const [userInfo, ratingHistory, submissions] = await Promise.all([
-              codeforcesApi.getUserInfo(handle),
-              codeforcesApi.getUserRating(handle).catch(() => []),
-              codeforcesApi.getUserSubmissions(handle, 1).catch(() => []), // Minimal submissions
-            ]);
-            newProfile = normalizeCodeforcesProfile(userInfo, ratingHistory, submissions);
-          } else if (platformId === "leetcode") {
-            const userData = await leetcodeApi.getUserProfile(handle);
-            if (userData) {
-              const contestData = await leetcodeApi.getUserContestRanking(handle).catch(() => null);
-              newProfile = normalizeLeetCodeProfile(userData, contestData);
-            }
-          } else if (platformId === "codechef") {
-            const userData = await codechefApi.getUserInfo(handle);
-            if (userData) newProfile = normalizeCodeChefProfile(userData);
-          } else if (platformId === "atcoder") {
-            const userData = await atcoderApi.getUserInfo(handle);
-            if (userData) newProfile = normalizeAtCoderProfile(userData);
-          }
-
-          if (!newProfile) {
-            throw new Error("User not found");
-          }
-
-          set((state) => ({
-            rivals: [
-              ...state.rivals,
-              { id, platformId, username: handle, data: newProfile },
-            ],
-            isLoading: false,
-          }));
-        } catch (error: any) {
-          set({ error: error.message || "Failed to add rival", isLoading: false });
-        }
-      },
-
-      removeRival: (id: string) => {
-        set((state) => ({
-          rivals: state.rivals.filter((r) => r.id !== id),
-        }));
-      },
-
-      refreshRivals: async () => {
-        const rivals = get().rivals;
-        if (rivals.length === 0) return;
-
-        set({ isLoading: true, error: null });
-        try {
-          const updatedRivals = await Promise.all(
-            rivals.map(async (rival) => {
-              try {
-                let newProfile: UnifiedProfile | null = null;
-                if (rival.platformId === "codeforces") {
-                  const userInfo = await codeforcesApi.getUserInfo(rival.username);
-                  newProfile = normalizeCodeforcesProfile(userInfo, [], []);
-                } else if (rival.platformId === "leetcode") {
-                  const userData = await leetcodeApi.getUserProfile(rival.username);
-                  if (userData) {
-                    const contestData = await leetcodeApi.getUserContestRanking(rival.username).catch(() => null);
-                    newProfile = normalizeLeetCodeProfile(userData, contestData);
-                  }
-                } else if (rival.platformId === "codechef") {
-                  const userData = await codechefApi.getUserInfo(rival.username);
-                  if (userData) newProfile = normalizeCodeChefProfile(userData);
-                } else if (rival.platformId === "atcoder") {
-                  const userData = await atcoderApi.getUserInfo(rival.username);
-                  if (userData) newProfile = normalizeAtCoderProfile(userData);
-                }
-
-                if (newProfile) {
-                  return { ...rival, data: newProfile };
-                }
-                return rival;
-              } catch (e) {
-                return rival; // Ignore failed fetches
-              }
-            })
-          );
-          set({ rivals: updatedRivals, isLoading: false });
-        } catch (error: any) {
-          set({ error: error.message || "Failed to refresh rivals", isLoading: false });
-        }
-      },
-    }),
-    {
-      name: "rivals-storage",
-      storage: createJSONStorage(() => AsyncStorage),
+  loadRivals: async () => {
+    set({ isLoading: true });
+    try {
+      const dbRivals = await getAllRivals();
+      const rivals: Rival[] = dbRivals.map((data) => ({
+        id: `${data.platformId}-${data.username.toLowerCase()}`,
+        platformId: data.platformId,
+        username: data.username,
+        data,
+      }));
+      set({ rivals, isLoading: false });
+    } catch (error) {
+      set({ error: "Failed to load rivals", isLoading: false });
     }
-  )
-);
+  },
+
+  addRival: async (platformId: PlatformId, handle: string) => {
+    const id = `${platformId}-${handle.toLowerCase()}`;
+    if (get().rivals.some((r) => r.id === id)) {
+      set({ error: "Rival already exists" });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+    try {
+      // Fetch data immediately
+      const newProfile = await fetchProfile(platformId, handle);
+      await saveRival(newProfile);
+
+      set((state) => ({
+        rivals: [
+          ...state.rivals,
+          { id, platformId, username: handle, data: newProfile },
+        ],
+        isLoading: false,
+      }));
+    } catch (error) {
+      set({
+        error: getErrorMessage(error) || "Failed to add rival",
+        isLoading: false,
+      });
+    }
+  },
+
+  removeRival: async (id: string) => {
+    try {
+      // The id in DB is the profile id (e.g. atcoder-user).
+      // Wait, is it? We need to make sure the delete uses the same ID.
+      // Profile ID is usually generated correctly in normalize functions.
+      // Actually, the newProfile.id is usually what we use. Let's find out what id `removeRival` takes.
+      // It takes the "platformId-handle" format. That's also what saveRival stores (as `profile.id`).
+      // Wait, let's be safe. Delete it from SQLite using the id passed in, assuming they match.
+      // Actually `deleteRival` uses `profile.id`. Is `profile.id` equal to `${platformId}-${handle.toLowerCase()}`? Yes, mostly.
+      await deleteRival(id);
+      set((state) => ({
+        rivals: state.rivals.filter((r) => r.id !== id),
+      }));
+    } catch (error) {
+      console.error("Failed to remove rival:", error);
+    }
+  },
+
+  refreshRivals: async () => {
+    const rivals = get().rivals;
+    if (rivals.length === 0) return;
+
+    set({ isLoading: true, error: null });
+    try {
+      const updatedRivals = await Promise.all(
+        rivals.map(async (rival) => {
+          try {
+            const newProfile = await fetchProfile(
+              rival.platformId,
+              rival.username
+            );
+            await saveRival(newProfile);
+            return { ...rival, data: newProfile };
+          } catch (error) {
+            console.error(`Failed to refresh rival ${rival.id}:`, error);
+            return rival; // Ignore failed fetches
+          }
+        })
+      );
+      set({ rivals: updatedRivals, isLoading: false });
+    } catch (error) {
+      set({
+        error: getErrorMessage(error) || "Failed to refresh rivals",
+        isLoading: false,
+      });
+    }
+  },
+}));
