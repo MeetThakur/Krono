@@ -25,6 +25,7 @@ import {
 import { useOnboardingStore } from "../src/stores/useOnboardingStore";
 import { useThemeStore } from "../src/stores/useThemeStore";
 import { getTheme } from "../src/theme/md3-theme";
+import { Toast } from "../src/components/ui/Toast";
 
 setupNotificationHandler();
 
@@ -103,6 +104,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" options={{ animation: "fade" }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <Toast />
     </PaperProvider>
   );
 }

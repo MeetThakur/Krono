@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 
 import React, { useEffect, useState } from "react";
 import {
@@ -237,22 +238,26 @@ export default function DashboardScreen() {
               DAILY CHALLENGE
             </Text>
             <View style={{ paddingHorizontal: 20 }}>
-              <View
-                style={[
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (leetcode?.url) Linking.openURL(leetcode.url);
+                }}
+                style={({ pressed }) => [
                   styles.potdCard,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: colors.outline,
-                    shadowColor: "#000",
+                    borderColor: dark ? "#FFA11630" : "#FFA11650",
+                    borderWidth: 1.5,
+                    shadowColor: "#FFA116",
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: dark ? 0.04 : 0.02,
-                    shadowRadius: 4,
-                    elevation: 2,
+                    shadowOpacity: dark ? 0.15 : 0.08,
+                    shadowRadius: 12,
+                    elevation: 4,
+                    opacity: pressed ? 0.95 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }]
                   },
                 ]}
-                onTouchEnd={() =>
-                  leetcode?.url && Linking.openURL(leetcode.url)
-                }
               >
                 {isPotdLoading && !leetcode ? (
                   <View style={{ gap: 8, padding: 16 }}>
@@ -318,7 +323,7 @@ export default function DashboardScreen() {
                     />
                   </View>
                 )}
-              </View>
+              </Pressable>
             </View>
           </View>
 

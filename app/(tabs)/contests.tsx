@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format, isSameDay, isTomorrow } from "date-fns";
+import * as Haptics from "expo-haptics";
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -121,15 +122,24 @@ export default function ContestsScreen() {
     }
 
     return (
-      <Surface
-        style={[
-          styles.card,
-          {
-            backgroundColor: colors.surface,
-          },
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          if (item.url) Linking.openURL(item.url);
+        }}
+        style={({ pressed }) => [
+          { opacity: pressed ? 0.95 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
         ]}
-        elevation={0}
       >
+        <Surface
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+            },
+          ]}
+          elevation={0}
+        >
         <View style={styles.cardHeader}>
           <View style={[styles.platformBadge, { backgroundColor: platformColor + "15" }]}>
             <MaterialCommunityIcons
@@ -229,7 +239,8 @@ export default function ContestsScreen() {
             </Pressable>
           </View>
         </View>
-      </Surface>
+        </Surface>
+      </Pressable>
     );
   };
 

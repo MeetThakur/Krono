@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import {
     Alert,
@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlatformSelector } from "../../src/components/contests/PlatformSelector";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 import { useRivalsStore } from "../../src/stores/useRivalsStore";
+import { useToastStore } from "../../src/stores/useToastStore";
 import { PlatformId, PLATFORMS } from "../../src/types/platform";
 
 export default function RivalsScreen() {
@@ -29,6 +30,7 @@ export default function RivalsScreen() {
 
   const { profiles: myProfiles } = useProfileStore();
   const { rivals, loadRivals, addRival, removeRival, refreshRivals, isLoading, error } = useRivalsStore();
+  const { showToast } = useToastStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -43,7 +45,7 @@ export default function RivalsScreen() {
 
   useEffect(() => {
     if (error) {
-      Alert.alert("Error", error);
+      showToast(error, "error");
     }
   }, [error]);
 
@@ -53,6 +55,7 @@ export default function RivalsScreen() {
     if (!useRivalsStore.getState().error) {
       setAddModalVisible(false);
       setNewRivalHandle("");
+      showToast(`Added @${newRivalHandle.trim()}`, "success");
     }
   };
 
@@ -106,12 +109,14 @@ export default function RivalsScreen() {
       >
         {activePlatform === "all" ? (
           <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="trophy-outline" size={64} color={colors.onSurfaceVariant} style={{ opacity: 0.5, marginBottom: 16 }} />
             <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
               Please select a specific platform to view the leaderboard.
             </Text>
           </View>
         ) : leaderboard.length === 0 ? (
           <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="account-group-outline" size={64} color={colors.onSurfaceVariant} style={{ opacity: 0.5, marginBottom: 16 }} />
             <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
               No profiles found for {currentPlatformConfig?.name}. Add yourself or a rival!
             </Text>

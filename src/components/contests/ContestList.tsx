@@ -66,18 +66,18 @@ export const ContestList: React.FC<ContestListProps> = ({
           return (
             <Pressable
               key={contest.id}
-              style={({ pressed }) => [
-                styles.compactRow,
-                {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.outline,
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 if (contest.url) Linking.openURL(contest.url);
               }}
+              style={({ pressed }) => [
+                styles.compactRow,
+                {
+                  backgroundColor: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                  opacity: pressed ? 0.95 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }]
+                },
+              ]}
             >
               <View
                 style={[styles.platformDot, { backgroundColor: platformColor }]}
@@ -146,13 +146,19 @@ export const ContestList: React.FC<ContestListProps> = ({
             : `${minutes}m`;
 
         return (
-          <View
+          <Pressable
             key={contest.id}
-            style={[
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              if (contest.url) Linking.openURL(contest.url);
+            }}
+            style={({ pressed }) => [
               styles.card,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.outline,
+                opacity: pressed ? 0.95 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }]
               },
             ]}
           >
@@ -276,7 +282,7 @@ export const ContestList: React.FC<ContestListProps> = ({
                 </Pressable>
               </View>
             </View>
-          </View>
+          </Pressable>
         );
       })}
     </View>
