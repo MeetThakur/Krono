@@ -83,10 +83,6 @@ export default function RootLayout() {
   useEffect(() => {
     // Make sure the bottom navigation bar and root background matches the theme
     SystemUI.setBackgroundColorAsync(activeTheme.colors.background);
-    if (Platform.OS === "android") {
-      NavigationBar.setBackgroundColorAsync(activeTheme.colors.background);
-      NavigationBar.setButtonStyleAsync(isDarkMode ? "light" : "dark");
-    }
   }, [activeTheme, isDarkMode]);
 
   if (!fontsLoaded || isLoading) {
@@ -95,10 +91,7 @@ export default function RootLayout() {
 
   return (
     <PaperProvider theme={activeTheme}>
-      <StatusBar
-        style={isDarkMode ? "light" : "dark"}
-        backgroundColor={activeTheme.colors.background}
-      />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="onboarding" options={{ animation: "fade" }} />

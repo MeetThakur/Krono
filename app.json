@@ -21,7 +21,10 @@
       "supportsTablet": true,
       "buildNumber": "1.5.0",
       "infoPlist": {
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -54,7 +57,9 @@
           "sounds": []
         }
       ],
-      ["expo-background-fetch"],
+      [
+        "expo-background-fetch"
+      ],
       [
         "expo-build-properties",
         {
@@ -64,7 +69,13 @@
             ]
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser",
+      "expo-sharing",
+      "expo-splash-screen",
+      "expo-sqlite",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

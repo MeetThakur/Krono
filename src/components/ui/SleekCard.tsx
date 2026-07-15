@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   shadowLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: 16, // Squircle-like
     top: 4,
     left: 4,
