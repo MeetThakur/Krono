@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-release:
     name: Build & Release Android APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Pinned to x86_64 — hermesc binary is not ARM64 compatible
     permissions:
       contents: write
     steps:
@@ -29,6 +29,17 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Make hermesc executable
+        run: |
+          HERMESC="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
+          if [ -f "$HERMESC" ]; then
+            chmod +x "$HERMESC"
+            echo "hermesc found and made executable"
+          else
+            echo "hermesc not found at $HERMESC — listing available:"
+            ls node_modules/react-native/sdks/hermesc/ || true
+          fi
 
       - name: Cache Gradle packages
         uses: gradle/actions/setup-gradle@v4
