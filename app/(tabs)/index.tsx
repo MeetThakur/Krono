@@ -5,6 +5,7 @@ import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import {
     Linking,
+    Pressable,
     RefreshControl,
     ScrollView,
     StyleSheet,

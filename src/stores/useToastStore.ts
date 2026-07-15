@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 export type ToastType = "success" | "error" | "info";
 
-let timeoutId: NodeJS.Timeout | null = null;
+let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
 interface ToastState {
   visible: boolean;
