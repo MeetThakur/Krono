@@ -73,8 +73,9 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
               style={({ pressed }) => [
                 styles.compactRow,
                 {
-                  backgroundColor: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
-                  borderLeftWidth: 3,
+                  backgroundColor: colors.surface,
+                  borderColor: colors.outline,
+                  borderLeftWidth: 4,
                   borderLeftColor: platformColor,
                   opacity: pressed ? 0.95 : 1,
                   transform: [{ scale: pressed ? 0.98 : 1 }]
@@ -295,7 +296,7 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    gap: 16, // Increased gap between cards
     paddingHorizontal: 20,
   },
   compactContainer: {
@@ -305,10 +306,10 @@ const styles = StyleSheet.create({
   compactRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 14, // Increased padding
+    paddingHorizontal: 18, // Increased padding
     gap: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
   },
   card: {
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: 20, // Increased padding to make cards feel breathable
   },
   row: {
     flexDirection: "row",

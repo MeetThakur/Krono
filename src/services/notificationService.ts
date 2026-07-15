@@ -1,7 +1,15 @@
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { useSettingsStore } from "../stores/useSettingsStore";
 import { Contest } from "../types/contest";
+import type * as NotificationsType from "expo-notifications";
+
+let Notifications: typeof NotificationsType | null = null;
+try {
+  Notifications = require("expo-notifications");
+} catch (e) {
+  console.warn("[Notifications] expo-notifications is not available in this environment.");
+}
+
 
 // ---------------------------------------------------------------------------
 // Notification handler
@@ -9,6 +17,7 @@ import { Contest } from "../types/contest";
 // because the native module may not be ready when this file is first imported.
 // ---------------------------------------------------------------------------
 export function setupNotificationHandler() {
+  if (!Notifications) return;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -36,6 +45,7 @@ function buildIdentifier(contestId: string, minutesBefore: number): string {
 
 /** Cancel every scheduled notification that Krono owns for a specific contest. */
 async function cancelContestNotifications(contestId: string): Promise<void> {
+  if (!Notifications) return;
   for (const minutes of REMINDER_INTERVALS_MINUTES) {
     try {
       await Notifications.cancelScheduledNotificationAsync(
@@ -55,6 +65,7 @@ export const notificationService = {
   // Permissions & channel setup
   // -------------------------------------------------------------------------
   requestPermissions: async (): Promise<boolean> => {
+    if (!Notifications) return false;
     try {
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
@@ -83,6 +94,7 @@ export const notificationService = {
   },
 
   setupAndroidChannel: async (): Promise<void> => {
+    if (!Notifications) return;
     try {
       await Notifications.setNotificationChannelAsync("default", {
         name: "Contest Reminders",
@@ -103,6 +115,7 @@ export const notificationService = {
   // Cancel all Krono-scheduled notifications
   // -------------------------------------------------------------------------
   cancelAll: async (): Promise<void> => {
+    if (!Notifications) return;
     try {
       const scheduled = await Notifications.getAllScheduledNotificationsAsync();
       const kronoIds = scheduled
@@ -134,6 +147,7 @@ export const notificationService = {
   // Schedule reminders for a single contest (bell-icon toggle)
   // -------------------------------------------------------------------------
   scheduleContestReminder: async (contest: Contest): Promise<boolean> => {
+    if (!Notifications) return false;
     try {
       // Always cancel first so we never double-schedule
       await cancelContestNotifications(contest.id);
@@ -204,6 +218,7 @@ export const notificationService = {
   // Bulk-schedule reminders for all upcoming contests (called after sync)
   // -------------------------------------------------------------------------
   scheduleAllReminders: async (contests: Contest[]): Promise<void> => {
+    if (!Notifications) return;
     try {
       const { notificationsEnabled } = useSettingsStore.getState();
 
@@ -310,6 +325,10 @@ export const notificationService = {
   // Test notification (fires 5 seconds from now)
   // -------------------------------------------------------------------------
   sendTestNotification: async (): Promise<void> => {
+    if (!Notifications) {
+      alert("Push notifications are not supported in this environment.");
+      return;
+    }
     try {
       const hasPermission = await notificationService.requestPermissions();
 

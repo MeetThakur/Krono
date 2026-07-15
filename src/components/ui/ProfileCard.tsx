@@ -22,13 +22,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
   let platformColor = platformConfig?.color || "#1A1A1A";
   if (profile.platformId === "atcoder") {
     platformColor = dark ? "#333333" : "#1C1917";
-  } else if (profile.platformId === "leetcode") {
-    platformColor = "#8B5000"; // Dark amber/brown for contrast with white text
   }
 
-  const textColor = "#FFFFFF";
-  const textMuted = "rgba(255, 255, 255, 0.7)";
-  const textFaint = "rgba(255, 255, 255, 0.5)";
+  // Detect light card backgrounds so we can switch to dark text
+  const isLightCard =
+    platformColor.toUpperCase() === "#FFBF00" || // LeetCode yellow
+    platformColor.toUpperCase() === "#FFA116" || // LeetCode old
+    platformColor.toUpperCase() === "#FFFFFF";
+
+  const textColor = isLightCard ? "#111111" : "#FFFFFF";
+  const textMuted = isLightCard ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.7)";
+  const textFaint = isLightCard ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.5)";
 
   const handle = profile.username || "Unknown";
   const rating = profile.rating !== undefined ? profile.rating : "—";

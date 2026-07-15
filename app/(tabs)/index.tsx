@@ -12,6 +12,7 @@ import {
     View,
 } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ErrorBoundary } from "../../src/components/common/ErrorBoundary";
 import {
     DashboardSkeleton,
@@ -39,6 +40,7 @@ const getDifficultyColor = (difficulty?: string): string => {
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, dark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const {
     profiles,
@@ -114,7 +116,7 @@ export default function DashboardScreen() {
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
           <View>
             <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>TODAY</Text>
             <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
@@ -137,7 +139,7 @@ export default function DashboardScreen() {
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Minimal header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
           <View>
             <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
               {currentDate}
@@ -394,7 +396,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 56,
     paddingBottom: 12,
   },
   logo: {
@@ -428,7 +429,7 @@ const styles = StyleSheet.create({
   connectCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: 20,
     marginHorizontal: 20,
     borderRadius: 14,
     borderWidth: 1,
@@ -441,8 +442,8 @@ const styles = StyleSheet.create({
   potdInner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 10,
+    padding: 20,
+    gap: 12,
   },
   potdDot: {
     width: 8,

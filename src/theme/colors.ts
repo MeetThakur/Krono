@@ -1,7 +1,7 @@
 // Common platform colors remain the same
 const platformColors = {
   codeforces: "#1877F2", // Blue
-  leetcode: "#FFA116", // Orange
+  leetcode: "#FFBF00", // Bright amber-yellow
   codechef: "#8B4513", // Brown
   atcoder: "#1C1917", // Black (Light Mode default)
   codingninjas: "#D04D28", // Orange-Red
@@ -25,7 +25,7 @@ export const lightColors = {
   background: "#F4F4F5", // Crisp off-white
   surface: "#FFFFFF",
   surfaceHighlight: "#F4F4F5",
-  border: "rgba(0, 0, 0, 0.12)",
+  border: "rgba(0, 0, 0, 0.15)",
 
   primary: "#09090B", // High contrast black
   secondary: "#6B7280",
@@ -46,21 +46,21 @@ export const lightColors = {
 };
 
 export const darkColors = {
-  background: "#000000", // True OLED black
-  surface: "#121212", // Clean dark surface
-  surfaceHighlight: "#1E1E1E",
-  border: "rgba(255, 255, 255, 0.15)", // Sharper border
+  background: "#121212", // Soft, deep neutral grey (not pitch black)
+  surface: "#1E1E1E", // Distinct lighter grey for cards
+  surfaceHighlight: "#2C2C2C", // Hover/highlight state
+  border: "rgba(255, 255, 255, 0.15)", // Clean border
 
-  primary: "#FAFAFA", // Crisp white primary
-  secondary: "#9CA3AF",
-  accent: "#60A5FA", // Soft blue accent
+  primary: "#FFFFFF",
+  secondary: "#A3A3A3", // Neutral 400
+  accent: "#FFFFFF", // Monochrome accent
 
   text: {
-    primary: "#F5F5F5",
-    secondary: "#9CA3AF",
-    muted: "#6B7280",
-    disabled: "#4B5563",
-    inverse: "#111111",
+    primary: "#F5F5F5", // Neutral 50
+    secondary: "#A3A3A3", // Neutral 400
+    muted: "#737373", // Neutral 500
+    disabled: "#525252", // Neutral 600
+    inverse: "#121212", // Background color
   },
 
   status: {

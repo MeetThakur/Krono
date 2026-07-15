@@ -27,7 +27,11 @@ import { useThemeStore } from "../src/stores/useThemeStore";
 import { getTheme } from "../src/theme/md3-theme";
 import { Toast } from "../src/components/ui/Toast";
 
-setupNotificationHandler();
+try {
+  setupNotificationHandler();
+} catch (error) {
+  console.warn("Could not set up notification handler:", error);
+}
 
 // Ignore Expo Go specific warnings and errors (SDK 53)
 LogBox.ignoreLogs([
