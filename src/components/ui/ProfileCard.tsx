@@ -11,7 +11,7 @@ interface ProfileCardProps {
   onPress?: () => void;
 }
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({
+export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
   profile,
   onPress,
 }) => {
@@ -160,7 +160,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       </Surface>
     </Pressable>
   );
-};
+});
 
 const styles = StyleSheet.create({
   card: {

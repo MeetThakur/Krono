@@ -5,7 +5,7 @@ import { useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToastStore } from "../../stores/useToastStore";
 
-export const Toast = () => {
+export const Toast = React.memo(() => {
   const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
   const { visible, message, type, hideToast } = useToastStore();
@@ -82,7 +82,7 @@ export const Toast = () => {
       </Text>
     </Animated.View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

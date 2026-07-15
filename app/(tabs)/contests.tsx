@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format, isSameDay, isTomorrow } from "date-fns";
 import * as Haptics from "expo-haptics";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Linking,
     Pressable,
@@ -103,7 +103,7 @@ export default function ContestsScreen() {
     return result;
   }, [upcomingContests, selectedPlatform]);
 
-  const renderContestItem = ({ item }: { item: Contest }) => {
+  const renderContestItem = useCallback(({ item }: { item: Contest }) => {
     const startDate = new Date(item.startTime);
     const totalMinutes = Math.round(item.durationSeconds / 60);
     const hours = Math.floor(totalMinutes / 60);
@@ -242,7 +242,7 @@ export default function ContestsScreen() {
         </Surface>
       </Pressable>
     );
-  };
+  }, [colors, dark, toggleReminder]);
 
   if (isLoading && upcomingContests.length === 0) {
     return (
@@ -274,7 +274,10 @@ export default function ContestsScreen() {
             contentContainerStyle={styles.chipsContainer}
           >
             <Pressable
-              onPress={() => setSelectedPlatform("all")}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSelectedPlatform("all");
+              }}
               style={[
                 styles.chip,
                 {
@@ -303,7 +306,10 @@ export default function ContestsScreen() {
               return (
                 <Pressable
                   key={platform.id}
-                  onPress={() => setSelectedPlatform(platform.id)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setSelectedPlatform(platform.id);
+                  }}
                   style={[
                     styles.chip,
                     {
@@ -349,6 +355,10 @@ export default function ContestsScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={true}
+          initialNumToRender={10}
+          windowSize={5}
+          maxToRenderPerBatch={10}
+          removeClippedSubviews={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

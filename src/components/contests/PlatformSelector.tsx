@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
 import { Text, useTheme } from "react-native-paper";
 import { Platform, PlatformId } from "../../types/platform";
 
@@ -26,7 +27,10 @@ export function PlatformSelector({
     >
       {!hideAllOption && (
         <Pressable
-          onPress={() => onSelectPlatform("all")}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onSelectPlatform("all");
+          }}
           style={[
             styles.chip,
             {
@@ -56,7 +60,10 @@ export function PlatformSelector({
         return (
           <Pressable
             key={platform.id}
-            onPress={() => onSelectPlatform(platform.id)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onSelectPlatform(platform.id);
+            }}
             style={[
               styles.chip,
               {

@@ -16,7 +16,7 @@ interface ContestListProps {
   compact?: boolean;
 }
 
-export const ContestList: React.FC<ContestListProps> = ({
+export const ContestList: React.FC<ContestListProps> = React.memo(({
   contests,
   emptyMessage = "No contests found.",
   limit,
@@ -287,7 +287,7 @@ export const ContestList: React.FC<ContestListProps> = ({
       })}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

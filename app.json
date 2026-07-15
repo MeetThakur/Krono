@@ -2,7 +2,7 @@
   "expo": {
     "name": "Krono",
     "slug": "Krono",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "krono",
@@ -19,13 +19,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "1.4.0",
+      "buildNumber": "1.5.0",
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
-      "versionCode": 140,
+      "versionCode": 150,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.meet11.Krono",
