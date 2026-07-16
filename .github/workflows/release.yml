@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-release:
     name: Build & Release Android APK
-    runs-on: ubuntu-22.04  # Pinned to x86_64 — hermesc binary is not ARM64 compatible
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -30,16 +30,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Make hermesc executable
+      - name: Setup hermesc
         run: |
-          HERMESC="node_modules/react-native/sdks/hermesc/linux64-bin/hermesc"
-          if [ -f "$HERMESC" ]; then
-            chmod +x "$HERMESC"
-            echo "hermesc found and made executable"
-          else
-            echo "hermesc not found at $HERMESC — listing available:"
-            ls node_modules/react-native/sdks/hermesc/ || true
+          DEST="node_modules/react-native/sdks/hermesc/linux64-bin"
+          mkdir -p "$DEST"
+
+          # 1. Already there?
+          if [ -f "$DEST/hermesc" ]; then
+            chmod +x "$DEST/hermesc"
+            echo "✓ hermesc already at expected path"
+            exit 0
           fi
+
+          # 2. Search hermes-engine package (ships hermesc for each platform)
+          FOUND=$(find node_modules -name "hermesc" \( -path "*/linux64-bin/*" -o -path "*/linux-bin/*" \) 2>/dev/null | head -1)
+          if [ -n "$FOUND" ]; then
+            cp "$FOUND" "$DEST/hermesc"
+            chmod +x "$DEST/hermesc"
+            echo "✓ hermesc copied from: $FOUND"
+            exit 0
+          fi
+
+          # 3. Download from Hermes GitHub releases using the version in hermes-engine
+          HERMES_VERSION=$(node -e "
+            try {
+              const p = require('./node_modules/hermes-engine/package.json');
+              console.log(p.version);
+            } catch(e) {
+              const p = require('./node_modules/react-native/package.json');
+              console.log(p.version);
+            }
+          ")
+          echo "Attempting download for hermes version: $HERMES_VERSION"
+          URL="https://github.com/facebook/hermes/releases/download/v${HERMES_VERSION}/hermesc-linux64.tar.gz"
+          echo "Downloading from: $URL"
+          if curl -fL "$URL" -o /tmp/hermesc.tar.gz 2>/dev/null; then
+            tar -xzf /tmp/hermesc.tar.gz -C /tmp
+            HERMESC_BIN=$(find /tmp -name "hermesc" -type f | head -1)
+            if [ -n "$HERMESC_BIN" ]; then
+              cp "$HERMESC_BIN" "$DEST/hermesc"
+              chmod +x "$DEST/hermesc"
+              echo "✓ hermesc downloaded and installed"
+              exit 0
+            fi
+          fi
+
+          echo "✗ Could not obtain hermesc. Dumping search results for debugging:"
+          find node_modules -name "hermesc" 2>/dev/null || true
+          find node_modules -name "hermes-engine" -type d 2>/dev/null || true
+          exit 1
 
       - name: Cache Gradle packages
         uses: gradle/actions/setup-gradle@v4
@@ -49,9 +88,9 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build release APK (arm64-v8a)
+      - name: Build release APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon
         env:
           NODE_OPTIONS: --max-old-space-size=4096
 
