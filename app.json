@@ -29,7 +29,7 @@
     },
     "android": {
       "versionCode": 150,
-      "edgeToEdgeEnabled": true,
+
       "predictiveBackGestureEnabled": false,
       "package": "com.meet11.Krono",
       "permissions": [
