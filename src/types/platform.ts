@@ -2,7 +2,10 @@ export type PlatformId =
   | "codeforces"
   | "leetcode"
   | "codechef"
-  | "atcoder";
+  | "atcoder"
+  | "geeksforgeeks"
+  | "topcoder"
+  | "hackerrank";
 
 export interface Platform {
   id: PlatformId;
@@ -24,7 +27,7 @@ export const PLATFORMS: Record<PlatformId, Platform> = {
     id: "leetcode",
     name: "LeetCode",
     icon: "code-tags",
-    color: "#ffa116",
+    color: "#FFA116", // Official LeetCode Orange-Yellow
     baseUrl: "https://leetcode.com",
   },
   codechef: {
@@ -41,5 +44,25 @@ export const PLATFORMS: Record<PlatformId, Platform> = {
     color: "#FFFFFF",
     baseUrl: "https://atcoder.jp",
   },
-
+  geeksforgeeks: {
+    id: "geeksforgeeks",
+    name: "GeeksforGeeks",
+    icon: "code-json",
+    color: "#2F8D46",
+    baseUrl: "https://geeksforgeeks.org",
+  },
+  topcoder: {
+    id: "topcoder",
+    name: "TopCoder",
+    icon: "code-brackets",
+    color: "#F91216", // TopCoder Red
+    baseUrl: "https://topcoder.com",
+  },
+  hackerrank: {
+    id: "hackerrank",
+    name: "HackerRank",
+    icon: "code-braces",
+    color: "#2EC866",
+    baseUrl: "https://hackerrank.com",
+  },
 };

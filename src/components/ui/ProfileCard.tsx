@@ -26,8 +26,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
 
   // Detect light card backgrounds so we can switch to dark text
   const isLightCard =
-    platformColor.toUpperCase() === "#FFBF00" || // LeetCode yellow
-    platformColor.toUpperCase() === "#FFA116" || // LeetCode old
+    profile.platformId === "leetcode" ||
     platformColor.toUpperCase() === "#FFFFFF";
 
   const textColor = isLightCard ? "#111111" : "#FFFFFF";
@@ -35,9 +34,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
   const textFaint = isLightCard ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.5)";
 
   const handle = profile.username || "Unknown";
-  const rating = profile.rating !== undefined ? profile.rating : "—";
-  const maxRating = profile.maxRating;
-  const rank = profile.rank || "";
+  let heroText: string | number = profile.rating !== undefined ? profile.rating : "—";
+  let maxRating = profile.maxRating;
+  let rank = profile.rank || "";
+  let showProblemsSolvedInFooter = true;
+
+  if (profile.platformId === "geeksforgeeks" || profile.platformId === "hackerrank") {
+    heroText = profile.problemsSolved || 0;
+    rank = "Problems Solved";
+    maxRating = undefined; // Hide peak metric
+    showProblemsSolvedInFooter = false; // Already in hero
+  }
 
   return (
     <Pressable
@@ -102,7 +109,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
                   includeFontPadding: false,
                 }}
               >
-                {rating}
+                {heroText}
               </Text>
 
               {rank ? (
@@ -145,7 +152,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
                     Peak {maxRating}
                   </Text>
                 )}
-                {(profile.problemsSolved || 0) > 0 && (
+                {showProblemsSolvedInFooter && (profile.problemsSolved || 0) > 0 && (
                   <Text
                     style={{
                       color: textFaint,

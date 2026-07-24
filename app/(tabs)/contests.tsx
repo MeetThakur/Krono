@@ -355,7 +355,9 @@ export default function ContestsScreen() {
             </Text>
           </Pressable>
 
-          {Object.values(PLATFORMS).map((platform) => {
+          {Object.values(PLATFORMS)
+            .filter((p) => ["codeforces", "leetcode", "codechef", "atcoder"].includes(p.id))
+            .map((platform) => {
             let platformColor = platform.color;
             if (platform.id === "atcoder") {
               platformColor = dark ? "#E5E5E5" : "#111111";

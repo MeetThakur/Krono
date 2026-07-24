@@ -2,11 +2,17 @@ import { atcoderApi } from "../api/atcoder";
 import { codechefApi } from "../api/codechef";
 import { codeforcesApi } from "../api/codeforces";
 import { leetcodeApi } from "../api/leetcode";
+import { geeksforgeeksApi } from "../api/geeksforgeeks";
+import { topcoderApi } from "../api/topcoder";
+import { hackerrankApi } from "../api/hackerrank";
 import {
   normalizeAtCoderProfile,
   normalizeCodeChefProfile,
   normalizeCodeforcesProfile,
   normalizeLeetCodeProfile,
+  normalizeGeeksForGeeksProfile,
+  normalizeTopCoderProfile,
+  normalizeHackerRankProfile,
 } from "./dataNormalizer";
 import { PlatformId } from "../types/platform";
 import { UnifiedProfile } from "../types/user";
@@ -62,6 +68,24 @@ export async function fetchProfile(
       throw new Error("User not found. Note: AtCoder API is case-sensitive.");
     }
     return normalizeAtCoderProfile(userData);
+  } else if (platformId === "geeksforgeeks") {
+    const userData = await geeksforgeeksApi.getUserInfo(handle);
+    if (!userData) {
+      throw new Error("User not found");
+    }
+    return normalizeGeeksForGeeksProfile(userData);
+  } else if (platformId === "topcoder") {
+    const userData = await topcoderApi.getUserInfo(handle);
+    if (!userData) {
+      throw new Error("User not found");
+    }
+    return normalizeTopCoderProfile(userData);
+  } else if (platformId === "hackerrank") {
+    const userData = await hackerrankApi.getProfile(handle);
+    if (!userData) {
+      throw new Error("User not found");
+    }
+    return normalizeHackerRankProfile(userData, handle);
   }
 
   throw new Error(`Platform ${platformId} not implemented yet`);

@@ -126,6 +126,37 @@ export const leetcodeApi = {
   },
 
   /**
+   * Get user submission calendar
+   */
+  getUserCalendar: async (username: string): Promise<any> => {
+    try {
+      const response = await axios.post(
+        LEETCODE_GRAPHQL_URL,
+        {
+          query: `
+            query getUserCalendar($username: String!) {
+              matchedUser(username: $username) {
+                userCalendar {
+                  submissionCalendar
+                }
+              }
+            }
+          `,
+          variables: { username },
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      if (response.data.errors) {
+        throw new Error(response.data.errors[0]?.message || 'GraphQL error');
+      }
+      return response.data.data.matchedUser?.userCalendar?.submissionCalendar;
+    } catch (error) {
+      console.error('LeetCode getUserCalendar error:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Get upcoming contests (top 2)
    */
   getUpcomingContests: async (): Promise<LeetCodeUpcomingContest[]> => {

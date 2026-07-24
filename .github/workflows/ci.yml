@@ -63,9 +63,8 @@ jobs:
 
       - name: Build release APK (arm64-v8a)
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
         env:
-          # architecture is already locked to arm64-v8a in gradle.properties
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Upload APK artifact

@@ -10,8 +10,11 @@ import { PlatformId } from "../types/platform";
 import { UnifiedProfile } from "../types/user";
 import { getErrorMessage } from "../utils/errors";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 // Cache duration: 15 minutes
 const CACHE_TTL_MS = 15 * 60 * 1000;
+const ORDER_STORAGE_KEY = "krono_profile_order";
 
 interface ProfileState {
   profiles: UnifiedProfile[];
@@ -25,6 +28,7 @@ interface ProfileState {
   removeProfile: (id: string) => Promise<void>;
   removeAllProfiles: () => Promise<void>;
   refreshProfiles: (force?: boolean) => Promise<void>;
+  reorderProfiles: (orderedIds: string[]) => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -37,6 +41,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     set({ isLoading: true });
     try {
       const profiles = await getAllProfiles();
+      const savedOrderStr = await AsyncStorage.getItem(ORDER_STORAGE_KEY);
+      if (savedOrderStr) {
+        const savedOrder: string[] = JSON.parse(savedOrderStr);
+        profiles.sort((a, b) => {
+          const indexA = savedOrder.indexOf(a.id);
+          const indexB = savedOrder.indexOf(b.id);
+          if (indexA === -1 && indexB === -1) return 0;
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+      }
       set({ profiles, isLoading: false });
     } catch (error) {
       set({ error: "Failed to load profiles", isLoading: false });
@@ -116,6 +132,18 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
       // Reload updated data from DB
       const updatedProfiles = await getAllProfiles();
+      const savedOrderStr = await AsyncStorage.getItem(ORDER_STORAGE_KEY);
+      if (savedOrderStr) {
+        const savedOrder: string[] = JSON.parse(savedOrderStr);
+        updatedProfiles.sort((a, b) => {
+          const indexA = savedOrder.indexOf(a.id);
+          const indexB = savedOrder.indexOf(b.id);
+          if (indexA === -1 && indexB === -1) return 0;
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+      }
       set({
         profiles: updatedProfiles,
         isLoading: false,
@@ -123,7 +151,29 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       });
     } catch (error) {
       console.error("Global refresh error:", error);
+    } finally {
       set({ isLoading: false });
     }
   },
+
+  reorderProfiles: async (orderedIds: string[]) => {
+    try {
+      await AsyncStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orderedIds));
+      
+      // Update local state to match the new order immediately
+      const currentProfiles = get().profiles;
+      const sortedProfiles = [...currentProfiles].sort((a, b) => {
+        const indexA = orderedIds.indexOf(a.id);
+        const indexB = orderedIds.indexOf(b.id);
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+      
+      set({ profiles: sortedProfiles });
+    } catch (error) {
+      console.error("Reorder Profiles Error:", error);
+    }
+  }
 }));

@@ -10,6 +10,8 @@ const RESOURCE_MAP: Record<string, string> = {
   leetcode: "leetcode.com",
   codechef: "codechef.com",
   atcoder: "atcoder.jp",
+  topcoder: "topcoder.com",
+  hackerrank: "hackerrank.com",
 };
 
 interface ClistAccount {

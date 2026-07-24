@@ -5,6 +5,7 @@ import { Surface, Text, useTheme } from "react-native-paper";
 import { codechefApi } from "../../api/codechef";
 import { codeforcesApi } from "../../api/codeforces";
 import { leetcodeApi } from "../../api/leetcode";
+import { clistApi } from "../../api/clist";
 import { UnifiedProfile } from "../../types/user";
 import { Skeleton } from "../common/SkeletonLoader";
 
@@ -142,6 +143,25 @@ export function ContestHistory({ profiles }: ContestHistoryProps) {
           }
         })
         .catch((e) => console.warn("[ContestHistory] CC fetch failed:", e))
+        .finally(() => setIsLoading(false));
+    } else if (profile.platformId === "topcoder") {
+      clistApi
+        .getRatingHistory("topcoder", profile.username)
+        .then((history: any) => {
+          if (Array.isArray(history)) {
+            const mapped: ContestEntry[] = history.map((s: any) => ({
+              event: s.event || "Contest",
+              date: s.date ? new Date(s.date).toISOString() : "",
+              place: s.place || 0,
+              ratingChange: s.rating_change,
+              newRating: s.new_rating,
+            }));
+            // Clist rating history is sorted ascending by date.
+            // Reverse to show newest first.
+            setEntries(mapped.reverse().slice(0, 20));
+          }
+        })
+        .catch((e: any) => console.warn("[ContestHistory] TC fetch failed:", e))
         .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);

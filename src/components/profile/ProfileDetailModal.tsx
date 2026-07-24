@@ -171,44 +171,52 @@ export function ProfileDetailModal({
 
               {/* Secondary Stats Row */}
               <View style={styles.statsRow}>
-                <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Problems Solved
-                  </Text>
-                  <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
-                    {profile.problemsSolved ?? 0}
-                  </Text>
-                </Surface>
-                <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                    Contests
-                  </Text>
-                  <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
-                    {profile.totalContests ?? contestCount ?? "—"}
-                  </Text>
-                </Surface>
+                {profile.platformId !== "topcoder" && (
+                  <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Problems Solved
+                    </Text>
+                    <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                      {profile.problemsSolved ?? 0}
+                    </Text>
+                  </Surface>
+                )}
+                {profile.platformId !== "geeksforgeeks" && profile.platformId !== "hackerrank" && (
+                  <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                      Contests
+                    </Text>
+                    <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                      {profile.totalContests ?? contestCount ?? "—"}
+                    </Text>
+                  </Surface>
+                )}
               </View>
             </View>
 
             {/* Charts Section */}
-            <View style={styles.chartSection}>
-              <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
-                RATING HISTORY
-              </Text>
-              <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
-                <RatingChart profiles={[profile]} />
-              </Surface>
-            </View>
+            {profile.platformId !== "geeksforgeeks" && profile.platformId !== "hackerrank" && (
+              <View style={styles.chartSection}>
+                <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
+                  RATING HISTORY
+                </Text>
+                <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+                  <RatingChart profiles={[profile]} />
+                </Surface>
+              </View>
+            )}
           </View>
 
-          <View style={styles.chartSection}>
-            <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
-              RECENT ACTIVITY
-            </Text>
-            <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
-              <ContestHistory profiles={[profile]} />
-            </Surface>
-          </View>
+          {profile.platformId !== "geeksforgeeks" && profile.platformId !== "hackerrank" && (
+            <View style={styles.chartSection}>
+              <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
+                PAST CONTESTS
+              </Text>
+              <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+                <ContestHistory profiles={[profile]} />
+              </Surface>
+            </View>
+          )}
 
         </ScrollView>
       </View>

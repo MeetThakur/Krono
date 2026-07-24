@@ -37,6 +37,8 @@ const getDifficultyColor = (difficulty?: string): string => {
 
 
 
+import { ReorderProfilesModal } from "../../src/components/profile/ReorderProfilesModal";
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, dark } = useTheme();
@@ -56,6 +58,7 @@ export default function DashboardScreen() {
   } = useContestStore();
   const { leetcode, refreshPotd, isLoading: isPotdLoading } = usePotdStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isReorderModalVisible, setReorderModalVisible] = useState(false);
 
   useEffect(() => {
     const initProfiles = async () => {
@@ -171,11 +174,21 @@ export default function DashboardScreen() {
           {/* Profiles */}
           {profiles.length > 0 ? (
             <View style={styles.section}>
-              <Text
-                style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
-              >
-                YOUR PROFILES
-              </Text>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingRight: 24, marginBottom: 12 }}>
+                <Text
+                  style={[styles.sectionLabel, { color: colors.onSurfaceVariant, marginBottom: 0 }]}
+                >
+                  YOUR PROFILES
+                </Text>
+                <Pressable
+                  onPress={() => setReorderModalVisible(true)}
+                  style={({ pressed }) => [
+                    { opacity: pressed ? 0.7 : 1, padding: 4 }
+                  ]}
+                >
+                  <MaterialCommunityIcons name="swap-vertical" size={20} color={colors.primary} />
+                </Pressable>
+              </View>
               <ProfileCarousel profiles={profiles} />
             </View>
           ) : (
@@ -382,6 +395,10 @@ export default function DashboardScreen() {
             />
           </View>
         </ScrollView>
+        <ReorderProfilesModal 
+          visible={isReorderModalVisible}
+          onDismiss={() => setReorderModalVisible(false)}
+        />
       </View>
     </ErrorBoundary>
   );

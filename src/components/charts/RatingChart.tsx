@@ -4,6 +4,7 @@ import { Surface, Text, useTheme } from "react-native-paper";
 import { codechefApi } from "../../api/codechef";
 import { codeforcesApi } from "../../api/codeforces";
 import { leetcodeApi } from "../../api/leetcode";
+import { clistApi } from "../../api/clist";
 import { PlatformId, PLATFORMS } from "../../types/platform";
 import { UnifiedProfile } from "../../types/user";
 import { Skeleton } from "../common/SkeletonLoader";
@@ -88,6 +89,16 @@ export function RatingChart({ profiles }: RatingChartProps) {
               label: s.name,
             }));
           }
+        } else if (profile.platformId === "topcoder") {
+          // TopCoder history via clist
+          const history = await clistApi.getRatingHistory("topcoder", profile.username);
+          if (Array.isArray(history) && history.length > 0) {
+            result[profile.platformId] = history.map((s: any) => ({
+              date: new Date(s.date).getTime(),
+              rating: s.new_rating,
+              label: s.event,
+            }));
+          }
         }
       } catch (e) {
         console.warn(`[RatingChart] Failed to fetch ${profile.platformId}:`, e);
@@ -119,8 +130,14 @@ export function RatingChart({ profiles }: RatingChartProps) {
   return (
     <View style={styles.container}>
       {platformKeys.map((platformId) => {
-        const points = historyMap[platformId];
+        let points = historyMap[platformId];
         if (!points || points.length < 2) return null;
+
+        // If there are many contests, only show the most recent ones to prevent a cluttered graph
+        const MAX_POINTS = 40;
+        if (points.length > MAX_POINTS) {
+          points = points.slice(-MAX_POINTS);
+        }
 
         const platformConfig = PLATFORMS[platformId];
         let color = platformConfig?.color || colors.primary;

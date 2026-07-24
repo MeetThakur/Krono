@@ -163,7 +163,7 @@ export const normalizeCodeChefProfile = (userData: any): UnifiedProfile => {
     platformId: 'codechef',
     username: userData.handle,
     displayName: userData.name || userData.handle,
-    avatar: userData.avatar,
+    avatar: userData.avatarUrl || userData.avatar,
     
     rating: userData.rating,
     maxRating: userData.maxRating,
@@ -282,5 +282,95 @@ export const normalizeAtCoderContest = (acContest: any): Contest => {
     phase,
     reminderSet: false,
     scheduledReminders: []
+  };
+};
+
+// ==================== GEEKSFORGEEKS NORMALIZERS ====================
+
+export const normalizeGeeksForGeeksProfile = (userData: any): UnifiedProfile => {
+  // We use codingScore for rating, and rank isn't reliably available as a title
+  return {
+    id: `geeksforgeeks:${userData.handle}`,
+    platformId: 'geeksforgeeks',
+    username: userData.handle,
+    displayName: userData.name || userData.handle,
+    avatar: userData.avatar,
+    
+    rating: userData.codingScore || 0,
+    maxRating: userData.codingScore || 0,
+    
+    problemsSolved: userData.problemsSolved || 0,
+    totalSubmissions: userData.problemsSolved || 0,
+    totalContests: 0,
+    
+    badges: [],
+    
+    lastUpdated: new Date(),
+    isStale: false
+  };
+};
+
+// ==================== TOPCODER NORMALIZERS ====================
+
+export const normalizeTopCoderProfile = (userData: any): UnifiedProfile => {
+  const rating = userData.rating || 0;
+  
+  // TopCoder Ranks based on standard Rating thresholds
+  let rankTitle = 'Unrated';
+  if (rating >= 3000) rankTitle = 'Target';
+  else if (rating >= 2200) rankTitle = 'Red';
+  else if (rating >= 1500) rankTitle = 'Yellow';
+  else if (rating >= 1200) rankTitle = 'Blue';
+  else if (rating >= 900) rankTitle = 'Green';
+  else if (rating > 0) rankTitle = 'Grey';
+
+  return {
+    id: `topcoder:${userData.handle}`,
+    platformId: 'topcoder',
+    username: userData.handle,
+    displayName: userData.name || userData.handle,
+    
+    rating: rating,
+    maxRating: rating, // Clist doesn't easily give maxRating in the base account model without full stats
+    rank: rankTitle,
+    
+    problemsSolved: 0, // Clist doesn't track this
+    totalSubmissions: 0,
+    totalContests: userData.totalContests || 0,
+    
+    badges: [],
+    
+    lastUpdated: new Date(),
+    isStale: false
+  };
+};
+
+// ==================== HACKERRANK NORMALIZERS ====================
+
+export const normalizeHackerRankProfile = (
+  userData: any,
+  handle: string
+): UnifiedProfile => {
+  const rating = userData.rating || 0;
+  
+  return {
+    id: `hackerrank:${handle}`,
+    platformId: 'hackerrank',
+    username: handle,
+    displayName: userData.name || handle,
+    avatar: userData.avatarUrl || userData.avatar,
+    
+    rating: userData.problems_solved || 0,
+    maxRating: userData.problems_solved || 0,
+    rank: "Problems Solved",
+    
+    problemsSolved: userData.problems_solved || 0,
+    totalSubmissions: userData.problems_solved || 0,
+    totalContests: userData.n_contests || 0,
+    
+    badges: [],
+    
+    lastUpdated: new Date(),
+    isStale: false
   };
 };

@@ -3,6 +3,8 @@ import { StyleSheet, View } from "react-native";
 import { Surface, Text, useTheme } from "react-native-paper";
 import { clistApi } from "../../api/clist";
 import { codeforcesApi } from "../../api/codeforces";
+import { leetcodeApi } from "../../api/leetcode";
+import { hackerrankApi } from "../../api/hackerrank";
 import { UnifiedProfile } from "../../types/user";
 import { Skeleton } from "../common/SkeletonLoader";
 
@@ -35,7 +37,7 @@ export function ActivityHeatmap({ profiles }: ActivityHeatmapProps) {
     for (const profile of profiles) {
       try {
         if (profile.platformId === "codeforces") {
-          // CF has per-submission data
+          // CF uses native submissions API
           const subs = await codeforcesApi.getUserSubmissions(
             profile.username,
             10000,
@@ -48,8 +50,26 @@ export function ActivityHeatmap({ profiles }: ActivityHeatmapProps) {
               map[key] = (map[key] || 0) + 1;
             }
           }
+        } else if (profile.platformId === "leetcode") {
+          const calendar = await leetcodeApi.getUserCalendar(profile.username);
+          if (calendar) {
+            const parsed = JSON.parse(calendar);
+            for (const timestamp in parsed) {
+              const date = new Date(parseInt(timestamp, 10) * 1000);
+              const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+              map[key] = (map[key] || 0) + parsed[timestamp];
+            }
+          }
+        } else if (profile.platformId === "hackerrank") {
+          const calendar = await hackerrankApi.getSubmissionHistory(profile.username);
+          if (calendar && typeof calendar === "object") {
+            for (const dateString in calendar) {
+              // dateString is "YYYY-MM-DD"
+              map[dateString] = (map[dateString] || 0) + calendar[dateString];
+            }
+          }
         } else {
-          // For LC, AC, CC — use clist.by statistics (cached)
+          // For AC, CC, TC — use clist.by statistics (cached)
           const stats = await clistApi.getStatistics(
             profile.platformId,
             profile.username,
