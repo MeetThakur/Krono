@@ -42,7 +42,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
   if (profile.platformId === "geeksforgeeks" || profile.platformId === "hackerrank") {
     heroText = profile.problemsSolved || 0;
     rank = "Problems Solved";
-    maxRating = undefined; // Hide peak metric
+    maxRating = 0; // Hide peak metric
     showProblemsSolvedInFooter = false; // Already in hero
   }
 
