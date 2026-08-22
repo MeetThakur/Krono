@@ -30,20 +30,27 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
 
   if (isLoading) {
     return (
-      <ActivityIndicator
-        size="small"
-        color={colors.primary}
-        style={{ marginTop: 20 }}
-      />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="small"
+          color={colors.primary}
+        />
+      </View>
     );
   }
 
   if (contests.length === 0) {
     return (
       <View style={styles.emptyContainer}>
+        <MaterialCommunityIcons
+          name="calendar-blank-outline"
+          size={36}
+          color={colors.onSurfaceVariant}
+          style={{ opacity: 0.5, marginBottom: 8 }}
+        />
         <Text
           variant="bodyMedium"
-          style={{ color: colors.onSurfaceVariant, opacity: 0.6 }}
+          style={{ color: colors.onSurfaceVariant, fontWeight: "600" }}
         >
           {emptyMessage}
         </Text>
@@ -60,7 +67,7 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
           const platformConfig = PLATFORMS[contest.platformId];
           let platformColor = platformConfig?.color || colors.primary;
           if (contest.platformId === "atcoder" && !dark) {
-            platformColor = "#000000";
+            platformColor = "#181A20";
           }
 
           return (
@@ -73,24 +80,33 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
               style={({ pressed }) => [
                 styles.compactRow,
                 {
-                  backgroundColor: colors.surface,
+                  backgroundColor: dark ? colors.surfaceVariant : colors.surface,
                   borderColor: colors.outline,
-                  borderLeftWidth: 4,
-                  borderLeftColor: platformColor,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                   opacity: pressed ? 0.95 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }]
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: dark ? 0.15 : 0.03,
+                  shadowRadius: 10,
+                  elevation: 2,
                 },
               ]}
             >
               <View
-                style={[styles.platformDot, { backgroundColor: platformColor }]}
-              />
+                style={[styles.compactPlatformPill, { backgroundColor: platformColor + "18" }]}
+              >
+                <MaterialCommunityIcons
+                  name={(platformConfig?.icon as any) || "code-tags"}
+                  size={16}
+                  color={platformColor}
+                />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontSize: 13,
-                    fontWeight: "600",
+                    fontSize: 14,
+                    fontWeight: "700",
                     color: colors.onSurface,
                   }}
                 >
@@ -98,27 +114,28 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                 </Text>
                 <Text
                   style={{
-                    fontSize: 10,
-                    fontWeight: "600",
-                    color: colors.onSurfaceVariant,
+                    fontSize: 11,
+                    fontWeight: "700",
+                    color: platformColor,
                     marginTop: 2,
                     textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.4,
                   }}
                 >
                   {platformConfig?.name}
                 </Text>
               </View>
-              <Text
-                style={{
-                  fontSize: 11,
-                  fontWeight: "500",
-                  color: colors.onSurfaceVariant,
-                  marginLeft: 12,
-                }}
-              >
-                {format(startTime, "MMM d, HH:mm")}
-              </Text>
+              <View style={[styles.timeBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "JetBrainsMono_700Bold",
+                    color: colors.onSurfaceVariant,
+                  }}
+                >
+                  {format(startTime, "MMM d, HH:mm")}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
@@ -135,9 +152,10 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
         let platformColor = platformConfig?.color || colors.primary;
 
         if (contest.platformId === "atcoder" && !dark) {
-          platformColor = "#000000";
+          platformColor = "#181A20";
         }
 
+        const isLive = contest.phase === "running";
         const totalMinutes = Math.round(contest.durationSeconds / 60);
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
@@ -158,30 +176,34 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
             style={({ pressed }) => [
               styles.card,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.outline,
-                borderLeftWidth: 4,
-                borderLeftColor: platformColor,
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: isLive ? "#EF4444" : colors.outline,
+                borderWidth: isLive ? 1.5 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
                 opacity: pressed ? 0.95 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }]
+                shadowColor: isLive ? "#EF4444" : "#000",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: isLive ? (dark ? 0.25 : 0.15) : (dark ? 0.2 : 0.04),
+                shadowRadius: 14,
+                elevation: 3,
               },
             ]}
           >
             <View style={styles.contentContainer}>
-              {/* Header */}
+              {/* Header: Platform pill + Time/Live status */}
               <View style={styles.row}>
-                <View style={styles.platformRow}>
-                  <View
-                    style={[
-                      styles.platformDot,
-                      { backgroundColor: platformColor },
-                    ]}
+                <View style={[styles.platformPill, { backgroundColor: platformColor + "18" }]}>
+                  <MaterialCommunityIcons
+                    name={(platformConfig?.icon as any) || "code-tags"}
+                    size={14}
+                    color={platformColor}
+                    style={{ marginRight: 6 }}
                   />
                   <Text
                     style={{
-                      color: colors.onSurfaceVariant,
+                      color: platformColor,
                       fontSize: 11,
-                      fontWeight: "600",
+                      fontWeight: "700",
                       textTransform: "uppercase",
                       letterSpacing: 0.5,
                     }}
@@ -189,49 +211,61 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                     {platformConfig?.name}
                   </Text>
                 </View>
-                <Text
-                  style={{
-                    fontSize: 11,
-                    color: colors.onSurfaceVariant,
-                    fontWeight: "500",
-                  }}
-                >
-                  {format(startTime, "MMM d, HH:mm")}
-                </Text>
+
+                {isLive ? (
+                  <View style={styles.liveBadge}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.liveText}>LIVE NOW</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.timeBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        color: colors.onSurfaceVariant,
+                        fontFamily: "JetBrainsMono_700Bold",
+                      }}
+                    >
+                      {format(startTime, "MMM d, HH:mm")}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {/* Title */}
               <Text
                 numberOfLines={2}
                 style={{
-                  fontWeight: "600",
-                  fontSize: 15,
-                  marginTop: 10,
-                  marginBottom: 6,
+                  fontWeight: "700",
+                  fontSize: 16,
+                  marginTop: 12,
+                  marginBottom: 8,
                   color: colors.onSurface,
-                  lineHeight: 20,
+                  lineHeight: 22,
                 }}
               >
                 {contest.name}
               </Text>
 
-              {/* Duration */}
+              {/* Duration & Meta */}
               <View style={styles.metaRow}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={13}
-                  color={colors.onSurfaceVariant}
-                />
-                <Text
-                  style={{
-                    marginLeft: 4,
-                    color: colors.onSurfaceVariant,
-                    fontWeight: "500",
-                    fontSize: 11,
-                  }}
-                >
-                  {durationText}
-                </Text>
+                <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={13}
+                    color={colors.onSurfaceVariant}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text
+                    style={{
+                      color: colors.onSurfaceVariant,
+                      fontWeight: "600",
+                      fontSize: 11,
+                    }}
+                  >
+                    {durationText}
+                  </Text>
+                </View>
               </View>
 
               {/* Actions */}
@@ -241,7 +275,7 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                     styles.registerBtn,
                     {
                       backgroundColor: colors.primary,
-                      opacity: pressed ? 0.85 : 1,
+                      opacity: pressed ? 0.88 : 1,
                     },
                   ]}
                   onPress={() => {
@@ -249,25 +283,33 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                     if (contest.url) Linking.openURL(contest.url);
                   }}
                 >
+                  <MaterialCommunityIcons
+                    name="open-in-new"
+                    size={15}
+                    color={dark ? "#0F172A" : "#FFFFFF"}
+                    style={{ marginRight: 6 }}
+                  />
                   <Text
                     style={{
-                      color: dark ? "#111111" : "#FFFFFF",
-                      fontSize: 12,
-                      fontWeight: "600",
+                      color: dark ? "#0F172A" : "#FFFFFF",
+                      fontSize: 13,
+                      fontWeight: "700",
                     }}
                   >
-                    Open
+                    View Contest
                   </Text>
                 </Pressable>
+
                 <Pressable
-                  style={[
+                  style={({ pressed }) => [
                     styles.reminderBtn,
                     {
                       backgroundColor: contest.reminderSet
-                        ? colors.primary + "18"
-                        : dark
-                          ? "rgba(255,255,255,0.06)"
-                          : "rgba(0,0,0,0.04)",
+                        ? colors.primaryContainer
+                        : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                      borderColor: contest.reminderSet ? colors.primary : colors.outline,
+                      borderWidth: 1,
+                      transform: [{ scale: pressed ? 0.94 : 1 }],
                     },
                   ]}
                   onPress={() => {
@@ -277,7 +319,7 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
                 >
                   <MaterialCommunityIcons
                     name={contest.reminderSet ? "bell-ring" : "bell-outline"}
-                    size={16}
+                    size={18}
                     color={
                       contest.reminderSet
                         ? colors.primary
@@ -296,73 +338,116 @@ export const ContestList: React.FC<ContestListProps> = React.memo(({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16, // Increased gap between cards
+    gap: 14,
     paddingHorizontal: 20,
   },
   compactContainer: {
     paddingHorizontal: 20,
-    gap: 8,
+    gap: 10,
+  },
+  loadingContainer: {
+    paddingVertical: 24,
+    alignItems: "center",
   },
   compactRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 14, // Increased padding
-    paddingHorizontal: 18, // Increased padding
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     gap: 12,
-    borderRadius: 14,
+    borderRadius: 20, // M3 Expressive squircle
     borderWidth: 1,
+  },
+  compactPlatformPill: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 24, // M3 Expressive squircle
     overflow: "hidden",
-    borderWidth: 1,
   },
   contentContainer: {
-    padding: 20, // Increased padding to make cards feel breathable
+    padding: 18,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  platformRow: {
+  platformPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
-  platformDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  liveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: "#EF4444",
+    marginRight: 6,
+  },
+  liveText: {
+    color: "#EF4444",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+  },
+  timeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
   },
+  metaPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   actionBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginTop: 14,
+    gap: 10,
+    marginTop: 16,
     paddingTop: 14,
     borderTopWidth: 1,
   },
   registerBtn: {
     flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 12,
+    borderRadius: 999, // M3 Pill button
   },
   reminderBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
   emptyContainer: {
-    paddingVertical: 24,
+    paddingVertical: 32,
     alignItems: "center",
+    justifyContent: "center",
   },
 });
+

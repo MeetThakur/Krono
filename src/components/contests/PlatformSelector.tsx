@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, ScrollView, StyleSheet } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Text, useTheme } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Platform, PlatformId } from "../../types/platform";
 
 interface PlatformSelectorProps {
@@ -31,18 +32,27 @@ export function PlatformSelector({
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onSelectPlatform("all");
           }}
-          style={[
+          style={({ pressed }) => [
             styles.chip,
             {
-              backgroundColor: selectedPlatform === "all" ? colors.onSurface : colors.surface,
+              backgroundColor: selectedPlatform === "all" ? colors.primary : (dark ? colors.surfaceVariant : colors.surface),
+              borderColor: selectedPlatform === "all" ? "transparent" : colors.outline,
+              transform: [{ scale: pressed ? 0.96 : 1 }],
             },
           ]}
         >
+          <MaterialCommunityIcons
+            name="apps"
+            size={16}
+            color={selectedPlatform === "all" ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurfaceVariant}
+            style={{ marginRight: 6 }}
+          />
           <Text
             style={{
-              color: selectedPlatform === "all" ? colors.background : colors.onSurfaceVariant,
+              color: selectedPlatform === "all" ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurface,
               fontWeight: "700",
-              fontSize: 12,
+              fontSize: 13,
+              letterSpacing: 0.1,
             }}
           >
             All
@@ -52,7 +62,7 @@ export function PlatformSelector({
       {platforms.map((platform) => {
         let platformColor = platform.color;
         if (platform.id === "atcoder" && !dark) {
-          platformColor = "#111111";
+          platformColor = "#181A20";
         }
         const isSelected = selectedPlatform === platform.id;
         const isLightBg = platformColor.toUpperCase() === "#FFFFFF";
@@ -64,18 +74,29 @@ export function PlatformSelector({
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               onSelectPlatform(platform.id);
             }}
-            style={[
+            style={({ pressed }) => [
               styles.chip,
               {
-                backgroundColor: isSelected ? platformColor : colors.surface,
+                backgroundColor: isSelected ? platformColor : (dark ? colors.surfaceVariant : colors.surface),
+                borderColor: isSelected ? "transparent" : colors.outline,
+                transform: [{ scale: pressed ? 0.96 : 1 }],
               },
             ]}
           >
+            <View
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: isSelected ? (isLightBg ? "#181A20" : "#FFFFFF") : platformColor,
+                },
+              ]}
+            />
             <Text
               style={{
-                color: isSelected ? (isLightBg ? "#111111" : "#FFFFFF") : colors.onSurfaceVariant,
+                color: isSelected ? (isLightBg ? "#181A20" : "#FFFFFF") : colors.onSurface,
                 fontWeight: "700",
-                fontSize: 12,
+                fontSize: 13,
+                letterSpacing: 0.1,
               }}
             >
               {platform.name}
@@ -90,12 +111,23 @@ export function PlatformSelector({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    gap: 8,
+    gap: 10,
     paddingVertical: 12,
+    alignItems: "center",
   },
   chip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 100,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
   },
 });
+

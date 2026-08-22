@@ -3,7 +3,7 @@ const fontConfig = {
     fontFamily: "Inter_900Black",
     fontSize: 57,
     fontWeight: "900",
-    letterSpacing: 0,
+    letterSpacing: -0.25,
     lineHeight: 64,
   },
   displayMedium: {
@@ -25,14 +25,14 @@ const fontConfig = {
     fontFamily: "Inter_700Bold",
     fontSize: 32,
     fontWeight: "700",
-    letterSpacing: 0,
+    letterSpacing: -0.5,
     lineHeight: 40,
   },
   headlineMedium: {
     fontFamily: "Inter_700Bold",
     fontSize: 28,
     fontWeight: "700",
-    letterSpacing: 0,
+    letterSpacing: -0.25,
     lineHeight: 36,
   },
   headlineSmall: {
@@ -44,9 +44,9 @@ const fontConfig = {
   },
 
   titleLarge: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_700Bold",
     fontSize: 22,
-    fontWeight: "600",
+    fontWeight: "700",
     letterSpacing: 0,
     lineHeight: 28,
   },
@@ -73,9 +73,9 @@ const fontConfig = {
     lineHeight: 20,
   },
   labelMedium: {
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Inter_600SemiBold",
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "600",
     letterSpacing: 0.5,
     lineHeight: 16,
   },
@@ -110,6 +110,13 @@ const fontConfig = {
   },
 } as const;
 
+export const monoFonts = {
+  monoRegular: "JetBrainsMono_400Regular",
+  monoBold: "JetBrainsMono_700Bold",
+};
+
 export const typography = {
   fonts: fontConfig,
+  mono: monoFonts,
 };
+

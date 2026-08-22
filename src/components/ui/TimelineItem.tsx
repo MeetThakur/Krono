@@ -2,6 +2,7 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from '../../hooks/useTheme';
 import { Contest } from '../../types/contest';
 import { PLATFORMS } from '../../types/platform';
@@ -21,23 +22,24 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({ contest, isLast }) =
   };
 
   const getBrandColor = (platformId: string) => {
-    switch(platformId) {
-        case 'codeforces': return '#1877F2';
-        case 'codechef': return '#8B4513';
-        case 'leetcode': return '#FFA116';
-        case 'atcoder': return isDarkMode ? '#FFFFFF' : '#1C1917';
-        case 'geeksforgeeks': return '#2F8D46';
-        case 'codingninjas': return '#D04D28';
-        default: return colors.primary;
+    switch (platformId) {
+      case 'codeforces': return '#1877F2';
+      case 'codechef': return '#8B4513';
+      case 'leetcode': return '#FFA116';
+      case 'atcoder': return isDarkMode ? '#FFFFFF' : '#181A20';
+      case 'geeksforgeeks': return '#2F8D46';
+      case 'codingninjas': return '#D04D28';
+      case 'hackerrank': return '#00EA64';
+      default: return colors.primary;
     }
   };
 
   const brandColor = getBrandColor(contest.platformId);
+  const platformConfig = PLATFORMS[contest.platformId];
   
-  // Handle startTime potentially being a string from JSON/DB or a Date object
   const startTime = typeof contest.startTime === 'string' 
-      ? parseISO(contest.startTime) 
-      : contest.startTime;
+    ? parseISO(contest.startTime) 
+    : contest.startTime;
 
   const formattedTime = format(startTime, 'h:mm a');
   const formattedDate = format(startTime, 'MMM d');
@@ -48,38 +50,57 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({ contest, isLast }) =
     <View style={styles.container}>
       {/* Left: Time Column */}
       <View style={styles.timeColumn}>
-        <Text style={[styles.timeText, { color: colors.text.primary }]}>{formattedTime}</Text>
-        <Text style={[styles.dateText, { color: colors.text.muted }]}>{isToday ? 'Today' : formattedDate}</Text>
-        {!isLast && <View style={[styles.timelineLine, { backgroundColor: colors.border }]} />}
+        <Text style={[styles.timeText, { color: colors.text.primary, fontFamily: "JetBrainsMono_700Bold" }]}>
+          {formattedTime}
+        </Text>
+        <View style={[styles.datePill, { backgroundColor: isToday ? colors.primaryContainer : "transparent" }]}>
+          <Text style={[styles.dateText, { color: isToday ? colors.primary : colors.text.muted }]}>
+            {isToday ? 'Today' : formattedDate}
+          </Text>
+        </View>
+        {!isLast && <View style={[styles.timelineLine, { backgroundColor: colors.outline }]} />}
       </View>
 
-      {/* Right: Card */}
-       <TouchableOpacity 
-          style={[styles.cardContainer, { 
-              backgroundColor: colors.surface, 
-              borderColor: colors.border,
-              shadowColor: brandColor 
-          }]} 
-          onPress={handlePress}
-          activeOpacity={0.8}
-       >
-          <View style={[styles.accentStrip, { backgroundColor: brandColor }]} />
-          
-          <View style={styles.cardContent}>
-              <View style={styles.headerRow}>
-                  <Text style={[styles.platformName, { color: colors.text.secondary }]}>
-                      {PLATFORMS[contest.platformId]?.name.toUpperCase() || contest.platformId}
-                  </Text>
-                  <View style={[styles.durationBadge, { backgroundColor: colors.background }]}>
-                      <Text style={[styles.durationText, { color: colors.text.muted }]}>{durationHours}h</Text>
-                  </View>
-              </View>
-              
-              <Text style={[styles.contestTitle, { color: colors.text.primary }]} numberOfLines={2}>
-                  {contest.name}
+      {/* Right: M3 Expressive Card */}
+      <TouchableOpacity 
+        style={[
+          styles.cardContainer, 
+          { 
+            backgroundColor: isDarkMode ? colors.surfaceContainerHigh : colors.surface, 
+            borderColor: colors.outline,
+            shadowColor: brandColor,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isDarkMode ? 0.2 : 0.06,
+            shadowRadius: 12,
+            elevation: 3,
+          }
+        ]} 
+        onPress={handlePress}
+        activeOpacity={0.85}
+      >
+        <View style={styles.cardContent}>
+          <View style={styles.headerRow}>
+            <View style={[styles.platformPill, { backgroundColor: brandColor + "18" }]}>
+              <MaterialCommunityIcons
+                name={(platformConfig?.icon as any) || "code-tags"}
+                size={12}
+                color={brandColor}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.platformName, { color: brandColor }]}>
+                {platformConfig?.name || contest.platformId}
               </Text>
+            </View>
+            <View style={[styles.durationBadge, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+              <Text style={[styles.durationText, { color: colors.text.secondary }]}>{durationHours}h</Text>
+            </View>
           </View>
-       </TouchableOpacity>
+          
+          <Text style={[styles.contestTitle, { color: colors.text.primary }]} numberOfLines={2}>
+            {contest.name}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -88,75 +109,77 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     marginBottom: 0,
-    minHeight: 100
+    minHeight: 90,
   },
   timeColumn: {
-    width: 60,
+    width: 75,
     alignItems: 'flex-end',
-    paddingRight: 16,
-    paddingTop: 4
+    paddingRight: 14,
+    paddingTop: 4,
   },
   timeText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    letterSpacing: -0.2,
+  },
+  datePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 2,
   },
   dateText: {
-    fontSize: 10,
-    marginTop: 2,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '700',
   },
   timelineLine: {
     width: 2,
     flex: 1,
     marginTop: 8,
-    marginRight: 6, // Center with text roughly
-    borderRadius: 1
+    marginRight: 8,
+    borderRadius: 1,
   },
   cardContainer: {
     flex: 1,
-    borderWidth: 2,
-    borderRadius: 12,
-    marginBottom: 20,
-    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: 20, // M3 Expressive squircle
+    marginBottom: 16,
     overflow: 'hidden',
-    
-    // Hard Shadow
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 0
-  },
-  accentStrip: {
-      width: 6,
-      height: '100%'
   },
   cardContent: {
-      flex: 1,
-      padding: 12
+    flex: 1,
+    padding: 14,
   },
   headerRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 6
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  platformPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
   },
   platformName: {
-      fontSize: 10,
-      fontWeight: '900',
-      letterSpacing: 0.5
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   contestTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      lineHeight: 20
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20,
   },
   durationBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
   },
   durationText: {
-      fontSize: 10,
-      fontWeight: '700'
-  }
+    fontSize: 10,
+    fontWeight: '700',
+  },
 });

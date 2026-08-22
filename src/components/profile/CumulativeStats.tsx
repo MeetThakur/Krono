@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import { UnifiedProfile } from "../../types/user";
 
@@ -28,9 +29,9 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
   );
 
   const stats = [
-    { value: totalSolved, label: "Solved" },
-    { value: totalSubmissions, label: "Submissions" },
-    { value: totalContests, label: "Contests" },
+    { value: totalSolved, label: "Solved", icon: "check-decagram-outline", color: "#10B981" },
+    { value: totalSubmissions, label: "Submissions", icon: "code-tags", color: "#3B82F6" },
+    { value: totalContests, label: "Contests", icon: "trophy-outline", color: "#F59E0B" },
   ];
 
   return (
@@ -39,8 +40,13 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
         style={[
           styles.card,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: dark ? colors.surfaceVariant : colors.surface,
             borderColor: colors.outline,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: dark ? 0.2 : 0.04,
+            shadowRadius: 16,
+            elevation: 3,
           },
         ]}
       >
@@ -57,10 +63,13 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
               />
             )}
             <View style={styles.statItem}>
+              <View style={[styles.iconCircle, { backgroundColor: stat.color + "18" }]}>
+                <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.color} />
+              </View>
               <Text
                 style={[
                   styles.value,
-                  { color: colors.onSurface },
+                  { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" },
                 ]}
               >
                 {stat.value.toLocaleString()}
@@ -84,36 +93,45 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    marginBottom: 36,
+    marginBottom: 28,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-evenly",
-    borderRadius: 16,
+    borderRadius: 24, // M3 Expressive squircle
     borderWidth: 1,
-    paddingVertical: 20,
+    paddingVertical: 18,
     paddingHorizontal: 8,
   },
   statItem: {
     alignItems: "center",
     flex: 1,
   },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
   value: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 20,
+    lineHeight: 26,
     includeFontPadding: false,
-    fontWeight: "800",
-    letterSpacing: -1,
+    letterSpacing: -0.5,
   },
   label: {
     fontSize: 11,
-    fontWeight: "500",
-    marginTop: 4,
+    fontWeight: "700",
+    marginTop: 2,
     letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
   divider: {
     width: 1,
-    height: 32,
+    height: 36,
   },
 });
+

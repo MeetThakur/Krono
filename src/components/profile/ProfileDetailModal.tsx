@@ -57,7 +57,7 @@ export function ProfileDetailModal({
   
   let effectivePlatformColor = platformConfig?.color || colors.primary;
   if (profile.platformId === "atcoder") {
-    effectivePlatformColor = dark ? "#FFFFFF" : "#18181B";
+    effectivePlatformColor = dark ? "#FFFFFF" : "#181A20";
   }
 
   return (
@@ -75,14 +75,17 @@ export function ProfileDetailModal({
       >
         {/* Header Navigation */}
         <View style={[styles.header, { paddingTop: 16 }]}>
-          {/* Empty view for flex balancing */}
           <View style={{ width: 40 }} /> 
           
           <Pressable
             onPress={onDismiss}
-            style={[
+            style={({ pressed }) => [
               styles.iconBtn,
-              { backgroundColor: colors.surface },
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                transform: [{ scale: pressed ? 0.94 : 1 }]
+              },
             ]}
           >
             <MaterialCommunityIcons
@@ -100,7 +103,7 @@ export function ProfileDetailModal({
           <View style={{ backgroundColor: colors.background }}>
             {/* Hero Section */}
             <View style={styles.heroSection}>
-              <View style={[styles.platformIconContainer, { backgroundColor: effectivePlatformColor + "15" }]}>
+              <View style={[styles.platformIconContainer, { backgroundColor: effectivePlatformColor + "18" }]}>
                 <MaterialCommunityIcons
                   name={(platformConfig?.icon as any) || "code-tags"}
                   size={42}
@@ -111,12 +114,12 @@ export function ProfileDetailModal({
               <Text
                 style={{
                   fontSize: 13,
-                  fontWeight: "700",
+                  fontWeight: "800",
                   color: effectivePlatformColor,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                   marginTop: 16,
-                  marginBottom: 8,
+                  marginBottom: 6,
                 }}
               >
                 {platformConfig?.name}
@@ -124,17 +127,17 @@ export function ProfileDetailModal({
 
               <Text
                 style={{
-                  fontSize: 36,
-                  lineHeight: 42,
+                  fontSize: 32,
+                  lineHeight: 38,
                   includeFontPadding: false,
                   fontWeight: "900",
                   color: colors.onSurface,
-                  letterSpacing: -1,
+                  letterSpacing: -0.5,
                   textAlign: "center",
                 }}
                 numberOfLines={1}
               >
-                {profile.username}
+                @{profile.username}
               </Text>
 
               <View style={styles.tagsContainer}>
@@ -147,9 +150,9 @@ export function ProfileDetailModal({
                 ) : null}
 
                 {profile.globalRank ? (
-                  <View style={[styles.tag, { backgroundColor: colors.surface }]}>
+                  <View style={[styles.tag, { backgroundColor: dark ? colors.surfaceVariant : colors.surface, borderColor: colors.outline, borderWidth: 1 }]}>
                     <MaterialCommunityIcons name="earth" size={14} color={colors.onSurfaceVariant} />
-                    <Text style={{ color: colors.onSurfaceVariant, fontWeight: "600", fontSize: 12, marginLeft: 4 }}>
+                    <Text style={{ color: colors.onSurfaceVariant, fontWeight: "700", fontSize: 12, marginLeft: 4, fontFamily: "JetBrainsMono_700Bold" }}>
                       #{profile.globalRank.toLocaleString()}
                     </Text>
                   </View>
@@ -159,34 +162,87 @@ export function ProfileDetailModal({
 
             {/* Stats Grid */}
             <View style={styles.statsGrid}>
-              {/* Primary Stat */}
-              <Surface style={[styles.statCard, { backgroundColor: colors.surface, width: "100%", paddingVertical: 24 }]} elevation={0}>
-                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 1 }}>
+              {/* Primary Stat Card */}
+              <Surface 
+                style={[
+                  styles.statCard, 
+                  { 
+                    backgroundColor: dark ? colors.surfaceVariant : colors.surface, 
+                    borderColor: colors.outline,
+                    width: "100%", 
+                    paddingVertical: 24,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: dark ? 0.2 : 0.04,
+                    shadowRadius: 16,
+                    elevation: 3,
+                  }
+                ]} 
+                elevation={0}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "800", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 1 }}>
                   Current Rating
                 </Text>
-                <Text style={{ fontSize: 56, lineHeight: 64, includeFontPadding: false, fontWeight: "900", color: effectivePlatformColor, marginTop: 4, letterSpacing: -2 }}>
+                <Text style={{ fontSize: 52, lineHeight: 60, includeFontPadding: false, fontWeight: "900", color: effectivePlatformColor, marginTop: 4, letterSpacing: -1, fontFamily: "JetBrainsMono_700Bold" }}>
                   {profile.rating ?? "—"}
                 </Text>
+                {profile.maxRating ? (
+                  <View style={[styles.peakPill, { backgroundColor: effectivePlatformColor + "14" }]}>
+                    <Text style={{ color: effectivePlatformColor, fontSize: 11, fontWeight: "700", fontFamily: "JetBrainsMono_700Bold" }}>
+                      Peak {profile.maxRating}
+                    </Text>
+                  </View>
+                ) : null}
               </Surface>
 
               {/* Secondary Stats Row */}
               <View style={styles.statsRow}>
                 {profile.platformId !== "topcoder" && (
-                  <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                  <Surface 
+                    style={[
+                      styles.statCard, 
+                      { 
+                        backgroundColor: dark ? colors.surfaceVariant : colors.surface, 
+                        borderColor: colors.outline,
+                        flex: 1,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: dark ? 0.15 : 0.03,
+                        shadowRadius: 12,
+                        elevation: 2,
+                      }
+                    ]} 
+                    elevation={0}
+                  >
                     <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                      Problems Solved
+                      Solved
                     </Text>
-                    <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                    <Text style={{ fontSize: 26, lineHeight: 32, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 6, fontFamily: "JetBrainsMono_700Bold" }}>
                       {profile.problemsSolved ?? 0}
                     </Text>
                   </Surface>
                 )}
                 {profile.platformId !== "geeksforgeeks" && profile.platformId !== "hackerrank" && (
-                  <Surface style={[styles.statCard, { backgroundColor: colors.surface, flex: 1 }]} elevation={0}>
+                  <Surface 
+                    style={[
+                      styles.statCard, 
+                      { 
+                        backgroundColor: dark ? colors.surfaceVariant : colors.surface, 
+                        borderColor: colors.outline,
+                        flex: 1,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: dark ? 0.15 : 0.03,
+                        shadowRadius: 12,
+                        elevation: 2,
+                      }
+                    ]} 
+                    elevation={0}
+                  >
                     <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
                       Contests
                     </Text>
-                    <Text style={{ fontSize: 28, lineHeight: 34, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 8 }}>
+                    <Text style={{ fontSize: 26, lineHeight: 32, includeFontPadding: false, fontWeight: "800", color: colors.onSurface, marginTop: 6, fontFamily: "JetBrainsMono_700Bold" }}>
                       {profile.totalContests ?? contestCount ?? "—"}
                     </Text>
                   </Surface>
@@ -200,7 +256,21 @@ export function ProfileDetailModal({
                 <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
                   RATING HISTORY
                 </Text>
-                <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+                <Surface 
+                  style={[
+                    styles.chartContainer, 
+                    { 
+                      backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                      borderColor: colors.outline,
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 6 },
+                      shadowOpacity: dark ? 0.2 : 0.04,
+                      shadowRadius: 16,
+                      elevation: 3,
+                    }
+                  ]} 
+                  elevation={0}
+                >
                   <RatingChart profiles={[profile]} />
                 </Surface>
               </View>
@@ -212,7 +282,21 @@ export function ProfileDetailModal({
               <Text style={[styles.sectionTitle, { color: colors.onSurfaceVariant }]}>
                 PAST CONTESTS
               </Text>
-              <Surface style={[styles.chartContainer, { backgroundColor: colors.surface }]} elevation={0}>
+              <Surface 
+                style={[
+                  styles.chartContainer, 
+                  { 
+                    backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                    borderColor: colors.outline,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: dark ? 0.2 : 0.04,
+                    shadowRadius: 16,
+                    elevation: 3,
+                  }
+                ]} 
+                elevation={0}
+              >
                 <ContestHistory profiles={[profile]} />
               </Surface>
             </View>
@@ -236,22 +320,23 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
   },
   heroSection: {
     alignItems: "center",
-    paddingTop: 16,
+    paddingTop: 12,
     paddingBottom: 24,
     paddingHorizontal: 24,
   },
   platformIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -259,7 +344,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
+    marginTop: 14,
     gap: 8,
     flexWrap: "wrap",
   },
@@ -267,8 +352,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 100,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  peakPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginTop: 8,
   },
   statsGrid: {
     paddingHorizontal: 20,
@@ -279,25 +370,29 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statCard: {
-    padding: 20,
-    borderRadius: 20,
+    padding: 18,
+    borderRadius: 24, // M3 Expressive squircle
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   chartSection: {
-    marginTop: 32,
+    marginTop: 28,
     paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontWeight: "700",
-    letterSpacing: 1,
-    fontSize: 12,
-    marginBottom: 12,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+    fontSize: 11,
+    marginBottom: 10,
     marginLeft: 4,
+    textTransform: "uppercase",
   },
   chartContainer: {
-    borderRadius: 20,
-    paddingVertical: 20,
+    borderRadius: 24, // M3 Expressive squircle
+    borderWidth: 1,
+    paddingVertical: 18,
     overflow: "hidden",
   },
 });
+

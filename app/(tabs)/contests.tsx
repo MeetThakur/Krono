@@ -116,37 +116,38 @@ export default function ContestsScreen() {
 
     const platformConfig = PLATFORMS[item.platformId];
     let platformColor = platformConfig?.color || colors.primary;
-    // Always ensure platform color has readable contrast
     if (item.platformId === "atcoder") {
-      platformColor = dark ? "#E5E5E5" : "#111111";
+      platformColor = dark ? "#FFFFFF" : "#181A20";
     }
-    // Determine if platform color is light (needs dark text on register btn)
+
     const isLightColor = platformColor.toUpperCase() === "#FFFFFF" ||
-      platformColor.toUpperCase() === "#FFA116" || // LeetCode orange (old)
-      platformColor.toUpperCase() === "#FFBF00" || // LeetCode bright yellow
-      platformColor.toUpperCase() === "#E5E5E5";
-    const registerTextColor = isLightColor ? "#111111" : "#FFFFFF";
-    const badgeBg = dark
-      ? platformColor + "25"
-      : platformColor + "18";
+      platformColor.toUpperCase() === "#FFA116" ||
+      platformColor.toUpperCase() === "#FFBF00";
+    const registerTextColor = isLightColor ? "#0F172A" : "#FFFFFF";
+    const badgeBg = platformColor + "18";
 
     return (
       <Pressable
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           if (item.url) Linking.openURL(item.url);
         }}
         style={({ pressed }) => [
-          { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] },
+          styles.cardPressable,
+          { transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.95 : 1 },
         ]}
       >
         <Surface
           style={[
             styles.card,
             {
-              backgroundColor: colors.surface,
-              borderLeftWidth: 3,
-              borderLeftColor: platformColor,
+              backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+              borderColor: colors.outline,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: dark ? 0.2 : 0.04,
+              shadowRadius: 14,
+              elevation: 3,
             },
           ]}
           elevation={0}
@@ -156,34 +157,36 @@ export default function ContestsScreen() {
             <View style={[styles.platformBadge, { backgroundColor: badgeBg }]}>
               <MaterialCommunityIcons
                 name={(platformConfig?.icon as any) || "code-tags"}
-                size={12}
+                size={14}
                 color={platformColor}
               />
               <Text
                 style={{
                   color: platformColor,
-                  fontSize: 10,
-                  fontWeight: "700",
+                  fontSize: 11,
+                  fontWeight: "800",
                   textTransform: "uppercase",
-                  letterSpacing: 0.8,
+                  letterSpacing: 0.5,
+                  marginLeft: 5,
                 }}
               >
                 {platformConfig?.name}
               </Text>
             </View>
 
-            <View style={styles.dateChip}>
+            <View style={[styles.dateChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
               <MaterialCommunityIcons
-                name="calendar-outline"
-                size={11}
+                name="calendar-clock"
+                size={12}
                 color={colors.onSurfaceVariant}
               />
               <Text
                 style={{
                   fontSize: 11,
                   color: colors.onSurfaceVariant,
-                  fontWeight: "600",
-                  marginLeft: 4,
+                  fontWeight: "700",
+                  marginLeft: 5,
+                  fontFamily: "JetBrainsMono_700Bold",
                 }}
               >
                 {format(startDate, "MMM d, HH:mm")}
@@ -195,9 +198,10 @@ export default function ContestsScreen() {
           <Text
             numberOfLines={2}
             style={{
-              fontWeight: "700",
-              fontSize: 15,
-              marginTop: 14,
+              fontWeight: "800",
+              fontSize: 16,
+              marginTop: 12,
+              marginBottom: 4,
               color: colors.onSurface,
               lineHeight: 22,
             }}
@@ -211,7 +215,7 @@ export default function ContestsScreen() {
           {/* Footer row */}
           <View style={styles.cardFooter}>
             {/* Duration */}
-            <View style={styles.metaItem}>
+            <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
               <MaterialCommunityIcons
                 name="timer-outline"
                 size={14}
@@ -221,7 +225,7 @@ export default function ContestsScreen() {
                 style={{
                   color: colors.onSurfaceVariant,
                   fontWeight: "600",
-                  fontSize: 12,
+                  fontSize: 11,
                   marginLeft: 5,
                 }}
               >
@@ -236,20 +240,21 @@ export default function ContestsScreen() {
                   styles.iconBtn,
                   {
                     backgroundColor: item.reminderSet
-                      ? platformColor + "25"
-                      : colors.surfaceVariant,
-                    opacity: pressed ? 0.7 : 1,
+                      ? colors.primaryContainer
+                      : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                    borderColor: item.reminderSet ? colors.primary : colors.outline,
+                    transform: [{ scale: pressed ? 0.92 : 1 }],
                   },
                 ]}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                   toggleReminder(item.id, !item.reminderSet);
                 }}
               >
                 <MaterialCommunityIcons
                   name={item.reminderSet ? "bell-ring" : "bell-outline"}
                   size={16}
-                  color={item.reminderSet ? platformColor : colors.onSurfaceVariant}
+                  color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
                 />
               </Pressable>
 
@@ -257,8 +262,8 @@ export default function ContestsScreen() {
                 style={({ pressed }) => [
                   styles.registerBtn,
                   {
-                    backgroundColor: platformColor,
-                    opacity: pressed ? 0.8 : 1,
+                    backgroundColor: colors.primary,
+                    transform: [{ scale: pressed ? 0.94 : 1 }],
                   },
                 ]}
                 onPress={() => {
@@ -268,17 +273,17 @@ export default function ContestsScreen() {
               >
                 <Text
                   style={{
-                    color: registerTextColor,
-                    fontWeight: "700",
+                    color: dark ? "#0F172A" : "#FFFFFF",
+                    fontWeight: "800",
                     fontSize: 12,
                   }}
                 >
-                  Register
+                  Open
                 </Text>
                 <MaterialCommunityIcons
-                  name="arrow-top-right"
+                  name="open-in-new"
                   size={13}
-                  color={registerTextColor}
+                  color={dark ? "#0F172A" : "#FFFFFF"}
                 />
               </Pressable>
             </View>
@@ -291,7 +296,7 @@ export default function ContestsScreen() {
   if (isLoading && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <Text style={[styles.title, { color: colors.onSurface }]}>
             Contests
           </Text>
@@ -304,11 +309,15 @@ export default function ContestsScreen() {
   return (
     <ErrorBoundary fallbackTitle="Contests Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
+        {/* Expressive Header */}
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <View>
-            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-              {upcomingContests.length > 0 ? `${upcomingContests.length} upcoming` : "upcoming"}
-            </Text>
+            <View style={[styles.countPill, { backgroundColor: colors.primaryContainer }]}>
+              <MaterialCommunityIcons name="trophy" size={12} color={colors.primary} style={{ marginRight: 4 }} />
+              <Text style={[styles.subtitle, { color: colors.primary }]}>
+                {upcomingContests.length > 0 ? `${upcomingContests.length} rounds scheduled` : "Timeline"}
+              </Text>
+            </View>
             <Text style={[styles.title, { color: colors.onSurface }]}>
               Contests
             </Text>
@@ -327,26 +336,33 @@ export default function ContestsScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setSelectedPlatform("all");
             }}
-            style={[
+            style={({ pressed }) => [
               styles.chip,
               {
                 backgroundColor:
                   selectedPlatform === "all"
-                    ? colors.onSurface
-                    : colors.surface,
+                    ? colors.primary
+                    : (dark ? colors.surfaceVariant : colors.surface),
                 borderColor:
                   selectedPlatform === "all"
-                    ? colors.onSurface
+                    ? "transparent"
                     : colors.outline,
+                transform: [{ scale: pressed ? 0.96 : 1 }],
               },
             ]}
           >
+            <MaterialCommunityIcons
+              name="apps"
+              size={15}
+              color={selectedPlatform === "all" ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurfaceVariant}
+              style={{ marginRight: 4 }}
+            />
             <Text
               style={{
                 color:
                   selectedPlatform === "all"
-                    ? colors.background
-                    : colors.onSurfaceVariant,
+                    ? (dark ? "#0F172A" : "#FFFFFF")
+                    : colors.onSurface,
                 fontWeight: "700",
                 fontSize: 13,
               }}
@@ -356,19 +372,18 @@ export default function ContestsScreen() {
           </Pressable>
 
           {Object.values(PLATFORMS)
-            .filter((p) => ["codeforces", "leetcode", "codechef", "atcoder"].includes(p.id))
+            .filter((p) => ["codeforces", "leetcode", "codechef", "atcoder", "geeksforgeeks", "hackerrank"].includes(p.id))
             .map((platform) => {
             let platformColor = platform.color;
             if (platform.id === "atcoder") {
-              platformColor = dark ? "#E5E5E5" : "#111111";
+              platformColor = dark ? "#FFFFFF" : "#181A20";
             }
             const isSelected = selectedPlatform === platform.id;
             const chipIsLight =
               platformColor.toUpperCase() === "#FFFFFF" ||
-              platformColor.toUpperCase() === "#E5E5E5" ||
               platformColor.toUpperCase() === "#FFBF00";
             const chipTextColor = isSelected
-              ? chipIsLight ? "#111111" : "#FFFFFF"
+              ? chipIsLight ? "#0F172A" : "#FFFFFF"
               : colors.onSurface;
 
             return (
@@ -378,17 +393,18 @@ export default function ContestsScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setSelectedPlatform(platform.id);
                 }}
-                style={[
+                style={({ pressed }) => [
                   styles.chip,
                   {
-                    backgroundColor: isSelected ? platformColor : colors.surface,
-                    borderColor: isSelected ? platformColor : colors.outline,
+                    backgroundColor: isSelected ? platformColor : (dark ? colors.surfaceVariant : colors.surface),
+                    borderColor: isSelected ? "transparent" : colors.outline,
+                    transform: [{ scale: pressed ? 0.96 : 1 }],
                   },
                 ]}
               >
                 <MaterialCommunityIcons
                   name={(platform.icon as any) || "code-tags"}
-                  size={13}
+                  size={14}
                   color={isSelected ? chipTextColor : platformColor}
                 />
                 <Text
@@ -421,13 +437,14 @@ export default function ContestsScreen() {
                   <View style={styles.liveDot} />
                   <Text
                     style={{
-                      color: "#FF453A",
+                      color: "#EF4444",
                       fontWeight: "800",
                       fontSize: 11,
-                      letterSpacing: 1,
+                      letterSpacing: 0.8,
+                      textTransform: "uppercase",
                     }}
                   >
-                    LIVE
+                    LIVE ROUNDS
                   </Text>
                 </View>
               )}
@@ -435,9 +452,9 @@ export default function ContestsScreen() {
                 <Text
                   style={{
                     color: colors.onSurfaceVariant,
-                    fontWeight: "700",
+                    fontWeight: "800",
                     fontSize: 11,
-                    letterSpacing: 1.5,
+                    letterSpacing: 1.2,
                     textTransform: "uppercase",
                   }}
                 >
@@ -446,7 +463,7 @@ export default function ContestsScreen() {
               )}
             </View>
           )}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 90 }]}
           showsVerticalScrollIndicator={false}
           stickySectionHeadersEnabled={true}
           initialNumToRender={10}
@@ -468,13 +485,13 @@ export default function ContestsScreen() {
                   name="trophy-broken"
                   size={52}
                   color={colors.onSurfaceVariant}
-                  style={{ opacity: 0.2, marginBottom: 16 }}
+                  style={{ opacity: 0.3, marginBottom: 16 }}
                 />
                 <Text
                   style={{
                     color: colors.onSurface,
                     fontWeight: "800",
-                    fontSize: 17,
+                    fontSize: 18,
                     marginBottom: 6,
                   }}
                 >
@@ -488,7 +505,7 @@ export default function ContestsScreen() {
                     lineHeight: 20,
                   }}
                 >
-                  Try changing filters or pull to refresh.
+                  Try changing platform filters or pull to refresh.
                 </Text>
               </View>
             ) : (
@@ -510,19 +527,27 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 10,
+  },
+  countPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 1.5,
+    fontSize: 11,
+    fontWeight: "700",
     textTransform: "uppercase",
-    marginBottom: 2,
+    letterSpacing: 0.5,
   },
   title: {
     fontWeight: "900",
-    fontSize: 30,
-    letterSpacing: -0.5,
+    fontSize: 32,
+    letterSpacing: -0.8,
   },
   chipsScroll: {
     flexGrow: 0,
@@ -530,7 +555,7 @@ const styles = StyleSheet.create({
   },
   chipsContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 12,
     paddingTop: 2,
     gap: 8,
     flexDirection: "row",
@@ -542,41 +567,42 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 100,
-    borderWidth: 1.5,
+    paddingVertical: 9,
+    borderRadius: 999,
+    borderWidth: 1,
     alignSelf: "center",
   },
   listContent: {
-    paddingBottom: 100,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
   },
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 20,
+    paddingTop: 18,
     paddingBottom: 10,
-    paddingHorizontal: 4,
   },
   livePill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#FF453A18",
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 100,
+    borderRadius: 999,
   },
   liveDot: {
     width: 7,
     height: 7,
-    borderRadius: 4,
-    backgroundColor: "#FF453A",
+    borderRadius: 3.5,
+    backgroundColor: "#EF4444",
+  },
+  cardPressable: {
+    marginBottom: 12,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 24, // M3 Expressive squircle
     padding: 18,
-    marginBottom: 12,
+    borderWidth: 1,
     overflow: "hidden",
   },
   cardHeader: {
@@ -587,29 +613,33 @@ const styles = StyleSheet.create({
   platformBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 100,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   dateChip: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   divider: {
     height: 1,
-    marginTop: 14,
+    marginTop: 12,
     marginBottom: 12,
-    opacity: 0.5,
   },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  metaItem: {
+  metaPill: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   actionsRow: {
     flexDirection: "row",
@@ -617,23 +647,25 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
   },
   registerBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 999, // M3 pill button
   },
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 80,
+    paddingTop: 60,
   },
 });
+

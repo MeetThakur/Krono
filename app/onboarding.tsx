@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import React, { useRef, useState } from "react";
 import {
     Animated,
@@ -38,7 +39,7 @@ const SLIDES: OnboardingSlide[] = [
     icon: "trophy-variant-outline",
     title: "All Contests, One Place",
     subtitle:
-      "Upcoming contests from Codeforces, LeetCode, AtCoder, and CodeChef — all in a single timeline.",
+      "Upcoming contests from Codeforces, LeetCode, AtCoder, CodeChef, and more — all in a single timeline.",
     accent: "#EF4444",
   },
   {
@@ -46,7 +47,7 @@ const SLIDES: OnboardingSlide[] = [
     icon: "chart-timeline-variant-shimmer",
     title: "Track Your Progress",
     subtitle:
-      "Connect your profiles to see live ratings, rating graphs, contest history, and detailed analytics.",
+      "Connect your profiles to see live ratings, rating graphs, contest history, and rival leaderboards.",
     accent: "#10B981",
   },
   {
@@ -54,7 +55,7 @@ const SLIDES: OnboardingSlide[] = [
     icon: "bell-ring-outline",
     title: "Never Miss a Contest",
     subtitle:
-      "Get smart notifications before contests start. Set your preferred reminder timing in Settings.",
+      "Get smart notifications before contests start. Customize reminders and background sync in Settings.",
     accent: "#F59E0B",
   },
 ];
@@ -82,6 +83,7 @@ export default function OnboardingScreen() {
   const viewConfig = useRef({ viewAreaCoveragePercentThreshold: 50 }).current;
 
   const handleNext = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isLast) {
       completeOnboarding();
       router.replace("/(tabs)");
@@ -94,6 +96,7 @@ export default function OnboardingScreen() {
   };
 
   const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     completeOnboarding();
     router.replace("/(tabs)");
   };
@@ -120,18 +123,23 @@ export default function OnboardingScreen() {
     return (
       <View style={[styles.slide, { width: SCREEN_WIDTH }]}>
         <Animated.View style={{ alignItems: "center", transform: [{ translateY }], opacity }}>
-          {/* Icon */}
+          {/* M3 Expressive Icon Squircle */}
           <View
             style={[
-              styles.iconCircle,
+              styles.iconSquircle,
               {
-                backgroundColor: item.accent + "1A",
+                backgroundColor: item.accent + "18",
+                borderColor: item.accent + "35",
+                shadowColor: item.accent,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.2,
+                shadowRadius: 20,
               },
             ]}
           >
             <MaterialCommunityIcons
               name={item.icon as any}
-              size={56}
+              size={60}
               color={item.accent}
             />
           </View>
@@ -169,14 +177,22 @@ export default function OnboardingScreen() {
       {!isLast && (
         <Pressable
           onPress={handleSkip}
-          style={[styles.skipButton, { top: insets.top + 16 }]}
+          style={({ pressed }) => [
+            styles.skipButton, 
+            { 
+              top: insets.top + 16,
+              opacity: pressed ? 0.6 : 1,
+            }
+          ]}
           hitSlop={12}
         >
           <Text
             style={{
               color: colors.onSurfaceVariant,
-              fontWeight: "700",
-              fontSize: 15,
+              fontWeight: "800",
+              fontSize: 14,
+              letterSpacing: 0.5,
+              textTransform: "uppercase",
             }}
           >
             Skip
@@ -205,7 +221,7 @@ export default function OnboardingScreen() {
 
       {/* Bottom area: dots + button */}
       <View style={styles.bottomArea}>
-        {/* Pagination dots */}
+        {/* M3 Pagination pills */}
         <View style={styles.pagination}>
           {SLIDES.map((slide, index) => {
             const inputRange = [
@@ -216,7 +232,7 @@ export default function OnboardingScreen() {
 
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [6, 24, 6],
+              outputRange: [8, 28, 8],
               extrapolate: "clamp",
             });
 
@@ -234,7 +250,7 @@ export default function OnboardingScreen() {
                   {
                     width: dotWidth,
                     opacity: dotOpacity,
-                    backgroundColor: colors.onSurface,
+                    backgroundColor: colors.primary,
                   },
                 ]}
               />
@@ -248,25 +264,24 @@ export default function OnboardingScreen() {
           style={({ pressed }) => [
             styles.nextButton,
             {
-              backgroundColor: colors.onSurface,
-              opacity: pressed ? 0.8 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
+              backgroundColor: colors.primary,
+              transform: [{ scale: pressed ? 0.97 : 1 }],
             },
           ]}
         >
           {isLast ? (
-            <Text style={[styles.buttonText, { color: colors.background }]}>
+            <Text style={[styles.buttonText, { color: dark ? "#0F172A" : "#FFFFFF" }]}>
               Get Started
             </Text>
           ) : (
             <View style={styles.nextButtonInner}>
-              <Text style={[styles.buttonText, { color: colors.background }]}>
+              <Text style={[styles.buttonText, { color: dark ? "#0F172A" : "#FFFFFF" }]}>
                 Next
               </Text>
               <MaterialCommunityIcons
                 name="arrow-right"
                 size={20}
-                color={colors.background}
+                color={dark ? "#0F172A" : "#FFFFFF"}
               />
             </View>
           )}
@@ -294,12 +309,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 40,
+    paddingHorizontal: 36,
   },
-  iconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  iconSquircle: {
+    width: 124,
+    height: 124,
+    borderRadius: 36, // M3 Expressive squircle
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 40,
@@ -308,19 +324,18 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "900",
     textAlign: "center",
-    letterSpacing: -1,
-    marginBottom: 16,
+    letterSpacing: -0.8,
+    marginBottom: 14,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: "center",
     lineHeight: 24,
     fontWeight: "500",
-    opacity: 0.7,
   },
   bottomArea: {
-    paddingHorizontal: 32,
-    gap: 32,
+    paddingHorizontal: 28,
+    gap: 28,
     alignItems: "center",
   },
   pagination: {
@@ -329,13 +344,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dot: {
-    height: 6,
-    borderRadius: 3,
+    height: 8,
+    borderRadius: 4,
   },
   nextButton: {
     width: "100%",
     height: 56,
-    borderRadius: 100,
+    borderRadius: 999, // M3 Expressive pill
     alignItems: "center",
     justifyContent: "center",
   },
@@ -345,7 +360,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
   },
 });
+

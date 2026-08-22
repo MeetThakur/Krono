@@ -21,6 +21,7 @@ import {
 import { ContestList } from "../../src/components/contests/ContestList";
 import { CumulativeStats } from "../../src/components/profile/CumulativeStats";
 import { ProfileCarousel } from "../../src/components/profile/ProfileCarousel";
+import { ReorderProfilesModal } from "../../src/components/profile/ReorderProfilesModal";
 import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
@@ -29,15 +30,11 @@ import { useProfileStore } from "../../src/stores/useProfileStore";
 const getDifficultyColor = (difficulty?: string): string => {
   const d = (difficulty || "").toLowerCase();
   if (d.includes("easy") || d.includes("basic") || d.includes("school"))
-    return "#10B981"; // Vibrant green
+    return "#10B981"; // Vibrant emerald
   if (d.includes("medium") || d.includes("intermediate")) return "#F59E0B"; // Vibrant amber
-  if (d.includes("hard") || d.includes("advanced")) return "#EF4444"; // Vibrant red
-  return "#6B7280";
+  if (d.includes("hard") || d.includes("advanced")) return "#EF4444"; // Vibrant rose
+  return "#64748B";
 };
-
-
-
-import { ReorderProfilesModal } from "../../src/components/profile/ReorderProfilesModal";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -114,53 +111,79 @@ export default function DashboardScreen() {
     return start <= sevenDaysFromNow;
   });
 
-
-
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <View>
             <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>TODAY</Text>
             <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
           </View>
-          <MaterialCommunityIcons
-            name="cog-outline"
-            size={22}
-            color={colors.onSurfaceVariant}
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingsBtn,
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                transform: [{ scale: pressed ? 0.94 : 1 }]
+              }
+            ]}
             onPress={() => router.push("/settings")}
-          />
+          >
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={20}
+              color={colors.onSurface}
+            />
+          </Pressable>
         </View>
         <DashboardSkeleton />
       </View>
     );
   }
 
-  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
   return (
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Minimal header */}
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 10 }]}>
+        {/* Expressive top app bar */}
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <View>
-            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
-              {currentDate}
-            </Text>
+            <View style={[styles.datePill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+              <MaterialCommunityIcons name="calendar-today" size={12} color={colors.onSurfaceVariant} style={{ marginRight: 5 }} />
+              <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
+                {currentDate}
+              </Text>
+            </View>
             <Text style={[styles.logo, { color: colors.onSurface }]}>
               Krono
             </Text>
           </View>
-          <MaterialCommunityIcons
-            name="cog-outline"
-            size={24}
-            color={colors.onSurfaceVariant}
-            onPress={() => router.push("/settings")}
-          />
+          <Pressable
+            style={({ pressed }) => [
+              styles.settingsBtn,
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                transform: [{ scale: pressed ? 0.94 : 1 }]
+              }
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push("/settings");
+            }}
+          >
+            <MaterialCommunityIcons
+              name="cog-outline"
+              size={20}
+              color={colors.onSurface}
+            />
+          </Pressable>
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 90 }]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -171,53 +194,67 @@ export default function DashboardScreen() {
             />
           }
         >
-          {/* Profiles */}
+          {/* Profiles Carousel */}
           {profiles.length > 0 ? (
             <View style={styles.section}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingRight: 24, marginBottom: 12 }}>
-                <Text
-                  style={[styles.sectionLabel, { color: colors.onSurfaceVariant, marginBottom: 0 }]}
-                >
-                  YOUR PROFILES
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>
+                  CONNECTED PROFILES
                 </Text>
                 <Pressable
-                  onPress={() => setReorderModalVisible(true)}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setReorderModalVisible(true);
+                  }}
                   style={({ pressed }) => [
-                    { opacity: pressed ? 0.7 : 1, padding: 4 }
+                    styles.reorderBtn,
+                    { 
+                      backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                      transform: [{ scale: pressed ? 0.94 : 1 }]
+                    }
                   ]}
                 >
-                  <MaterialCommunityIcons name="swap-vertical" size={20} color={colors.primary} />
+                  <MaterialCommunityIcons name="swap-vertical" size={16} color={colors.primary} style={{ marginRight: 4 }} />
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.primary }}>
+                    Reorder
+                  </Text>
                 </Pressable>
               </View>
               <ProfileCarousel profiles={profiles} />
             </View>
           ) : (
             <View style={styles.section}>
-              <View
-                style={[
+              <Pressable
+                style={({ pressed }) => [
                   styles.connectCard,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: dark ? colors.surfaceVariant : colors.surface,
                     borderColor: colors.outline,
                     shadowColor: "#000",
                     shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: dark ? 0.04 : 0.02,
-                    shadowRadius: 4,
+                    shadowOpacity: dark ? 0.15 : 0.03,
+                    shadowRadius: 10,
                     elevation: 2,
+                    transform: [{ scale: pressed ? 0.98 : 1 }]
                   },
                 ]}
-                onTouchEnd={() => router.push("/settings")}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push("/settings");
+                }}
               >
-                <MaterialCommunityIcons
-                  name="account-plus-outline"
-                  size={20}
-                  color={colors.onSurfaceVariant}
-                />
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={[styles.connectIconCircle, { backgroundColor: colors.primaryContainer }]}>
+                  <MaterialCommunityIcons
+                    name="account-plus-outline"
+                    size={22}
+                    color={colors.primary}
+                  />
+                </View>
+                <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text
                     style={{
-                      fontWeight: "700",
-                      fontSize: 14,
+                      fontWeight: "800",
+                      fontSize: 15,
                       color: colors.onSurface,
                     }}
                   >
@@ -228,25 +265,25 @@ export default function DashboardScreen() {
                       fontSize: 12,
                       color: colors.onSurfaceVariant,
                       marginTop: 2,
+                      fontWeight: "500",
                     }}
                   >
-                    LeetCode, Codeforces, CodeChef...
+                    Codeforces, LeetCode, AtCoder, CodeChef...
                   </Text>
                 </View>
                 <MaterialCommunityIcons
                   name="chevron-right"
-                  size={18}
+                  size={20}
                   color={colors.onSurfaceVariant}
-                  style={{ opacity: 0.5 }}
                 />
-              </View>
+              </Pressable>
             </View>
           )}
 
-          {/* Total Stats */}
+          {/* Cumulative Stats */}
           {profiles.length > 0 && <CumulativeStats profiles={profiles} />}
 
-          {/* Daily Challenge */}
+          {/* Daily Challenge (POTD) */}
           <View style={styles.section}>
             <Text
               style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
@@ -262,52 +299,52 @@ export default function DashboardScreen() {
                 style={({ pressed }) => [
                   styles.potdCard,
                   {
-                    backgroundColor: colors.surface,
-                    borderColor: dark ? "#FFA11630" : "#FFA11650",
-                    borderWidth: 1.5,
+                    backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                    borderColor: dark ? "#FFA11640" : "#FFA11670",
                     shadowColor: "#FFA116",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: dark ? 0.15 : 0.08,
-                    shadowRadius: 12,
+                    shadowOffset: { width: 0, height: 6 },
+                    shadowOpacity: dark ? 0.2 : 0.1,
+                    shadowRadius: 16,
                     elevation: 4,
-                    opacity: pressed ? 0.95 : 1,
-                    transform: [{ scale: pressed ? 0.98 : 1 }]
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                    opacity: pressed ? 0.96 : 1,
                   },
                 ]}
               >
                 {isPotdLoading && !leetcode ? (
-                  <View style={{ gap: 8, padding: 16 }}>
-                    <Skeleton width="85%" height={14} />
+                  <View style={{ gap: 8, padding: 18 }}>
+                    <Skeleton width="85%" height={16} />
                     <Skeleton width="40%" height={12} />
                   </View>
                 ) : (
                   <View style={styles.potdInner}>
-                    <View
-                      style={[
-                        styles.potdDot,
-                        { backgroundColor: "#FFA116" },
-                      ]}
-                    />
-                    <View style={{ flex: 1 }}>
+                    <View style={[styles.potdIconBadge, { backgroundColor: "rgba(255, 161, 22, 0.15)" }]}>
+                      <MaterialCommunityIcons name="code-braces" size={22} color="#FFA116" />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: "#FFA116",
+                            fontWeight: "800",
+                            letterSpacing: 0.5,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          LeetCode POTD
+                        </Text>
+                      </View>
                       <Text
                         numberOfLines={1}
                         style={{
-                          fontWeight: "700",
-                          fontSize: 14,
+                          fontWeight: "800",
+                          fontSize: 15,
                           color: colors.onSurface,
+                          lineHeight: 20,
                         }}
                       >
                         {leetcode?.title || "No problem today"}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          color: colors.onSurfaceVariant,
-                          marginTop: 3,
-                          fontWeight: "600",
-                        }}
-                      >
-                        LeetCode
                       </Text>
                     </View>
                     {leetcode?.difficulty && (
@@ -323,7 +360,7 @@ export default function DashboardScreen() {
                         <Text
                           style={{
                             color: getDifficultyColor(leetcode.difficulty),
-                            fontWeight: "700",
+                            fontWeight: "800",
                             fontSize: 11,
                           }}
                         >
@@ -333,9 +370,9 @@ export default function DashboardScreen() {
                     )}
                     <MaterialCommunityIcons
                       name="chevron-right"
-                      size={18}
+                      size={20}
                       color={colors.onSurfaceVariant}
-                      style={{ opacity: 0.4, marginLeft: 4 }}
+                      style={{ opacity: 0.5, marginLeft: 4 }}
                     />
                   </View>
                 )}
@@ -350,20 +387,21 @@ export default function DashboardScreen() {
                 <View style={styles.liveDot} />
                 <Text
                   style={{
-                    fontWeight: "700",
-                    fontSize: 14,
-                    color: "#FF453A",
-                    letterSpacing: 0.3,
+                    fontWeight: "800",
+                    fontSize: 12,
+                    color: "#EF4444",
+                    letterSpacing: 0.8,
+                    textTransform: "uppercase",
                   }}
                 >
-                  LIVE NOW
+                  LIVE ROUNDS NOW
                 </Text>
               </View>
               <ContestList contests={ongoingContests} emptyMessage="" compact />
             </View>
           )}
 
-          {/* Upcoming Contests — compact on dashboard */}
+          {/* Upcoming Contests */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text
@@ -372,19 +410,33 @@ export default function DashboardScreen() {
                   { color: colors.onSurfaceVariant, paddingHorizontal: 0 },
                 ]}
               >
-                UPCOMING
+                UPCOMING ROUNDS
               </Text>
               {upcomingOnly.length > 3 && (
-                <Text
-                  style={{
-                    color: colors.primary,
-                    fontWeight: "600",
-                    fontSize: 13,
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push("/contests");
                   }}
-                  onPress={() => router.push("/contests")}
+                  style={({ pressed }) => [
+                    styles.seeAllPill,
+                    {
+                      backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                      transform: [{ scale: pressed ? 0.94 : 1 }]
+                    }
+                  ]}
                 >
-                  See all
-                </Text>
+                  <Text
+                    style={{
+                      color: colors.primary,
+                      fontWeight: "700",
+                      fontSize: 12,
+                    }}
+                  >
+                    See all
+                  </Text>
+                  <MaterialCommunityIcons name="arrow-right" size={13} color={colors.primary} style={{ marginLeft: 3 }} />
+                </Pressable>
               )}
             </View>
             <ContestList
@@ -411,78 +463,123 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+  },
+  datePill: {
+    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 12,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginBottom: 4,
   },
   logo: {
     fontWeight: "900",
-    fontSize: 28,
-    letterSpacing: -1,
+    fontSize: 32,
+    letterSpacing: -0.8,
+    lineHeight: 36,
   },
   greeting: {
-    opacity: 0.8,
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  settingsBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   content: {
-    paddingBottom: 100,
+    paddingTop: 10,
   },
   section: {
-    marginBottom: 44,
+    marginBottom: 32,
   },
   sectionLabel: {
     fontWeight: "800",
     letterSpacing: 1.2,
-    fontSize: 12,
-    paddingHorizontal: 24,
-    marginBottom: 16,
+    fontSize: 11,
+    paddingHorizontal: 20,
+    textTransform: "uppercase",
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 24,
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  reorderBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  seeAllPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   connectCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
+    padding: 16,
     marginHorizontal: 20,
-    borderRadius: 14,
+    borderRadius: 24, // M3 Expressive squircle
     borderWidth: 1,
   },
+  connectIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   potdCard: {
-    borderRadius: 14,
-    borderWidth: 1,
+    borderRadius: 24, // M3 Expressive squircle
+    borderWidth: 1.5,
     overflow: "hidden",
   },
   potdInner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 20,
-    gap: 12,
+    padding: 16,
   },
-  potdDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  potdIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
   },
   diffBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginLeft: 6,
   },
   liveHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 24,
-    marginBottom: 8,
+    paddingHorizontal: 20,
+    marginBottom: 12,
   },
   liveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#FF453A",
+    backgroundColor: "#EF4444",
   },
 });
+

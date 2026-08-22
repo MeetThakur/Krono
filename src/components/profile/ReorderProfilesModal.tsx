@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Avatar, IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { Avatar, Surface, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProfileStore } from "../../stores/useProfileStore";
 import { PLATFORMS } from "../../types/platform";
@@ -17,7 +17,7 @@ export const ReorderProfilesModal: React.FC<ReorderProfilesModalProps> = ({
   visible,
   onDismiss,
 }) => {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const insets = useSafeAreaInsets();
   const { profiles, reorderProfiles } = useProfileStore();
   const [localProfiles, setLocalProfiles] = useState<UnifiedProfile[]>([]);
@@ -61,71 +61,99 @@ export const ReorderProfilesModal: React.FC<ReorderProfilesModalProps> = ({
             onPress={onDismiss}
             style={({ pressed }) => [
               styles.iconBtn,
-              { backgroundColor: colors.surface, opacity: pressed ? 0.7 : 1 },
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface, 
+                borderColor: colors.outline,
+                transform: [{ scale: pressed ? 0.94 : 1 }]
+              },
             ]}
           >
-            <MaterialCommunityIcons name="close" size={24} color={colors.onSurface} />
+            <MaterialCommunityIcons name="close" size={20} color={colors.onSurface} />
           </Pressable>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: colors.onSurface }}>
-            Reorder Banners
+          <Text style={{ fontSize: 17, fontWeight: "800", color: colors.onSurface, letterSpacing: -0.2 }}>
+            Reorder Cards
           </Text>
           <Pressable
             onPress={handleSave}
             style={({ pressed }) => [
-              styles.iconBtn,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.7 : 1 },
+              styles.saveBtn,
+              { 
+                backgroundColor: colors.primary, 
+                transform: [{ scale: pressed ? 0.94 : 1 }]
+              },
             ]}
           >
-            <MaterialCommunityIcons name="check" size={24} color={colors.onPrimary} />
+            <Text style={{ color: dark ? "#0F172A" : "#FFFFFF", fontWeight: "700", fontSize: 13 }}>
+              Done
+            </Text>
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={styles.listContent}>
+        <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
           {localProfiles.map((profile, index) => {
             const platform = PLATFORMS[profile.platformId];
             return (
               <Surface
                 key={profile.id}
-                style={[styles.itemCard, { backgroundColor: colors.surface }]}
+                style={[
+                  styles.itemCard, 
+                  { 
+                    backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                    borderColor: colors.outline,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: dark ? 0.15 : 0.03,
+                    shadowRadius: 10,
+                    elevation: 2,
+                  }
+                ]}
                 elevation={0}
               >
                 <View style={styles.itemInfo}>
-                  {profile.avatar ? (
-                    <Avatar.Image source={{ uri: profile.avatar }} size={40} />
-                  ) : (
-                    <Avatar.Icon
-                      size={40}
-                      icon={(platform?.icon as any) || "account"}
-                      style={{ backgroundColor: platform?.color || colors.primary }}
+                  <View style={[styles.platformIconCircle, { backgroundColor: (platform?.color || colors.primary) + "18" }]}>
+                    <MaterialCommunityIcons
+                      name={(platform?.icon as any) || "code-tags"}
+                      size={20}
+                      color={platform?.color || colors.primary}
                     />
-                  )}
-                  <View style={styles.textContainer}>
-                    <Text style={[styles.platformName, { color: colors.onSurface }]}>
-                      {platform?.name || profile.platformId}
-                    </Text>
-                    <Text style={[styles.handle, { color: colors.onSurfaceVariant }]}>
+                  </View>
+                  <View style={{ marginLeft: 12 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: colors.onSurface }}>
                       @{profile.username}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.onSurfaceVariant, fontWeight: "600", textTransform: "capitalize", marginTop: 2 }}>
+                      {platform?.name}
                     </Text>
                   </View>
                 </View>
 
-                <View style={styles.controls}>
-                  <IconButton
-                    icon="chevron-up"
-                    size={24}
-                    iconColor={colors.onSurface}
+                <View style={styles.actions}>
+                  <Pressable
                     disabled={index === 0}
                     onPress={() => moveUp(index)}
-                    style={styles.controlBtn}
-                  />
-                  <IconButton
-                    icon="chevron-down"
-                    size={24}
-                    iconColor={colors.onSurface}
+                    style={({ pressed }) => [
+                      styles.arrowBtn,
+                      {
+                        backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        opacity: index === 0 ? 0.2 : pressed ? 0.6 : 1,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name="chevron-up" size={22} color={colors.onSurface} />
+                  </Pressable>
+                  <Pressable
                     disabled={index === localProfiles.length - 1}
                     onPress={() => moveDown(index)}
-                    style={styles.controlBtn}
-                  />
+                    style={({ pressed }) => [
+                      styles.arrowBtn,
+                      {
+                        backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        opacity: index === localProfiles.length - 1 ? 0.2 : pressed ? 0.6 : 1,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name="chevron-down" size={22} color={colors.onSurface} />
+                  </Pressable>
                 </View>
               </Surface>
             );
@@ -146,13 +174,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingBottom: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(127,127,127,0.2)",
   },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  saveBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -164,24 +198,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 16,
+    padding: 14,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   itemInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    flex: 1,
   },
-  textContainer: {
-    flex: 1,
-  },
-  platformName: {
-    fontSize: 16,
-    fontWeight: "700",
+  platformIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   handle: {
     fontSize: 14,
+  },
+  actions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  arrowBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   controls: {
     flexDirection: "row",

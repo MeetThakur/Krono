@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import {
@@ -14,19 +15,28 @@ import {
     TextInput,
     useTheme,
 } from "react-native-paper";
-import { notificationService } from "../../src/services/notificationService";
-import { useOnboardingStore } from "../../src/stores/useOnboardingStore";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 import { useSettingsStore } from "../../src/stores/useSettingsStore";
-import { useThemeStore } from "../../src/stores/useThemeStore";
+import { useThemeStore, ThemeColor } from "../../src/stores/useThemeStore";
+import { themePalettes } from "../../src/theme/md3-theme";
 import { PLATFORMS, PlatformId } from "../../src/types/platform";
+
+const THEME_OPTIONS: { id: ThemeColor; name: string; color: string }[] = [
+  { id: "monochrome", name: "Default", color: "#181A20" },
+  { id: "blue", name: "Cobalt", color: "#2563EB" },
+  { id: "emerald", name: "Emerald", color: "#059669" },
+  { id: "violet", name: "Violet", color: "#7C3AED" },
+  { id: "rose", name: "Rose", color: "#E11D48" },
+  { id: "amber", name: "Amber", color: "#D97706" },
+];
 
 export default function SettingsScreen() {
   const { colors, dark } = useTheme();
   const router = useRouter();
-  const { isDarkMode, toggleTheme } = useThemeStore();
+  const insets = useSafeAreaInsets();
+  const { isDarkMode, toggleTheme, themeColor, setThemeColor } = useThemeStore();
   const { profiles, addProfile, removeProfile, isLoading } = useProfileStore();
-  const { resetOnboarding } = useOnboardingStore();
   const {
     notificationsEnabled,
     backgroundSyncEnabled,
@@ -42,6 +52,7 @@ export default function SettingsScreen() {
 
   const handleAddProfile = async () => {
     if (!selectedPlatform || !username.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await addProfile(selectedPlatform, username.trim());
     setDialogVisible(false);
     setUsername("");
@@ -49,6 +60,7 @@ export default function SettingsScreen() {
   };
 
   const openAddDialog = (platform: PlatformId) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedPlatform(platform);
     setDialogVisible(true);
   };
@@ -59,11 +71,11 @@ export default function SettingsScreen() {
 
   const SettingRow = ({ icon, title, description, control }: any) => (
     <View style={styles.settingRow}>
-      <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
-        <MaterialCommunityIcons name={icon} size={22} color={colors.primary} />
+      <View style={[styles.iconContainer, { backgroundColor: colors.primaryContainer }]}>
+        <MaterialCommunityIcons name={icon} size={20} color={colors.primary} />
       </View>
       <View style={{ flex: 1, paddingHorizontal: 12 }}>
-        <Text style={{ fontWeight: "700", fontSize: 15, color: colors.onSurface }}>{title}</Text>
+        <Text style={{ fontWeight: "800", fontSize: 15, color: colors.onSurface }}>{title}</Text>
         {description && (
           <Text style={{ fontSize: 12, color: colors.onSurfaceVariant, marginTop: 2, fontWeight: "500" }}>{description}</Text>
         )}
@@ -74,49 +86,178 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.onSurface }]}>
-          Settings
-        </Text>
+      {/* Expressive Header */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.back();
+            }}
+            style={({ pressed }) => [
+              styles.backBtn,
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                transform: [{ scale: pressed ? 0.92 : 1 }]
+              }
+            ]}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.onSurface} />
+          </Pressable>
+          <Text style={[styles.title, { color: colors.onSurface, marginLeft: 12 }]}>
+            Settings
+          </Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Appearance */}
+      <ScrollView 
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 40 }]} 
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Appearance & Theming */}
         <View style={styles.sectionContainer}>
           <Text
             style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            APPEARANCE
+            APPEARANCE & THEME
           </Text>
-          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
+          <Surface 
+            style={[
+              styles.surfaceCard, 
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: dark ? 0.15 : 0.03,
+                shadowRadius: 12,
+                elevation: 2,
+              }
+            ]} 
+            elevation={0}
+          >
             <SettingRow
               icon="moon-waning-crescent"
-              title="Dark Mode"
-              control={<Switch value={isDarkMode} onValueChange={toggleTheme} color={colors.primary} />}
+              title="Dark Theme"
+              description="High contrast OLED-friendly surfaces"
+              control={
+                <Switch 
+                  value={isDarkMode} 
+                  onValueChange={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    toggleTheme();
+                  }} 
+                  color={colors.primary} 
+                />
+              }
             />
+
+            <Divider style={{ opacity: 0.3, marginVertical: 14 }} />
+
+            <View style={{ paddingTop: 2 }}>
+              <Text style={{ fontSize: 13, fontWeight: "800", color: colors.onSurface, marginBottom: 12 }}>
+                Accent Color Palette
+              </Text>
+              <View style={styles.paletteRow}>
+                {THEME_OPTIONS.map((themeOpt) => {
+                  const isSelected = themeColor === themeOpt.id;
+                  const palette = themePalettes[themeOpt.id];
+                  const swatchColor = dark ? palette.dark : palette.light;
+
+                  return (
+                    <Pressable
+                      key={themeOpt.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setThemeColor(themeOpt.id);
+                      }}
+                      style={({ pressed }) => [
+                        styles.paletteItem,
+                        { transform: [{ scale: pressed ? 0.92 : 1 }] }
+                      ]}
+                    >
+                      <View 
+                        style={[
+                          styles.colorCircle, 
+                          { 
+                            backgroundColor: swatchColor,
+                            borderColor: isSelected ? colors.onSurface : "transparent",
+                            borderWidth: isSelected ? 3 : 0,
+                          }
+                        ]}
+                      >
+                        {isSelected && (
+                          <MaterialCommunityIcons 
+                            name="check" 
+                            size={16} 
+                            color={themeOpt.id === "monochrome" && !dark ? "#FFFFFF" : (dark ? "#0F172A" : "#FFFFFF")} 
+                          />
+                        )}
+                      </View>
+                      <Text style={{ fontSize: 10, fontWeight: "700", color: isSelected ? colors.primary : colors.onSurfaceVariant, marginTop: 4 }}>
+                        {themeOpt.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
           </Surface>
         </View>
 
-        {/* Notifications */}
+        {/* Notifications & Sync */}
         <View style={styles.sectionContainer}>
           <Text
             style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            NOTIFICATIONS
+            NOTIFICATIONS & BACKGROUND
           </Text>
-          <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface }]} elevation={0}>
+          <Surface 
+            style={[
+              styles.surfaceCard, 
+              { 
+                backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: dark ? 0.15 : 0.03,
+                shadowRadius: 12,
+                elevation: 2,
+              }
+            ]} 
+            elevation={0}
+          >
             <SettingRow
               icon="bell-outline"
-              title="Push Notifications"
-              control={<Switch value={notificationsEnabled} onValueChange={toggleNotifications} color={colors.primary} />}
+              title="Contest Alerts"
+              description="Push notifications before contest start"
+              control={
+                <Switch 
+                  value={notificationsEnabled} 
+                  onValueChange={(val) => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    toggleNotifications(val);
+                  }} 
+                  color={colors.primary} 
+                />
+              }
             />
-            <Divider style={{ opacity: 0.3, marginVertical: 12 }} />
+            <Divider style={{ opacity: 0.3, marginVertical: 14 }} />
             <SettingRow
               icon="sync"
               title="Background Sync"
-              description="Periodically fetch contests"
-              control={<Switch value={backgroundSyncEnabled} onValueChange={toggleBackgroundSync} color={colors.primary} />}
+              description="Keep contests and ratings refreshed automatically"
+              control={
+                <Switch 
+                  value={backgroundSyncEnabled} 
+                  onValueChange={(val) => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    toggleBackgroundSync(val);
+                  }} 
+                  color={colors.primary} 
+                />
+              }
             />
           </Surface>
         </View>
@@ -126,43 +267,70 @@ export default function SettingsScreen() {
           <Text
             style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
           >
-            CONNECTED PROFILES
+            CONNECTED ACCOUNTS
           </Text>
           {profiles.length === 0 ? (
-            <Text
-              style={{
-                fontWeight: "600",
-                color: colors.onSurfaceVariant,
-                opacity: 0.5,
-                textAlign: "center",
-                marginVertical: 12,
-                fontSize: 13,
-              }}
+            <Surface 
+              style={[
+                styles.surfaceCard, 
+                { 
+                  backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                  borderColor: colors.outline,
+                  alignItems: "center",
+                  paddingVertical: 24,
+                }
+              ]} 
+              elevation={0}
             >
-              No profiles connected yet.
-            </Text>
+              <MaterialCommunityIcons name="account-off-outline" size={32} color={colors.onSurfaceVariant} style={{ opacity: 0.4, marginBottom: 8 }} />
+              <Text
+                style={{
+                  fontWeight: "700",
+                  color: colors.onSurfaceVariant,
+                  fontSize: 14,
+                }}
+              >
+                No profiles connected yet.
+              </Text>
+            </Surface>
           ) : (
-            <Surface style={[styles.surfaceCard, { backgroundColor: colors.surface, paddingVertical: 8 }]} elevation={0}>
+            <Surface 
+              style={[
+                styles.surfaceCard, 
+                { 
+                  backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                  borderColor: colors.outline,
+                  paddingVertical: 6,
+                }
+              ]} 
+              elevation={0}
+            >
               {profiles.map((profile, i) => {
                 const platformConfig = PLATFORMS[profile.platformId];
                 let platformColor = platformConfig?.color || colors.primary;
-                if (profile.platformId === "atcoder" && !isDarkMode) {
-                  platformColor = "#111111";
+                if (profile.platformId === "atcoder") {
+                  platformColor = dark ? "#FFFFFF" : "#181A20";
                 }
 
                 return (
                   <React.Fragment key={profile.id}>
-                    {i > 0 && <Divider style={{ opacity: 0.2, marginVertical: 8 }} />}
+                    {i > 0 && <Divider style={{ opacity: 0.3, marginVertical: 4 }} />}
                     <View style={styles.profileRow}>
                       <View
                         style={[
-                          styles.platformDot,
-                          { backgroundColor: platformColor },
+                          styles.platformIconCircle,
+                          { backgroundColor: platformColor + "18" },
                         ]}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: "700", fontSize: 15, color: colors.onSurface }}>
-                          {profile.username}
+                      >
+                        <MaterialCommunityIcons
+                          name={(platformConfig?.icon as any) || "code-tags"}
+                          size={18}
+                          color={platformColor}
+                        />
+                      </View>
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text style={{ fontWeight: "800", fontSize: 15, color: colors.onSurface }}>
+                          @{profile.username}
                         </Text>
                         <Text
                           style={{
@@ -177,18 +345,21 @@ export default function SettingsScreen() {
                             style={{
                               fontWeight: "700",
                               color: platformColor,
+                              fontFamily: "JetBrainsMono_700Bold",
                             }}
                           >
-                            {profile.rating || "Unrated"}
+                            {profile.rating ?? "Active"}
                           </Text>
                         </Text>
                       </View>
                       <IconButton
-                        icon="close"
+                        icon="trash-can-outline"
                         size={20}
-                        iconColor={colors.onSurfaceVariant}
-                        onPress={() => removeProfile(profile.id)}
-                        style={{ opacity: 0.7 }}
+                        iconColor={colors.error}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          removeProfile(profile.id);
+                        }}
                       />
                     </View>
                   </React.Fragment>
@@ -198,19 +369,19 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Add Profile */}
+        {/* Add Platform */}
         {availablePlatforms.length > 0 && (
           <View style={styles.sectionContainer}>
             <Text
               style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
             >
-              ADD PLATFORM
+              LINK NEW PLATFORM
             </Text>
             <View style={styles.platformGrid}>
               {availablePlatforms.map((platform) => {
                 let platformColor = platform.color;
-                if (platform.id === "atcoder" && !isDarkMode) {
-                  platformColor = "#111111";
+                if (platform.id === "atcoder") {
+                  platformColor = dark ? "#FFFFFF" : "#181A20";
                 }
 
                 return (
@@ -219,9 +390,10 @@ export default function SettingsScreen() {
                     style={({ pressed }) => [
                       styles.platformTile,
                       {
-                        backgroundColor: colors.surface,
-                        opacity: pressed ? 0.8 : 1,
-                        transform: [{ scale: pressed ? 0.98 : 1 }],
+                        backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+                        borderColor: colors.outline,
+                        opacity: pressed ? 0.85 : 1,
+                        transform: [{ scale: pressed ? 0.97 : 1 }],
                       },
                     ]}
                     onPress={() => openAddDialog(platform.id)}
@@ -229,7 +401,7 @@ export default function SettingsScreen() {
                     <View
                       style={[
                         styles.platformIconBg,
-                        { backgroundColor: platformColor + "15" },
+                        { backgroundColor: platformColor + "18" },
                       ]}
                     >
                       <MaterialCommunityIcons
@@ -240,9 +412,9 @@ export default function SettingsScreen() {
                     </View>
                     <Text
                       style={{
-                        fontWeight: "700",
+                        fontWeight: "800",
                         color: colors.onSurface,
-                        marginTop: 12,
+                        marginTop: 10,
                         fontSize: 13,
                       }}
                     >
@@ -254,19 +426,16 @@ export default function SettingsScreen() {
             </View>
           </View>
         )}
-
-
-
-        <View style={{ height: 60 }} />
       </ScrollView>
 
+      {/* Add Profile Dialog */}
       <Portal>
         <Dialog
           visible={dialogVisible}
           onDismiss={() => setDialogVisible(false)}
-          style={{ backgroundColor: colors.surface, borderRadius: 24 }}
+          style={{ backgroundColor: dark ? colors.surfaceVariant : colors.surface, borderRadius: 28 }}
         >
-          <Dialog.Title style={{ fontWeight: "800", color: colors.onSurface }}>
+          <Dialog.Title style={{ fontWeight: "900", color: colors.onSurface, fontSize: 20 }}>
             Add {PLATFORMS[selectedPlatform as PlatformId]?.name}
           </Dialog.Title>
           <Dialog.Content>
@@ -275,9 +444,11 @@ export default function SettingsScreen() {
                 marginBottom: 16,
                 color: colors.onSurfaceVariant,
                 fontWeight: "500",
+                fontSize: 14,
+                lineHeight: 20,
               }}
             >
-              Enter your handle to track your profile and ratings.
+              Enter your competitive programming handle to pull ratings and contest submissions.
             </Text>
             <TextInput
               mode="outlined"
@@ -288,10 +459,10 @@ export default function SettingsScreen() {
               autoCorrect={false}
               outlineColor={colors.outline}
               activeOutlineColor={colors.primary}
-              style={{ backgroundColor: colors.surface }}
+              style={{ backgroundColor: dark ? colors.background : colors.surface }}
             />
           </Dialog.Content>
-          <Dialog.Actions style={{ paddingHorizontal: 24, paddingBottom: 16 }}>
+          <Dialog.Actions style={{ paddingHorizontal: 20, paddingBottom: 16, gap: 8 }}>
             <Button
               onPress={() => setDialogVisible(false)}
               textColor={colors.onSurfaceVariant}
@@ -304,10 +475,10 @@ export default function SettingsScreen() {
               onPress={handleAddProfile}
               loading={isLoading}
               disabled={isLoading || !username.trim()}
-              style={{ borderRadius: 100, paddingHorizontal: 12 }}
-              labelStyle={{ fontWeight: "800", color: dark ? "#111111" : "#FFFFFF" }}
+              style={{ borderRadius: 999, paddingHorizontal: 14 }}
+              labelStyle={{ fontWeight: "800", color: dark ? "#0F172A" : "#FFFFFF" }}
             >
-              Add Profile
+              Connect
             </Button>
           </Dialog.Actions>
         </Dialog>
@@ -322,31 +493,40 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
+    paddingBottom: 14,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   title: {
     fontWeight: "900",
-    fontSize: 32,
-    letterSpacing: -1,
+    fontSize: 28,
+    letterSpacing: -0.8,
   },
   content: {
     paddingHorizontal: 20,
     paddingTop: 8,
   },
   sectionContainer: {
-    marginBottom: 32,
+    marginBottom: 28,
   },
   sectionLabel: {
     fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1.5,
-    marginBottom: 12,
-    marginLeft: 8,
+    letterSpacing: 1.2,
+    marginBottom: 10,
+    marginLeft: 6,
+    textTransform: "uppercase",
   },
   surfaceCard: {
-    borderRadius: 24,
+    borderRadius: 24, // M3 Expressive squircle
     padding: 16,
+    borderWidth: 1,
   },
   settingRow: {
     flexDirection: "row",
@@ -354,6 +534,21 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   iconContainer: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paletteRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  paletteItem: {
+    alignItems: "center",
+  },
+  colorCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -364,13 +559,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
-  platformDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 16,
+  platformIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
   },
   platformGrid: {
     flexDirection: "row",
@@ -379,10 +575,11 @@ const styles = StyleSheet.create({
   },
   platformTile: {
     flex: 1,
-    minWidth: "45%",
+    minWidth: "46%",
     alignItems: "center",
-    paddingVertical: 20,
-    borderRadius: 24,
+    paddingVertical: 18,
+    borderRadius: 24, // M3 Expressive squircle
+    borderWidth: 1,
   },
   platformIconBg: {
     width: 48,
@@ -392,3 +589,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+

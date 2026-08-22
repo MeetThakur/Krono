@@ -1,6 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { Platform, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import React from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../src/hooks/useTheme";
 
@@ -13,37 +15,48 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: isDarkMode ? "rgba(17,17,17,0.95)" : "rgba(248,249,250,0.95)",
+          backgroundColor: isDarkMode ? colors.surfaceContainerLow : colors.surface,
           position: "absolute",
-          borderTopWidth: 0,
-          elevation: 0,
-          height: 64 + insets.bottom,
-          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
-          paddingTop: 10,
+          borderTopWidth: 1,
+          borderTopColor: colors.outline,
+          elevation: 8,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: isDarkMode ? 0.3 : 0.05,
+          shadowRadius: 16,
+          height: 68 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          paddingTop: 8,
         },
-        tabBarBackground: () => (
-          <View style={{ flex: 1, backgroundColor: isDarkMode ? "rgba(17,17,17,0.98)" : "rgba(248,249,250,0.98)" }} />
-        ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text.muted,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
+          fontWeight: "700",
           marginTop: 4,
+          letterSpacing: 0.2,
         },
         tabBarHideOnKeyboard: true,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="view-dashboard-outline"
-              size={24}
-              color={color}
-            />
+          tabBarIcon: ({ focused, color }) => (
+            <View style={[styles.iconWrapper, focused && { backgroundColor: colors.primaryContainer }]}>
+              <MaterialCommunityIcons
+                name={focused ? "view-dashboard" : "view-dashboard-outline"}
+                size={22}
+                color={focused ? (isDarkMode ? colors.primary : colors.onPrimaryContainer) : color}
+              />
+            </View>
           ),
         }}
       />
@@ -51,12 +64,14 @@ export default function TabLayout() {
         name="contests"
         options={{
           title: "Contests",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="trophy-variant-outline"
-              size={24}
-              color={color}
-            />
+          tabBarIcon: ({ focused, color }) => (
+            <View style={[styles.iconWrapper, focused && { backgroundColor: colors.primaryContainer }]}>
+              <MaterialCommunityIcons
+                name={focused ? "trophy" : "trophy-outline"}
+                size={22}
+                color={focused ? (isDarkMode ? colors.primary : colors.onPrimaryContainer) : color}
+              />
+            </View>
           ),
         }}
       />
@@ -64,12 +79,14 @@ export default function TabLayout() {
         name="rivals"
         options={{
           title: "Rivals",
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="sword-cross"
-              size={24}
-              color={color}
-            />
+          tabBarIcon: ({ focused, color }) => (
+            <View style={[styles.iconWrapper, focused && { backgroundColor: colors.primaryContainer }]}>
+              <MaterialCommunityIcons
+                name={focused ? "sword-cross" : "sword"}
+                size={22}
+                color={focused ? (isDarkMode ? colors.primary : colors.onPrimaryContainer) : color}
+              />
+            </View>
           ),
         }}
       />
@@ -79,15 +96,28 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           href: null,
-          tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={24}
-              color={color}
-            />
+          tabBarIcon: ({ focused, color }) => (
+            <View style={[styles.iconWrapper, focused && { backgroundColor: colors.primaryContainer }]}>
+              <MaterialCommunityIcons
+                name={focused ? "cog" : "cog-outline"}
+                size={22}
+                color={focused ? (isDarkMode ? colors.primary : colors.onPrimaryContainer) : color}
+              />
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrapper: {
+    width: 56,
+    height: 32,
+    borderRadius: 16, // M3 Expressive Pill Indicator
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
+
