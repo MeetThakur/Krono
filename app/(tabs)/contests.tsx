@@ -108,6 +108,10 @@ export default function ContestsScreen() {
     const platformColor = platformConfig?.color || colors.primary;
     const isLive = item.phase === "running";
 
+    const dayNumber = format(startDate, "d");
+    const monthShort = format(startDate, "MMM").toUpperCase();
+    const timeFormatted = format(startDate, "HH:mm");
+
     return (
       <Pressable
         onPress={() => {
@@ -115,30 +119,69 @@ export default function ContestsScreen() {
           if (item.url) Linking.openURL(item.url);
         }}
         style={({ pressed }) => [
-          styles.cardPressable,
+          styles.timelineItemRow,
           { transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.95 : 1 },
         ]}
       >
+        {/* Google Calendar Date Squircle */}
+        <View
+          style={[
+            styles.dateBox,
+            {
+              backgroundColor: isLive
+                ? (dark ? "#450A0A" : "#FEE2E2")
+                : (dark ? colors.surfaceVariant : colors.surface),
+              borderColor: isLive ? "#EF4444" : colors.outline,
+            },
+          ]}
+        >
+          {isLive ? (
+            <>
+              <View style={styles.livePulseDot} />
+              <Text style={[styles.liveText, { color: "#EF4444" }]}>LIVE</Text>
+            </>
+          ) : (
+            <>
+              <Text
+                style={[
+                  styles.dateDay,
+                  { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" },
+                ]}
+              >
+                {dayNumber}
+              </Text>
+              <Text
+                style={[
+                  styles.dateMonth,
+                  { color: colors.onSurfaceVariant },
+                ]}
+              >
+                {monthShort}
+              </Text>
+            </>
+          )}
+        </View>
+
+        {/* Right Ticket Card */}
         <Surface
           style={[
             styles.card,
             {
               backgroundColor: dark ? colors.surfaceVariant : colors.surface,
               borderColor: isLive ? "rgba(239, 68, 68, 0.4)" : colors.outline,
-              borderWidth: 1,
             },
           ]}
           elevation={0}
         >
-          {/* Top row: Platform & Time */}
+          {/* Header Row: Platform & Meta */}
           <View style={styles.cardHeader}>
             <View style={[styles.platformBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
               <View style={[styles.platformDot, { backgroundColor: platformColor }]} />
               <Text
                 style={{
                   color: colors.onSurfaceVariant,
-                  fontSize: 11,
-                  fontWeight: "700",
+                  fontSize: 10,
+                  fontWeight: "800",
                   textTransform: "uppercase",
                   letterSpacing: 0.4,
                   marginLeft: 5,
@@ -148,118 +191,88 @@ export default function ContestsScreen() {
               </Text>
             </View>
 
-            <View style={[styles.dateChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-              <MaterialCommunityIcons
-                name="calendar-clock"
-                size={12}
-                color={colors.onSurfaceVariant}
-              />
-              <Text
-                style={{
-                  fontSize: 11,
-                  color: colors.onSurfaceVariant,
-                  fontWeight: "700",
-                  marginLeft: 5,
-                  fontFamily: "JetBrainsMono_700Bold",
-                }}
-              >
-                {format(startDate, "MMM d, HH:mm")}
-              </Text>
+            <View style={styles.metaBadges}>
+              <View style={[styles.timeChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                <MaterialCommunityIcons name="clock-outline" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 3 }} />
+                <Text style={[styles.timeChipText, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
+                  {timeFormatted}
+                </Text>
+              </View>
+              <View style={[styles.timeChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                <Text style={[styles.timeChipText, { color: colors.onSurfaceVariant }]}>
+                  {durationText}
+                </Text>
+              </View>
             </View>
           </View>
 
           {/* Contest Title */}
           <Text
             numberOfLines={2}
-            style={{
-              fontWeight: "800",
-              fontSize: 15,
-              marginTop: 12,
-              marginBottom: 4,
-              color: colors.onSurface,
-              lineHeight: 21,
-            }}
+            style={[
+              styles.contestTitle,
+              { color: colors.onSurface },
+            ]}
           >
             {item.name}
           </Text>
 
-          {/* Divider */}
-          <View style={[styles.divider, { backgroundColor: colors.outline }]} />
-
-          {/* Footer row */}
-          <View style={styles.cardFooter}>
-            <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
+          {/* Footer Actions */}
+          <View style={[styles.cardFooter, { borderTopColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.reminderBtn,
+                {
+                  backgroundColor: item.reminderSet
+                    ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)")
+                    : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                  transform: [{ scale: pressed ? 0.92 : 1 }],
+                },
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                toggleReminder(item.id, !item.reminderSet);
+              }}
+            >
               <MaterialCommunityIcons
-                name="timer-outline"
-                size={13}
-                color={colors.onSurfaceVariant}
+                name={item.reminderSet ? "bell-ring" : "bell-outline"}
+                size={14}
+                color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
               />
               <Text
                 style={{
-                  color: colors.onSurfaceVariant,
-                  fontWeight: "600",
                   fontSize: 11,
-                  marginLeft: 5,
+                  fontWeight: "700",
+                  color: item.reminderSet ? colors.primary : colors.onSurfaceVariant,
+                  marginLeft: 4,
                 }}
               >
-                {durationText}
+                {item.reminderSet ? "Reminder Set" : "Remind"}
               </Text>
-            </View>
+            </Pressable>
 
-            {/* Actions */}
-            <View style={styles.actionsRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  {
-                    backgroundColor: item.reminderSet
-                      ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)")
-                      : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                    borderColor: item.reminderSet ? colors.primary : colors.outline,
-                    transform: [{ scale: pressed ? 0.92 : 1 }],
-                  },
-                ]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  toggleReminder(item.id, !item.reminderSet);
-                }}
-              >
-                <MaterialCommunityIcons
-                  name={item.reminderSet ? "bell-ring" : "bell-outline"}
-                  size={15}
-                  color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
-                />
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [
-                  styles.registerBtn,
-                  {
-                    backgroundColor: colors.primary,
-                    transform: [{ scale: pressed ? 0.94 : 1 }],
-                  },
-                ]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  if (item.url) Linking.openURL(item.url);
-                }}
-              >
-                <Text
-                  style={{
-                    color: dark ? "#0F172A" : "#FFFFFF",
-                    fontWeight: "800",
-                    fontSize: 12,
-                  }}
-                >
-                  Open
-                </Text>
-                <MaterialCommunityIcons
-                  name="open-in-new"
-                  size={12}
-                  color={dark ? "#0F172A" : "#FFFFFF"}
-                />
-              </Pressable>
-            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.openBtn,
+                {
+                  backgroundColor: colors.primary,
+                  transform: [{ scale: pressed ? 0.94 : 1 }],
+                },
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                if (item.url) Linking.openURL(item.url);
+              }}
+            >
+              <Text style={[styles.openBtnText, { color: dark ? "#0F172A" : "#FFFFFF" }]}>
+                Open
+              </Text>
+              <MaterialCommunityIcons
+                name="arrow-top-right"
+                size={13}
+                color={dark ? "#0F172A" : "#FFFFFF"}
+              />
+            </Pressable>
           </View>
         </Surface>
       </Pressable>
@@ -269,7 +282,7 @@ export default function ContestsScreen() {
   if (isLoading && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
           <Text style={[styles.title, { color: colors.onSurface }]}>
             Contests
           </Text>
@@ -282,11 +295,11 @@ export default function ContestsScreen() {
   return (
     <ErrorBoundary fallbackTitle="Contests Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Minimal M3 Header */}
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+        {/* Google Native M3 Header */}
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
           <View>
             <View style={[styles.countPill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-              <MaterialCommunityIcons name="trophy-outline" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+              <MaterialCommunityIcons name="calendar-month-outline" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
               <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
                 {upcomingContests.length > 0 ? `${upcomingContests.length} rounds scheduled` : "Timeline"}
               </Text>
@@ -297,7 +310,7 @@ export default function ContestsScreen() {
           </View>
         </View>
 
-        {/* Minimal Platform Filter Chips */}
+        {/* Google M3 Filter Chips */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -396,8 +409,8 @@ export default function ContestsScreen() {
             <View style={styles.sectionHeaderRow}>
               {isLive ? (
                 <View style={styles.livePill}>
-                  <View style={styles.liveDot} />
-                  <Text style={{ color: "#EF4444", fontWeight: "800", fontSize: 11, letterSpacing: 0.5 }}>
+                  <View style={styles.livePulseDot} />
+                  <Text style={{ color: "#EF4444", fontWeight: "900", fontSize: 11, letterSpacing: 0.6 }}>
                     LIVE NOW
                   </Text>
                 </View>
@@ -405,8 +418,8 @@ export default function ContestsScreen() {
                 <Text
                   style={{
                     fontSize: 11,
-                    fontWeight: "800",
-                    letterSpacing: 0.8,
+                    fontWeight: "900",
+                    letterSpacing: 1.2,
                     textTransform: "uppercase",
                     color: colors.onSurfaceVariant,
                   }}
@@ -440,7 +453,7 @@ export default function ContestsScreen() {
               <Text
                 style={{
                   fontSize: 16,
-                  fontWeight: "700",
+                  fontWeight: "800",
                   color: colors.onSurface,
                   marginBottom: 4,
                 }}
@@ -485,18 +498,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   title: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: "900",
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   chipsScroll: {
     maxHeight: 52,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   chipsContainer: {
     paddingHorizontal: 20,
@@ -526,8 +540,8 @@ const styles = StyleSheet.create({
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 18,
+    paddingBottom: 10,
   },
   livePill: {
     flexDirection: "row",
@@ -538,24 +552,53 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  liveDot: {
+  livePulseDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
     backgroundColor: "#EF4444",
   },
-  cardPressable: {
-    marginBottom: 10,
+  timelineItemRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+  },
+  dateBox: {
+    width: 54,
+    height: 64,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  dateDay: {
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 22,
+  },
+  dateMonth: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    marginTop: 1,
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.5,
   },
   card: {
-    borderRadius: 20,
-    padding: 16,
-    overflow: "hidden",
+    flex: 1,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 14,
+    justifyContent: "space-between",
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   platformBadge: {
     flexDirection: "row",
@@ -565,54 +608,56 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   platformDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  dateChip: {
+  metaBadges: {
+    flexDirection: "row",
+    gap: 5,
+  },
+  timeChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
-  divider: {
-    height: 1,
-    marginTop: 10,
+  timeChipText: {
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  contestTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 19,
     marginBottom: 10,
   },
   cardFooter: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 10,
+    borderTopWidth: 1,
   },
-  metaPill: {
+  reminderBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  registerBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
+  },
+  openBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  openBtnText: {
+    fontSize: 11,
+    fontWeight: "800",
   },
   emptyContainer: {
     alignItems: "center",

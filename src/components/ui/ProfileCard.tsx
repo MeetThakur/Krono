@@ -11,50 +11,57 @@ interface ProfileCardProps {
   onPress?: () => void;
 }
 
-// Google Native M3 Expressive Platform Colors
+// Google Native M3 Expressive Palette with deep, vibrant tones
 const getPlatformCardStyle = (platformId: string) => {
   switch (platformId) {
     case "codeforces":
       return {
-        bg: "#1D4ED8", // Rich M3 Royal Blue
-        accent: "#93C5FD",
+        bg: "#1D4ED8", // Google Royal Blue
+        subBg: "#172554",
+        pillBg: "rgba(255, 255, 255, 0.2)",
         shadow: "#1D4ED8",
       };
     case "leetcode":
       return {
-        bg: "#C25E00", // Rich M3 Warm Amber
-        accent: "#FDE68A",
-        shadow: "#C25E00",
+        bg: "#D97706", // Google Sunset Amber
+        subBg: "#451A03",
+        pillBg: "rgba(255, 255, 255, 0.2)",
+        shadow: "#D97706",
       };
     case "codechef":
       return {
-        bg: "#85371E", // Rich M3 Warm Sienna / Terracotta
-        accent: "#FECDD3",
-        shadow: "#85371E",
+        bg: "#9A3412", // Google Warm Terracotta
+        subBg: "#431407",
+        pillBg: "rgba(255, 255, 255, 0.2)",
+        shadow: "#9A3412",
       };
     case "atcoder":
       return {
-        bg: "#1E293B", // Rich M3 Deep Slate
-        accent: "#CBD5E1",
+        bg: "#1E293B", // Google Slate Onyx
+        subBg: "#0F172A",
+        pillBg: "rgba(255, 255, 255, 0.16)",
         shadow: "#1E293B",
       };
     case "geeksforgeeks":
       return {
-        bg: "#065F46", // Rich M3 Forest Emerald
-        accent: "#A7F3D0",
-        shadow: "#065F46",
+        bg: "#059669", // Google Forest Emerald
+        subBg: "#064E3B",
+        pillBg: "rgba(255, 255, 255, 0.2)",
+        shadow: "#059669",
       };
     case "hackerrank":
       return {
-        bg: "#047857", // Rich M3 Jade
-        accent: "#6EE7B7",
-        shadow: "#047857",
+        bg: "#0D9488", // Google Deep Teal
+        subBg: "#134E4A",
+        pillBg: "rgba(255, 255, 255, 0.2)",
+        shadow: "#0D9488",
       };
     default:
       return {
-        bg: "#4338CA",
-        accent: "#C7D2FE",
-        shadow: "#4338CA",
+        bg: "#4F46E5",
+        subBg: "#312E81",
+        pillBg: "rgba(255, 255, 255, 0.2)",
+        shadow: "#4F46E5",
       };
   }
 };
@@ -100,26 +107,26 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
           {
             backgroundColor: styleConfig.bg,
             shadowColor: styleConfig.shadow,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: dark ? 0.35 : 0.22,
-            shadowRadius: 18,
-            elevation: 6,
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: dark ? 0.4 : 0.25,
+            shadowRadius: 20,
+            elevation: 8,
           },
         ]}
         elevation={0}
       >
         <View style={styles.cardInner}>
-          {/* Subtle Watermark Icon */}
+          {/* Subtle Watermark Graphic */}
           <MaterialCommunityIcons
             name={(platformConfig?.icon as any) || "code-tags"}
-            size={150}
+            size={160}
             color="#FFFFFF"
             style={styles.watermarkIcon}
           />
 
-          {/* Top Bar: Platform Pill + Status */}
+          {/* Top Header Row */}
           <View style={styles.topRow}>
-            <View style={styles.platformPill}>
+            <View style={[styles.platformPill, { backgroundColor: styleConfig.pillBg }]}>
               <MaterialCommunityIcons
                 name={(platformConfig?.icon as any) || "code-tags"}
                 size={14}
@@ -133,7 +140,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
 
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               {profile.isStale && (
-                <View style={styles.iconPill}>
+                <View style={[styles.statusIcon, { backgroundColor: styleConfig.pillBg }]}>
                   <MaterialCommunityIcons
                     name="cloud-off-outline"
                     size={12}
@@ -141,17 +148,17 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
                   />
                 </View>
               )}
-              <View style={styles.iconPill}>
+              <View style={[styles.statusIcon, { backgroundColor: styleConfig.pillBg }]}>
                 <MaterialCommunityIcons
                   name="arrow-top-right"
-                  size={13}
+                  size={14}
                   color="#FFFFFF"
                 />
               </View>
             </View>
           </View>
 
-          {/* Hero: Monospace Rating & Rank */}
+          {/* Hero: Rating & Metric Unit */}
           <View style={styles.heroSection}>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
               <Text style={styles.heroRating}>
@@ -163,7 +170,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
             </View>
 
             {rank ? (
-              <View style={styles.rankPill}>
+              <View style={[styles.rankPill, { backgroundColor: styleConfig.pillBg }]}>
+                <MaterialCommunityIcons name="shield-check" size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
                 <Text style={styles.rankText} numberOfLines={1}>
                   {rank}
                 </Text>
@@ -171,19 +179,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
             ) : null}
           </View>
 
-          {/* Footer: Handle & Peak stats */}
+          {/* Bottom Footer: Handle & Stats */}
           <View style={styles.footerRow}>
             <Text style={styles.handleText} numberOfLines={1}>
               @{handle}
             </Text>
 
             {maxRating && maxRating > 0 ? (
-              <View style={styles.statPill}>
+              <View style={[styles.statPill, { backgroundColor: styleConfig.pillBg }]}>
                 <Text style={styles.statLabel}>PEAK</Text>
                 <Text style={styles.statValue}>{maxRating}</Text>
               </View>
             ) : showProblemsSolvedInFooter && profile.problemsSolved ? (
-              <View style={styles.statPill}>
+              <View style={[styles.statPill, { backgroundColor: styleConfig.pillBg }]}>
                 <Text style={styles.statLabel}>SOLVED</Text>
                 <Text style={styles.statValue}>{profile.problemsSolved}</Text>
               </View>
@@ -197,19 +205,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
 
 const styles = StyleSheet.create({
   pressable: {
-    marginRight: 14,
+    marginRight: 16,
   },
   card: {
-    width: 275,
-    height: 185,
-    borderRadius: 28, // Google M3 Expressive Large Corner
+    width: 290,
+    height: 195,
+    borderRadius: 32, // Google Pixel / M3 Expressive Ultra Squircles
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: "rgba(255, 255, 255, 0.16)",
   },
   cardInner: {
     flex: 1,
-    padding: 18,
+    padding: 20,
     justifyContent: "space-between",
     position: "relative",
   },
@@ -217,7 +225,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: -25,
     bottom: -25,
-    opacity: 0.08,
+    opacity: 0.1,
     transform: [{ rotate: "-12deg" }],
   },
   topRow: {
@@ -228,88 +236,86 @@ const styles = StyleSheet.create({
   platformPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
-    paddingHorizontal: 11,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
   },
   platformLabel: {
     color: "#FFFFFF",
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
+    fontWeight: "900",
+    letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  iconPill: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
+  statusIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   heroSection: {
-    marginVertical: 4,
+    marginVertical: 2,
   },
   heroRating: {
     color: "#FFFFFF",
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 40,
+    lineHeight: 46,
     fontFamily: "JetBrainsMono_700Bold",
-    letterSpacing: -1,
+    letterSpacing: -1.2,
   },
   ratingUnit: {
-    color: "rgba(255, 255, 255, 0.75)",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.6,
+    color: "rgba(255, 255, 255, 0.8)",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.8,
   },
   rankPill: {
+    flexDirection: "row",
+    alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255, 255, 255, 0.16)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    marginTop: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 6,
   },
   rankText: {
     color: "#FFFFFF",
     fontSize: 11,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   footerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 10,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.14)",
+    borderTopColor: "rgba(255, 255, 255, 0.18)",
   },
   handleText: {
     color: "rgba(255, 255, 255, 0.95)",
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 13,
     maxWidth: "50%",
   },
   statPill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
-    gap: 5,
+    gap: 6,
   },
   statLabel: {
-    color: "rgba(255, 255, 255, 0.75)",
+    color: "rgba(255, 255, 255, 0.8)",
     fontSize: 9,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
   statValue: {
     color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
+    fontSize: 13,
+    fontWeight: "900",
     fontFamily: "JetBrainsMono_700Bold",
   },
 });

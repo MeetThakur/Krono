@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTheme } from "react-native-paper";
+import { Surface, useTheme } from "react-native-paper";
 import { UnifiedProfile } from "../../types/user";
 
 interface CumulativeStatsProps {
@@ -28,76 +28,130 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
     0
   );
 
-  const stats = [
-    { 
-      value: totalSolved, 
-      label: "Solved", 
-      icon: "check-decagram-outline",
-      iconColor: dark ? "#34D399" : "#059669",
-      bgColor: dark ? "rgba(52, 211, 153, 0.15)" : "rgba(5, 150, 105, 0.12)",
-    },
-    { 
-      value: totalSubmissions, 
-      label: "Submissions", 
-      icon: "code-tags",
-      iconColor: dark ? "#60A5FA" : "#2563EB",
-      bgColor: dark ? "rgba(96, 165, 250, 0.15)" : "rgba(37, 99, 235, 0.12)",
-    },
-    { 
-      value: totalContests, 
-      label: "Contests", 
-      icon: "trophy-outline",
-      iconColor: dark ? "#FBBF24" : "#D97706",
-      bgColor: dark ? "rgba(251, 191, 36, 0.15)" : "rgba(217, 119, 6, 0.12)",
-    },
-  ];
-
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          styles.card,
-          {
-            backgroundColor: dark ? colors.surfaceVariant : colors.surface,
-            borderColor: colors.outline,
-          },
-        ]}
-      >
-        {stats.map((stat, i) => (
-          <React.Fragment key={stat.label}>
-            {i > 0 && (
-              <View
-                style={[
-                  styles.divider,
-                  {
-                    backgroundColor: colors.outline,
-                  },
-                ]}
+      <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
+        ACTIVITY HUB
+      </Text>
+
+      {/* Google M3 Bento Grid */}
+      <View style={styles.bentoRow}>
+        {/* Left Big Bento Tile - Solved */}
+        <Surface
+          style={[
+            styles.bigTile,
+            {
+              backgroundColor: dark ? "#132D20" : "#E8F5E9",
+              borderColor: dark ? "rgba(52, 211, 153, 0.2)" : "rgba(5, 150, 105, 0.15)",
+            },
+          ]}
+          elevation={0}
+        >
+          <View style={[styles.iconCircle, { backgroundColor: dark ? "#064E3B" : "#C8E6C9" }]}>
+            <MaterialCommunityIcons
+              name="check-decagram"
+              size={22}
+              color={dark ? "#34D399" : "#059669"}
+            />
+          </View>
+          <View style={{ marginTop: "auto" }}>
+            <Text
+              style={[
+                styles.bigValue,
+                { color: dark ? "#ECFDF5" : "#064E3B", fontFamily: "JetBrainsMono_700Bold" },
+              ]}
+            >
+              {totalSolved.toLocaleString()}
+            </Text>
+            <Text
+              style={[
+                styles.tileLabel,
+                { color: dark ? "#6EE7B7" : "#047857" },
+              ]}
+            >
+              Problems Solved
+            </Text>
+          </View>
+        </Surface>
+
+        {/* Right Stacked Bento Column */}
+        <View style={styles.smallTilesColumn}>
+          {/* Contests Tile */}
+          <Surface
+            style={[
+              styles.smallTile,
+              {
+                backgroundColor: dark ? "#2E2108" : "#FEF3C7",
+                borderColor: dark ? "rgba(251, 191, 36, 0.2)" : "rgba(217, 119, 6, 0.15)",
+              },
+            ]}
+            elevation={0}
+          >
+            <View style={[styles.smallIconCircle, { backgroundColor: dark ? "#451A03" : "#FDE68A" }]}>
+              <MaterialCommunityIcons
+                name="trophy"
+                size={16}
+                color={dark ? "#FBBF24" : "#D97706"}
               />
-            )}
-            <View style={styles.statItem}>
-              <View style={[styles.iconCircle, { backgroundColor: stat.bgColor }]}>
-                <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.iconColor} />
-              </View>
+            </View>
+            <View style={{ marginLeft: 12, flex: 1 }}>
               <Text
                 style={[
-                  styles.value,
-                  { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" },
+                  styles.smallValue,
+                  { color: dark ? "#FFFBEB" : "#78350F", fontFamily: "JetBrainsMono_700Bold" },
                 ]}
               >
-                {stat.value.toLocaleString()}
+                {totalContests.toLocaleString()}
               </Text>
               <Text
                 style={[
-                  styles.label,
-                  { color: colors.onSurfaceVariant },
+                  styles.smallTileLabel,
+                  { color: dark ? "#FCD34D" : "#B45309" },
                 ]}
               >
-                {stat.label}
+                Contests
               </Text>
             </View>
-          </React.Fragment>
-        ))}
+          </Surface>
+
+          {/* Submissions Tile */}
+          <Surface
+            style={[
+              styles.smallTile,
+              {
+                backgroundColor: dark ? "#112240" : "#DBEAFE",
+                borderColor: dark ? "rgba(96, 165, 250, 0.2)" : "rgba(37, 99, 235, 0.15)",
+              },
+            ]}
+            elevation={0}
+          >
+            <View style={[styles.smallIconCircle, { backgroundColor: dark ? "#1E3A8A" : "#BFDBFE" }]}>
+              <MaterialCommunityIcons
+                name="code-tags"
+                size={16}
+                color={dark ? "#60A5FA" : "#2563EB"}
+              />
+            </View>
+            <View style={{ marginLeft: 12, flex: 1 }}>
+              <Text
+                style={[
+                  styles.smallValue,
+                  { color: dark ? "#EFF6FF" : "#1E3A8A", fontFamily: "JetBrainsMono_700Bold" },
+                ]}
+              >
+                {totalSubmissions.toLocaleString()}
+              </Text>
+              <Text
+                style={[
+                  styles.smallTileLabel,
+                  { color: dark ? "#93C5FD" : "#1D4ED8" },
+                ]}
+              >
+                Submissions
+              </Text>
+            </View>
+          </Surface>
+        </View>
       </View>
     </View>
   );
@@ -106,44 +160,76 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    marginBottom: 24,
+    marginBottom: 26,
   },
-  card: {
+  sectionHeading: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    marginBottom: 12,
+  },
+  bentoRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    borderRadius: 24,
-    borderWidth: 1,
-    paddingVertical: 18,
-    paddingHorizontal: 8,
+    gap: 12,
+    height: 155,
   },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
+  bigTile: {
+    flex: 1.1,
+    borderRadius: 28, // Google M3 Bento Squircle
+    padding: 16,
+    borderWidth: 1,
+    justifyContent: "space-between",
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
   },
-  value: {
-    fontSize: 20,
-    lineHeight: 26,
+  bigValue: {
+    fontSize: 32,
+    lineHeight: 38,
     includeFontPadding: false,
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
-  label: {
-    fontSize: 10,
+  tileLabel: {
+    fontSize: 12,
     fontWeight: "800",
     marginTop: 2,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
   },
-  divider: {
-    width: 1,
-    height: 36,
+  smallTilesColumn: {
+    flex: 1,
+    gap: 10,
+    justifyContent: "space-between",
+  },
+  smallTile: {
+    flex: 1,
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+  },
+  smallIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  smallValue: {
+    fontSize: 18,
+    lineHeight: 22,
+    includeFontPadding: false,
+  },
+  smallTileLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginTop: 1,
   },
 });

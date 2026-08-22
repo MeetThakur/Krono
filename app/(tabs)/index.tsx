@@ -25,16 +25,31 @@ import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 
-// Minimal difficulty colors
-const getDifficultyColor = (difficulty?: string, dark: boolean = false): string => {
+// Google M3 Difficulty Tonal Colors
+const getDifficultyTheme = (difficulty?: string, dark: boolean = false) => {
   const d = (difficulty || "").toLowerCase();
-  if (d.includes("easy") || d.includes("basic") || d.includes("school"))
-    return dark ? "#34D399" : "#059669";
-  if (d.includes("medium") || d.includes("intermediate"))
-    return dark ? "#FBBF24" : "#D97706";
-  if (d.includes("hard") || d.includes("advanced"))
-    return dark ? "#F87171" : "#DC2626";
-  return dark ? "#94A3B8" : "#64748B";
+  if (d.includes("easy") || d.includes("basic") || d.includes("school")) {
+    return {
+      bg: dark ? "rgba(52, 211, 153, 0.15)" : "#D1FAE5",
+      text: dark ? "#34D399" : "#065F46",
+    };
+  }
+  if (d.includes("medium") || d.includes("intermediate")) {
+    return {
+      bg: dark ? "rgba(251, 191, 36, 0.15)" : "#FEF3C7",
+      text: dark ? "#FBBF24" : "#92400E",
+    };
+  }
+  if (d.includes("hard") || d.includes("advanced")) {
+    return {
+      bg: dark ? "rgba(248, 113, 113, 0.15)" : "#FEE2E2",
+      text: dark ? "#F87171" : "#991B1B",
+    };
+  }
+  return {
+    bg: dark ? "rgba(148, 163, 184, 0.15)" : "#F1F5F9",
+    text: dark ? "#94A3B8" : "#475569",
+  };
 };
 
 export default function DashboardScreen() {
@@ -100,9 +115,9 @@ export default function DashboardScreen() {
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
           <View>
-            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>OVERVIEW</Text>
+            <Text style={[styles.dateSubtext, { color: colors.onSurfaceVariant }]}>OVERVIEW</Text>
             <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
           </View>
           <Pressable
@@ -118,7 +133,7 @@ export default function DashboardScreen() {
           >
             <MaterialCommunityIcons
               name="cog-outline"
-              size={20}
+              size={22}
               color={colors.onSurface}
             />
           </Pressable>
@@ -129,17 +144,18 @@ export default function DashboardScreen() {
   }
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const diffTheme = getDifficultyTheme(leetcode?.difficulty, dark);
 
   return (
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Minimal M3 Top App Bar */}
-        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+        {/* Google Native M3 Top App Bar */}
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
           <View>
-            <View style={[styles.datePill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-              <MaterialCommunityIcons name="calendar-today" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 5 }} />
-              <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
-                {currentDate}
+            <View style={[styles.dateCapsule, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+              <View style={styles.liveGreenDot} />
+              <Text style={[styles.dateSubtext, { color: colors.onSurfaceVariant }]}>
+                {currentDate.toUpperCase()}
               </Text>
             </View>
             <Text style={[styles.logo, { color: colors.onSurface }]}>
@@ -162,7 +178,7 @@ export default function DashboardScreen() {
           >
             <MaterialCommunityIcons
               name="cog-outline"
-              size={20}
+              size={22}
               color={colors.onSurface}
             />
           </Pressable>
@@ -180,7 +196,7 @@ export default function DashboardScreen() {
             />
           }
         >
-          {/* Live Now Banner */}
+          {/* Live Now Alert Banner */}
           {ongoingContests.length > 0 && (
             <View style={styles.liveSection}>
               <Pressable
@@ -191,16 +207,16 @@ export default function DashboardScreen() {
                 style={({ pressed }) => [
                   styles.liveBanner,
                   {
-                    backgroundColor: dark ? "rgba(239, 68, 68, 0.1)" : "rgba(239, 68, 68, 0.08)",
-                    borderColor: "rgba(239, 68, 68, 0.3)",
+                    backgroundColor: dark ? "rgba(239, 68, 68, 0.12)" : "rgba(239, 68, 68, 0.08)",
+                    borderColor: "rgba(239, 68, 68, 0.35)",
                     transform: [{ scale: pressed ? 0.98 : 1 }],
                   },
                 ]}
               >
-                <View style={styles.liveDot} />
+                <View style={styles.livePulseDot} />
                 <View style={{ flex: 1, marginHorizontal: 8 }}>
                   <Text style={styles.liveBannerTitle}>
-                    {ongoingContests.length} {ongoingContests.length === 1 ? "Contest" : "Contests"} Live Now
+                    {ongoingContests.length} {ongoingContests.length === 1 ? "Contest" : "Contests"} Active Now
                   </Text>
                   <Text numberOfLines={1} style={styles.liveBannerSub}>
                     {ongoingContests[0].name}
@@ -214,11 +230,11 @@ export default function DashboardScreen() {
             </View>
           )}
 
-          {/* Profiles Section */}
+          {/* Profiles Carousel */}
           {profiles.length > 0 ? (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>
+                <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
                   PROFILES
                 </Text>
                 <Pressable
@@ -235,7 +251,7 @@ export default function DashboardScreen() {
                   ]}
                 >
                   <MaterialCommunityIcons name="swap-vertical" size={14} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant }}>
+                  <Text style={{ fontSize: 11, fontWeight: "800", color: colors.onSurfaceVariant }}>
                     Reorder
                   </Text>
                 </Pressable>
@@ -261,15 +277,15 @@ export default function DashboardScreen() {
                 <View style={[styles.connectIconCircle, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
                   <MaterialCommunityIcons
                     name="account-plus-outline"
-                    size={20}
+                    size={22}
                     color={colors.onSurface}
                   />
                 </View>
                 <View style={{ flex: 1, marginLeft: 14 }}>
                   <Text
                     style={{
-                      fontWeight: "800",
-                      fontSize: 15,
+                      fontWeight: "900",
+                      fontSize: 16,
                       color: colors.onSurface,
                     }}
                   >
@@ -280,7 +296,7 @@ export default function DashboardScreen() {
                       fontSize: 12,
                       color: colors.onSurfaceVariant,
                       marginTop: 2,
-                      fontWeight: "500",
+                      fontWeight: "600",
                     }}
                   >
                     Codeforces, LeetCode, AtCoder, CodeChef...
@@ -295,17 +311,15 @@ export default function DashboardScreen() {
             </View>
           )}
 
-          {/* Cumulative Stats */}
+          {/* Google M3 Bento Grid (Cumulative Stats) */}
           {profiles.length > 0 && <CumulativeStats profiles={profiles} />}
 
-          {/* Daily Challenge (POTD) */}
+          {/* Google Daily Challenge (POTD) Widget */}
           <View style={styles.section}>
-            <Text
-              style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}
-            >
+            <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant, paddingHorizontal: 20 }]}>
               DAILY CHALLENGE
             </Text>
-            <View style={{ paddingHorizontal: 20 }}>
+            <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
               <Pressable
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -322,83 +336,63 @@ export default function DashboardScreen() {
                 ]}
               >
                 {isPotdLoading && !leetcode ? (
-                  <View style={{ gap: 8, padding: 16 }}>
-                    <Skeleton width="85%" height={16} />
-                    <Skeleton width="40%" height={12} />
+                  <View style={{ gap: 8, padding: 18 }}>
+                    <Skeleton width="85%" height={18} />
+                    <Skeleton width="40%" height={14} />
                   </View>
                 ) : (
                   <View style={styles.potdInner}>
-                    <View style={[styles.potdIconBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-                      <MaterialCommunityIcons name="code-tags" size={18} color={colors.onSurface} />
+                    {/* Left Icon Badge */}
+                    <View style={[styles.potdIconBadge, { backgroundColor: "#FFA116" + "20" }]}>
+                      <MaterialCommunityIcons name="code-braces" size={22} color="#FFA116" />
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          color: colors.onSurfaceVariant,
-                          fontWeight: "700",
-                          letterSpacing: 0.4,
-                          textTransform: "uppercase",
-                          marginBottom: 2,
-                        }}
-                      >
-                        LeetCode Daily
-                      </Text>
+
+                    {/* Middle Info */}
+                    <View style={{ flex: 1, marginHorizontal: 12 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                        <Text style={{ fontSize: 10, fontWeight: "900", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                          LeetCode Daily
+                        </Text>
+                        {leetcode?.difficulty && (
+                          <View style={[styles.diffPill, { backgroundColor: diffTheme.bg }]}>
+                            <Text style={[styles.diffPillText, { color: diffTheme.text }]}>
+                              {leetcode.difficulty}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
                       <Text
                         numberOfLines={1}
                         style={{
-                          fontWeight: "800",
-                          fontSize: 14,
+                          fontWeight: "900",
+                          fontSize: 15,
                           color: colors.onSurface,
-                          lineHeight: 19,
+                          lineHeight: 20,
                         }}
                       >
                         {leetcode?.title || "Problem of the Day"}
                       </Text>
                     </View>
-                    {leetcode?.difficulty && (
-                      <View
-                        style={[
-                          styles.diffBadge,
-                          {
-                            backgroundColor:
-                              getDifficultyColor(leetcode.difficulty, dark) + "18",
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            color: getDifficultyColor(leetcode.difficulty, dark),
-                            fontWeight: "800",
-                            fontSize: 11,
-                          }}
-                        >
-                          {leetcode.difficulty}
-                        </Text>
-                      </View>
-                    )}
-                    <MaterialCommunityIcons
-                      name="open-in-new"
-                      size={16}
-                      color={colors.onSurfaceVariant}
-                      style={{ opacity: 0.5, marginLeft: 6 }}
-                    />
+
+                    {/* Right Action Button */}
+                    <View style={[styles.solveBtn, { backgroundColor: colors.primary }]}>
+                      <Text style={{ color: dark ? "#0F172A" : "#FFFFFF", fontWeight: "800", fontSize: 12 }}>
+                        Solve
+                      </Text>
+                      <MaterialCommunityIcons name="arrow-right" size={13} color={dark ? "#0F172A" : "#FFFFFF"} />
+                    </View>
                   </View>
                 )}
               </Pressable>
             </View>
           </View>
 
-          {/* Upcoming Contests */}
+          {/* Upcoming Schedule Timeline */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text
-                style={[
-                  styles.sectionLabel,
-                  { color: colors.onSurfaceVariant, paddingHorizontal: 0 },
-                ]}
-              >
-                UPCOMING ROUNDS
+              <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant, paddingHorizontal: 0 }]}>
+                UPCOMING SCHEDULE
               </Text>
               {upcomingOnly.length > 3 && (
                 <Pressable
@@ -414,14 +408,8 @@ export default function DashboardScreen() {
                     }
                   ]}
                 >
-                  <Text
-                    style={{
-                      color: colors.onSurfaceVariant,
-                      fontWeight: "700",
-                      fontSize: 11,
-                    }}
-                  >
-                    View all
+                  <Text style={{ color: colors.onSurfaceVariant, fontWeight: "800", fontSize: 11 }}>
+                    Full Calendar
                   </Text>
                   <MaterialCommunityIcons name="arrow-right" size={12} color={colors.onSurfaceVariant} style={{ marginLeft: 3 }} />
                 </Pressable>
@@ -429,7 +417,7 @@ export default function DashboardScreen() {
             </View>
             <ContestList
               contests={upcomingOnly}
-              emptyMessage="No upcoming contests found. Pull down to refresh."
+              emptyMessage="No upcoming contests scheduled. Pull down to refresh."
               limit={5}
               compact
             />
@@ -454,9 +442,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 16,
   },
-  datePill: {
+  dateCapsule: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
@@ -464,28 +452,34 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 4,
+    gap: 6,
   },
-  greeting: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+  liveGreenDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#10B981",
+  },
+  dateSubtext: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.8,
   },
   logo: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: "900",
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
   },
   content: {
-    paddingTop: 8,
+    paddingTop: 4,
   },
   liveSection: {
     paddingHorizontal: 20,
@@ -495,11 +489,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
+    paddingVertical: 12,
+    borderRadius: 20,
     borderWidth: 1,
   },
-  liveDot: {
+  livePulseDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -507,32 +501,33 @@ const styles = StyleSheet.create({
   },
   liveBannerTitle: {
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#EF4444",
     textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
   },
   liveBannerSub: {
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#EF4444",
+    marginTop: 1,
   },
   liveJoinBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
     backgroundColor: "#EF4444",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
   },
   liveJoinText: {
     fontSize: 11,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#FFFFFF",
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 26,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -541,13 +536,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 12,
   },
-  sectionLabel: {
+  sectionHeading: {
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
+    fontWeight: "900",
+    letterSpacing: 1.2,
     textTransform: "uppercase",
-    paddingHorizontal: 20,
-    marginBottom: 10,
   },
   reorderBtn: {
     flexDirection: "row",
@@ -567,37 +560,50 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 20,
+    padding: 18,
+    borderRadius: 24,
     borderWidth: 1,
   },
   connectIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
   potdCard: {
-    borderRadius: 20,
+    borderRadius: 28, // Google M3 Expressive Large Squircle
     borderWidth: 1,
     overflow: "hidden",
   },
   potdInner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 14,
+    padding: 16,
   },
   potdIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
-  diffBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+  diffPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 6,
+  },
+  diffPillText: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
+  solveBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
   },
 });

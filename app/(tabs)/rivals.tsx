@@ -115,13 +115,13 @@ export default function RivalsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Minimal M3 Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <View>
           <View style={[styles.rivalPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-            <MaterialCommunityIcons name="sword-cross" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+            <MaterialCommunityIcons name="trophy-award" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
             <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-              Competitive Leaderboard
+              Google Play Style Leaderboard
             </Text>
           </View>
           <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Rivals</Text>
@@ -140,11 +140,11 @@ export default function RivalsScreen() {
             }
           ]}
         >
-          <Ionicons name="add" size={22} color={isDarkMode ? "#0F172A" : "#FFFFFF"} />
+          <Ionicons name="add" size={24} color={isDarkMode ? "#0F172A" : "#FFFFFF"} />
         </Pressable>
       </View>
 
-      {/* Platform selector */}
+      {/* Platform Selector */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
         <PlatformSelector
           platforms={availablePlatforms}
@@ -168,7 +168,7 @@ export default function RivalsScreen() {
               No competitors yet
             </Text>
             <Text style={[styles.emptySubText, { color: colors.onSurfaceVariant }]}>
-              Link your {currentPlatformConfig?.name} profile or add friends to compare ratings!
+              Add friends or link your {currentPlatformConfig?.name} handle to climb the leaderboard!
             </Text>
             <Pressable
               onPress={() => setAddModalVisible(true)}
@@ -188,70 +188,73 @@ export default function RivalsScreen() {
           </View>
         ) : (
           <View>
-            {/* Top 3 Podium Cards */}
+            {/* Google Play Games 3D-Style Podium */}
             {topThree.length > 0 && (
               <View style={styles.podiumContainer}>
-                {/* 2nd Place (Left) */}
+                {/* 2nd Place (Silver - Left) */}
                 {topThree.length >= 2 ? (
-                  <Surface style={[styles.podiumCard, styles.podiumCard2, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: colors.outline }]}>
-                    <View style={[styles.rankCircle, { backgroundColor: "#94A3B8" + "20" }]}>
-                      <MaterialCommunityIcons name="medal" size={16} color="#94A3B8" />
+                  <Surface style={[styles.podiumCard, styles.podiumCard2, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#94A3B8" + "40" }]}>
+                    <View style={[styles.rankCircle, { backgroundColor: "#94A3B8" + "25" }]}>
+                      <MaterialCommunityIcons name="medal" size={18} color="#94A3B8" />
                     </View>
                     <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
                       @{topThree[1].username}
                     </Text>
                     {topThree[1].isMe && (
-                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
                         <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
                       </View>
                     )}
                     <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
                       {topThree[1].rating ?? "—"}
                     </Text>
+                    <Text style={styles.placeLabel}>2ND</Text>
                   </Surface>
                 ) : <View style={{ flex: 1 }} />}
 
-                {/* 1st Place (Center - Raised) */}
-                <Surface style={[styles.podiumCard, styles.podiumCard1, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#F59E0B" + "60", borderWidth: 1.5 }]}>
-                  <View style={[styles.rankCircle, { backgroundColor: "#F59E0B" + "25" }]}>
-                    <MaterialCommunityIcons name="crown" size={20} color="#F59E0B" />
+                {/* 1st Place (Gold - Center Raised) */}
+                <Surface style={[styles.podiumCard, styles.podiumCard1, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#F59E0B", borderWidth: 2 }]}>
+                  <View style={[styles.rankCircle, { backgroundColor: "#F59E0B" + "30" }]}>
+                    <MaterialCommunityIcons name="crown" size={22} color="#F59E0B" />
                   </View>
-                  <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface, fontWeight: "900" }]}>
+                  <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface, fontWeight: "900", fontSize: 13 }]}>
                     @{topThree[0].username}
                   </Text>
                   {topThree[0].isMe && (
-                    <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
-                      <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                    <View style={[styles.youPill, { backgroundColor: "#F59E0B" + "25" }]}>
+                      <Text style={[styles.youText, { color: "#F59E0B" }]}>YOU</Text>
                     </View>
                   )}
-                  <Text style={[styles.podiumRating, { color: "#F59E0B", fontFamily: "JetBrainsMono_700Bold", fontSize: 20 }]}>
+                  <Text style={[styles.podiumRating, { color: "#F59E0B", fontFamily: "JetBrainsMono_700Bold", fontSize: 22 }]}>
                     {topThree[0].rating ?? "—"}
                   </Text>
+                  <Text style={[styles.placeLabel, { color: "#F59E0B" }]}>1ST CHAMPION</Text>
                 </Surface>
 
-                {/* 3rd Place (Right) */}
+                {/* 3rd Place (Bronze - Right) */}
                 {topThree.length >= 3 ? (
-                  <Surface style={[styles.podiumCard, styles.podiumCard3, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: colors.outline }]}>
-                    <View style={[styles.rankCircle, { backgroundColor: "#B45309" + "20" }]}>
-                      <MaterialCommunityIcons name="shield-star" size={16} color="#B45309" />
+                  <Surface style={[styles.podiumCard, styles.podiumCard3, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#B45309" + "40" }]}>
+                    <View style={[styles.rankCircle, { backgroundColor: "#B45309" + "25" }]}>
+                      <MaterialCommunityIcons name="shield-star" size={18} color="#B45309" />
                     </View>
                     <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
                       @{topThree[2].username}
                     </Text>
                     {topThree[2].isMe && (
-                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
                         <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
                       </View>
                     )}
                     <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
                       {topThree[2].rating ?? "—"}
                     </Text>
+                    <Text style={styles.placeLabel}>3RD</Text>
                   </Surface>
                 ) : <View style={{ flex: 1 }} />}
               </View>
             )}
 
-            {/* Remaining Rivals List */}
+            {/* Runners Up List */}
             {remainingRivals.length > 0 && (
               <View style={styles.leaderboard}>
                 <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
@@ -274,9 +277,11 @@ export default function RivalsScreen() {
                       ]}
                       elevation={0}
                     >
-                      <Text style={[styles.rankNumber, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
-                        #{actualRank}
-                      </Text>
+                      <View style={[styles.rankBadgeCircle, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                        <Text style={[styles.rankNumber, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
+                          #{actualRank}
+                        </Text>
+                      </View>
                       
                       <View style={styles.userInfo}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -284,7 +289,7 @@ export default function RivalsScreen() {
                             @{user.username}
                           </Text>
                           {isUserMe && (
-                            <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                            <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
                               <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
                             </View>
                           )}
@@ -429,19 +434,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.3,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: "900",
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   addButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -456,7 +462,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     marginBottom: 4,
   },
   emptySubText: {
@@ -475,67 +481,81 @@ const styles = StyleSheet.create({
   podiumContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
-    marginBottom: 24,
-    paddingTop: 10,
+    gap: 10,
+    marginBottom: 26,
+    paddingTop: 14,
   },
   podiumCard: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 24, // Google M3 Podium squircle
     padding: 12,
     alignItems: "center",
     borderWidth: 1,
   },
   podiumCard1: {
-    minHeight: 140,
+    minHeight: 155,
     justifyContent: "center",
   },
   podiumCard2: {
-    minHeight: 120,
+    minHeight: 130,
     justifyContent: "center",
   },
   podiumCard3: {
-    minHeight: 110,
+    minHeight: 118,
     justifyContent: "center",
   },
   rankCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 6,
   },
   podiumUsername: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
     marginBottom: 4,
   },
   podiumRating: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  placeLabel: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.6,
+    marginTop: 4,
+    opacity: 0.7,
   },
   leaderboard: {
-    gap: 8,
+    gap: 10,
   },
   sectionHeading: {
     fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    marginBottom: 4,
+    fontWeight: "900",
+    letterSpacing: 1.2,
+    marginBottom: 6,
+    textTransform: "uppercase",
   },
   leaderboardCard: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 16,
+    borderRadius: 20,
     gap: 12,
   },
+  rankBadgeCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   rankNumber: {
-    fontSize: 13,
-    fontWeight: "700",
-    width: 28,
+    fontSize: 12,
+    fontWeight: "800",
   },
   userInfo: {
     flex: 1,
@@ -546,7 +566,7 @@ const styles = StyleSheet.create({
   },
   userRank: {
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "600",
     marginTop: 2,
   },
   ratingText: {
@@ -560,7 +580,7 @@ const styles = StyleSheet.create({
   },
   youText: {
     fontSize: 9,
-    fontWeight: "800",
+    fontWeight: "900",
   },
   deleteBtn: {
     padding: 6,
@@ -573,19 +593,19 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalCard: {
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 28,
+    padding: 22,
     borderWidth: 1,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "900",
-    marginBottom: 14,
+    marginBottom: 16,
   },
   modalInput: {
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
     marginBottom: 16,
