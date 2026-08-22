@@ -60,12 +60,7 @@ export function PlatformSelector({
         </Pressable>
       )}
       {platforms.map((platform) => {
-        let platformColor = platform.color;
-        if (platform.id === "atcoder" && !dark) {
-          platformColor = "#181A20";
-        }
         const isSelected = selectedPlatform === platform.id;
-        const isLightBg = platformColor.toUpperCase() === "#FFFFFF";
 
         return (
           <Pressable
@@ -77,7 +72,7 @@ export function PlatformSelector({
             style={({ pressed }) => [
               styles.chip,
               {
-                backgroundColor: isSelected ? platformColor : (dark ? colors.surfaceVariant : colors.surface),
+                backgroundColor: isSelected ? colors.primary : (dark ? colors.surfaceVariant : colors.surface),
                 borderColor: isSelected ? "transparent" : colors.outline,
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               },
@@ -87,13 +82,13 @@ export function PlatformSelector({
               style={[
                 styles.dot,
                 {
-                  backgroundColor: isSelected ? (isLightBg ? "#181A20" : "#FFFFFF") : platformColor,
+                  backgroundColor: isSelected ? (dark ? "#0F172A" : "#FFFFFF") : platform.color,
                 },
               ]}
             />
             <Text
               style={{
-                color: isSelected ? (isLightBg ? "#181A20" : "#FFFFFF") : colors.onSurface,
+                color: isSelected ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurface,
                 fontWeight: "700",
                 fontSize: 13,
                 letterSpacing: 0.1,

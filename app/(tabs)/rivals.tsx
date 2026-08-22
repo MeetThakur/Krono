@@ -1,39 +1,46 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
-import {
-    Alert,
-    Modal,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from "react-native";
-import { Surface, useTheme } from "react-native-paper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
+import { Surface, Text, useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlatformSelector } from "../../src/components/contests/PlatformSelector";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 import { useRivalsStore } from "../../src/stores/useRivalsStore";
-import { useToastStore } from "../../src/stores/useToastStore";
-import { PlatformId, PLATFORMS } from "../../src/types/platform";
+import { Platform, PlatformId, PLATFORMS } from "../../src/types/platform";
 
 export default function RivalsScreen() {
   const { colors, dark: isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
+  const { profiles } = useProfileStore();
+  const { 
+    rivals,
+    addRival, 
+    removeRival, 
+    refreshRivals,
+    loadRivals,
+    isLoading 
+  } = useRivalsStore();
 
   const [activePlatform, setActivePlatform] = useState<PlatformId | "all">("codeforces");
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [newRivalHandle, setNewRivalHandle] = useState("");
-  const [addingPlatform, setAddingPlatform] = useState<PlatformId>("codeforces");
-
-  const { profiles: myProfiles } = useProfileStore();
-  const { rivals, loadRivals, addRival, removeRival, refreshRivals, isLoading, error } = useRivalsStore();
-  const { showToast } = useToastStore();
+  const [isAddModalVisible, setAddModalVisible] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [selectedPlatformForAdd, setSelectedPlatformForAdd] = useState<PlatformId>("codeforces");
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadRivals();
+    refreshRivals();
+  }, []);
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -41,62 +48,79 @@ export default function RivalsScreen() {
     setIsRefreshing(false);
   };
 
-  useEffect(() => {
-    loadRivals();
-  }, []);
-
-  useEffect(() => {
-    if (error) {
-      showToast(error, "error");
-    }
-  }, [error]);
-
   const handleAddRival = async () => {
-    if (!newRivalHandle.trim()) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await addRival(addingPlatform, newRivalHandle.trim());
-    if (!useRivalsStore.getState().error) {
+    if (!newUsername.trim()) {
+      Alert.alert("Error", "Please enter a username");
+      return;
+    }
+
+    try {
+      await addRival(selectedPlatformForAdd, newUsername.trim());
+      setNewUsername("");
       setAddModalVisible(false);
-      setNewRivalHandle("");
-      showToast(`Added @${newRivalHandle.trim()}`, "success");
+    } catch (e: any) {
+      Alert.alert("Failed", e.message || "Could not fetch user stats");
     }
   };
 
-  // Combine My Profile and Rivals for the selected platform
-  const getLeaderboard = () => {
-    if (activePlatform === "all") return [];
-    
-    const myProfile = myProfiles.find((p) => p.platformId === activePlatform);
-    const platformRivals = rivals
-      .filter((r) => r.platformId === activePlatform && r.data)
-      .map((r) => ({ ...r.data!, isMe: false, rivalId: r.id }));
+  const leaderboard = useMemo(() => {
+    const list: Array<{
+      rivalId: string;
+      username: string;
+      rating?: number;
+      rank?: string;
+      problemsSolved?: number;
+      isMe: boolean;
+    }> = [];
 
-    const leaderboard = [...platformRivals];
+    const myProfile = profiles.find((p) => p.platformId === activePlatform);
     if (myProfile) {
-      leaderboard.push({ ...myProfile, isMe: true, rivalId: "me" });
+      list.push({
+        rivalId: myProfile.id,
+        username: myProfile.username,
+        rating: myProfile.rating,
+        rank: myProfile.rank,
+        problemsSolved: myProfile.problemsSolved,
+        isMe: true,
+      });
     }
 
-    return leaderboard.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  };
+    rivals
+      .filter((r) => r.platformId === activePlatform && r.data)
+      .forEach((r) => {
+        if (r.data) {
+          list.push({
+            rivalId: r.id,
+            username: r.username,
+            rating: r.data.rating,
+            rank: r.data.rank,
+            problemsSolved: r.data.problemsSolved,
+            isMe: false,
+          });
+        }
+      });
 
-  const leaderboard = getLeaderboard();
-  const currentPlatformConfig = activePlatform !== "all" ? PLATFORMS[activePlatform] : undefined;
+    return list.sort((a, b) => (b.rating || b.problemsSolved || 0) - (a.rating || a.problemsSolved || 0));
+  }, [profiles, rivals, activePlatform]);
 
-  const getRankBadgeColor = (index: number) => {
-    if (index === 0) return "#F59E0B"; // Gold
-    if (index === 1) return "#94A3B8"; // Silver
-    if (index === 2) return "#B45309"; // Bronze
-    return colors.onSurfaceVariant;
-  };
+  const currentPlatformConfig = PLATFORMS[activePlatform as PlatformId];
+  const topThree = leaderboard.slice(0, 3);
+  const remainingRivals = leaderboard.slice(3);
+
+  const availablePlatforms = useMemo(() => {
+    return (Object.values(PLATFORMS) as Platform[]).filter(
+      (p: Platform) => !["geeksforgeeks", "hackerrank"].includes(p.id)
+    );
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Expressive Header */}
+      {/* Minimal M3 Header */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
         <View>
-          <View style={[styles.rivalPill, { backgroundColor: colors.primaryContainer }]}>
-            <MaterialCommunityIcons name="sword-cross" size={12} color={colors.primary} style={{ marginRight: 4 }} />
-            <Text style={[styles.subtitle, { color: colors.primary }]}>
+          <View style={[styles.rivalPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+            <MaterialCommunityIcons name="sword-cross" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+            <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
               Competitive Leaderboard
             </Text>
           </View>
@@ -116,15 +140,16 @@ export default function RivalsScreen() {
             }
           ]}
         >
-          <Ionicons name="add" size={24} color={isDarkMode ? "#0F172A" : "#FFFFFF"} />
+          <Ionicons name="add" size={22} color={isDarkMode ? "#0F172A" : "#FFFFFF"} />
         </Pressable>
       </View>
 
-      <View style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 }}>
+      {/* Platform selector */}
+      <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
         <PlatformSelector
-          platforms={Object.values(PLATFORMS)}
+          platforms={availablePlatforms}
           selectedPlatform={activePlatform}
-          onSelectPlatform={setActivePlatform}
+          onSelectPlatform={(p) => setActivePlatform(p)}
           hideAllOption={true}
         />
       </View>
@@ -136,16 +161,9 @@ export default function RivalsScreen() {
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        {activePlatform === "all" ? (
+        {leaderboard.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="trophy-outline" size={64} color={colors.onSurfaceVariant} style={{ opacity: 0.3, marginBottom: 16 }} />
-            <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
-              Please select a specific platform to view the leaderboard.
-            </Text>
-          </View>
-        ) : leaderboard.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="account-group-outline" size={64} color={colors.onSurfaceVariant} style={{ opacity: 0.3, marginBottom: 16 }} />
+            <MaterialCommunityIcons name="account-group-outline" size={54} color={colors.onSurfaceVariant} style={{ opacity: 0.3, marginBottom: 16 }} />
             <Text style={[styles.emptyText, { color: colors.onSurface }]}>
               No competitors yet
             </Text>
@@ -169,162 +187,221 @@ export default function RivalsScreen() {
             </Pressable>
           </View>
         ) : (
-          <View style={styles.leaderboard}>
-            {leaderboard.map((user, index) => {
-              let platformColor = currentPlatformConfig?.color || colors.primary;
-              if (activePlatform === "atcoder") {
-                platformColor = isDarkMode ? "#FFFFFF" : "#181A20";
-              }
-              const isUserMe = user.isMe;
-              const rankColor = getRankBadgeColor(index);
-
-              return (
-                <Surface 
-                  key={user.rivalId} 
-                  style={[
-                    styles.leaderboardCard, 
-                    { 
-                      backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
-                      borderColor: isUserMe ? colors.primary : colors.outline,
-                      borderWidth: isUserMe ? 1.5 : 1,
-                      shadowColor: isUserMe ? colors.primary : "#000",
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: isUserMe ? (isDarkMode ? 0.25 : 0.1) : (isDarkMode ? 0.15 : 0.03),
-                      shadowRadius: 12,
-                      elevation: isUserMe ? 4 : 2,
-                    }
-                  ]}
-                  elevation={0}
-                >
-                  {/* Rank Badge */}
-                  <View style={[
-                    styles.rankBadge, 
-                    { 
-                      backgroundColor: index < 3 ? rankColor + "18" : (isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                      borderColor: index < 3 ? rankColor + "40" : "transparent",
-                      borderWidth: index < 3 ? 1 : 0,
-                    }
-                  ]}>
-                    {index < 3 ? (
-                      <MaterialCommunityIcons 
-                        name={index === 0 ? "crown" : index === 1 ? "medal" : "shield-star"} 
-                        size={14} 
-                        color={rankColor} 
-                        style={{ marginRight: 2 }}
-                      />
-                    ) : null}
-                    <Text style={[
-                      styles.rankText, 
-                      { color: rankColor, fontFamily: "JetBrainsMono_700Bold" }
-                    ]}>
-                      #{index + 1}
-                    </Text>
-                  </View>
-                  
-                  {/* User info */}
-                  <View style={styles.userInfo}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Text style={[styles.username, { color: colors.onSurface }]} numberOfLines={1}>
-                        @{user.username}
-                      </Text>
-                      {isUserMe && (
-                        <View style={[styles.youPill, { backgroundColor: colors.primaryContainer }]}>
-                          <Text style={[styles.youText, { color: colors.primary }]}>YOU</Text>
-                        </View>
-                      )}
+          <View>
+            {/* Top 3 Podium Cards */}
+            {topThree.length > 0 && (
+              <View style={styles.podiumContainer}>
+                {/* 2nd Place (Left) */}
+                {topThree.length >= 2 ? (
+                  <Surface style={[styles.podiumCard, styles.podiumCard2, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: colors.outline }]}>
+                    <View style={[styles.rankCircle, { backgroundColor: "#94A3B8" + "20" }]}>
+                      <MaterialCommunityIcons name="medal" size={16} color="#94A3B8" />
                     </View>
-                    <Text style={[styles.userRank, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
-                      {user.rank || "Active"} • {user.problemsSolved ?? 0} Solved
+                    <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
+                      @{topThree[1].username}
                     </Text>
-                  </View>
-                  
-                  {/* Rating figure */}
-                  <View style={styles.ratingInfo}>
-                    <Text style={[styles.ratingText, { color: platformColor, fontFamily: "JetBrainsMono_700Bold" }]}>
-                      {user.rating ?? "—"}
+                    {topThree[1].isMe && (
+                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                        <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                      {topThree[1].rating ?? "—"}
                     </Text>
+                  </Surface>
+                ) : <View style={{ flex: 1 }} />}
+
+                {/* 1st Place (Center - Raised) */}
+                <Surface style={[styles.podiumCard, styles.podiumCard1, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#F59E0B" + "60", borderWidth: 1.5 }]}>
+                  <View style={[styles.rankCircle, { backgroundColor: "#F59E0B" + "25" }]}>
+                    <MaterialCommunityIcons name="crown" size={20} color="#F59E0B" />
                   </View>
-                  
-                  {/* Remove Rival */}
-                  {!isUserMe && (
-                    <Pressable 
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        Alert.alert("Remove Rival", `Remove @${user.username} from rivals?`, [
-                          { text: "Cancel", style: "cancel" },
-                          { text: "Remove", style: "destructive", onPress: () => removeRival(user.rivalId) }
-                        ]);
-                      }}
-                      style={({ pressed }) => [
-                        styles.deleteBtn,
-                        { opacity: pressed ? 0.6 : 1 }
-                      ]}
-                    >
-                      <Ionicons name="trash-outline" size={18} color={colors.error} />
-                    </Pressable>
+                  <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface, fontWeight: "900" }]}>
+                    @{topThree[0].username}
+                  </Text>
+                  {topThree[0].isMe && (
+                    <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                      <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                    </View>
                   )}
+                  <Text style={[styles.podiumRating, { color: "#F59E0B", fontFamily: "JetBrainsMono_700Bold", fontSize: 20 }]}>
+                    {topThree[0].rating ?? "—"}
+                  </Text>
                 </Surface>
-              );
-            })}
+
+                {/* 3rd Place (Right) */}
+                {topThree.length >= 3 ? (
+                  <Surface style={[styles.podiumCard, styles.podiumCard3, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: colors.outline }]}>
+                    <View style={[styles.rankCircle, { backgroundColor: "#B45309" + "20" }]}>
+                      <MaterialCommunityIcons name="shield-star" size={16} color="#B45309" />
+                    </View>
+                    <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
+                      @{topThree[2].username}
+                    </Text>
+                    {topThree[2].isMe && (
+                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                        <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                      {topThree[2].rating ?? "—"}
+                    </Text>
+                  </Surface>
+                ) : <View style={{ flex: 1 }} />}
+              </View>
+            )}
+
+            {/* Remaining Rivals List */}
+            {remainingRivals.length > 0 && (
+              <View style={styles.leaderboard}>
+                <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
+                  RUNNERS UP
+                </Text>
+                {remainingRivals.map((user, index) => {
+                  const actualRank = index + 4;
+                  const isUserMe = user.isMe;
+
+                  return (
+                    <Surface 
+                      key={user.rivalId} 
+                      style={[
+                        styles.leaderboardCard, 
+                        { 
+                          backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
+                          borderColor: isUserMe ? colors.primary : colors.outline,
+                          borderWidth: 1,
+                        }
+                      ]}
+                      elevation={0}
+                    >
+                      <Text style={[styles.rankNumber, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
+                        #{actualRank}
+                      </Text>
+                      
+                      <View style={styles.userInfo}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <Text style={[styles.username, { color: colors.onSurface }]} numberOfLines={1}>
+                            @{user.username}
+                          </Text>
+                          {isUserMe && (
+                            <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" }]}>
+                              <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={[styles.userRank, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                          {user.rank || "Active"} • {user.problemsSolved ?? 0} Solved
+                        </Text>
+                      </View>
+                      
+                      <Text style={[styles.ratingText, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                        {user.rating ?? "—"}
+                      </Text>
+                      
+                      {!isUserMe && (
+                        <Pressable 
+                          onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            Alert.alert("Remove Rival", `Remove @${user.username} from rivals?`, [
+                              { text: "Cancel", style: "cancel" },
+                              { text: "Remove", style: "destructive", onPress: () => removeRival(user.rivalId) }
+                            ]);
+                          }}
+                          style={({ pressed }) => [
+                            styles.deleteBtn,
+                            { opacity: pressed ? 0.6 : 1 }
+                          ]}
+                        >
+                          <Ionicons name="trash-outline" size={16} color={colors.error} />
+                        </Pressable>
+                      )}
+                    </Surface>
+                  );
+                })}
+              </View>
+            )}
           </View>
         )}
       </ScrollView>
 
       {/* Add Rival Modal */}
-      <Modal visible={addModalVisible} animationType="slide" transparent>
-        <View style={[styles.modalOverlay, { backgroundColor: "rgba(0,0,0,0.6)" }]}>
-          <View style={[styles.modalContent, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface }]}>
-            <View style={styles.modalHandle} />
-            <Text style={[styles.modalTitle, { color: colors.onSurface }]}>Add a Rival</Text>
+      <Modal
+        visible={isAddModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setAddModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Surface 
+            style={[
+              styles.modalCard, 
+              { 
+                backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
+                borderColor: colors.outline,
+              }
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.onSurface }]}>
+              Add a Rival
+            </Text>
             
-            <View style={{ marginBottom: 20 }}>
-              <Text style={[styles.inputLabel, { color: colors.onSurfaceVariant }]}>SELECT PLATFORM</Text>
-              <PlatformSelector
-                platforms={Object.values(PLATFORMS)}
-                selectedPlatform={addingPlatform}
-                onSelectPlatform={(p) => p !== 'all' && setAddingPlatform(p)}
+            <View style={{ marginBottom: 14 }}>
+              <PlatformSelector 
+                platforms={availablePlatforms}
+                selectedPlatform={selectedPlatformForAdd}
+                onSelectPlatform={(p) => setSelectedPlatformForAdd(p as PlatformId)}
                 hideAllOption={true}
               />
             </View>
 
-            <Text style={[styles.inputLabel, { color: colors.onSurfaceVariant }]}>HANDLE / USERNAME</Text>
             <TextInput
               style={[
-                styles.input, 
+                styles.modalInput, 
                 { 
-                  color: colors.onSurface, 
-                  backgroundColor: colors.background,
+                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
                   borderColor: colors.outline,
+                  color: colors.onSurface 
                 }
               ]}
-              placeholder="e.g. tourist, neal, ecnerwala"
+              placeholder={`Enter ${PLATFORMS[selectedPlatformForAdd]?.name} handle...`}
               placeholderTextColor={colors.onSurfaceVariant}
-              value={newRivalHandle}
-              onChangeText={setNewRivalHandle}
+              value={newUsername}
+              onChangeText={setNewUsername}
               autoCapitalize="none"
               autoCorrect={false}
             />
 
-            <View style={styles.modalActions}>
-              <Pressable onPress={() => setAddModalVisible(false)} style={styles.cancelBtn}>
-                <Text style={{ color: colors.onSurfaceVariant, fontSize: 14, fontWeight: "700" }}>Cancel</Text>
-              </Pressable>
-              <Pressable 
-                onPress={handleAddRival} 
+            <View style={styles.modalButtons}>
+              <Pressable
+                onPress={() => setAddModalVisible(false)}
                 style={({ pressed }) => [
-                  styles.confirmBtn, 
+                  styles.cancelBtn,
                   { 
-                    backgroundColor: colors.primary,
-                    transform: [{ scale: pressed ? 0.96 : 1 }]
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    opacity: pressed ? 0.8 : 1 
                   }
                 ]}
               >
-                <Text style={{ color: isDarkMode ? "#0F172A" : "#FFFFFF", fontSize: 14, fontWeight: "800" }}>
+                <Text style={{ color: colors.onSurface, fontWeight: "700" }}>Cancel</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleAddRival}
+                disabled={isLoading}
+                style={({ pressed }) => [
+                  styles.submitBtn,
+                  { 
+                    backgroundColor: colors.primary,
+                    opacity: pressed || isLoading ? 0.8 : 1 
+                  }
+                ]}
+              >
+                <Text style={{ color: isDarkMode ? "#0F172A" : "#FFFFFF", fontWeight: "800" }}>
                   {isLoading ? "Adding..." : "Add Rival"}
                 </Text>
               </Pressable>
             </View>
-          </View>
+          </Surface>
         </View>
       </Modal>
     </View>
@@ -340,113 +417,52 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   rivalPill: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 11,
     fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "900",
-    letterSpacing: -0.8,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  leaderboard: {
-    gap: 12,
-  },
-  leaderboardCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 24, // M3 Expressive squircle
-  },
-  rankBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    marginRight: 14,
-    minWidth: 44,
-  },
-  rankText: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  userInfo: {
-    flex: 1,
-  },
-  username: {
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: -0.2,
-  },
-  youPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  youText: {
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-  userRank: {
-    fontSize: 12,
-    marginTop: 3,
-    fontWeight: "500",
-  },
-  ratingInfo: {
-    alignItems: "flex-end",
-    justifyContent: "center",
-    marginLeft: 10,
-  },
-  ratingText: {
-    fontSize: 22,
     letterSpacing: -0.5,
   },
-  deleteBtn: {
-    marginLeft: 12,
-    padding: 6,
+  addButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
   },
   emptyContainer: {
-    paddingTop: 40,
     alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
   },
   emptyText: {
-    fontSize: 18,
-    textAlign: "center",
-    fontWeight: "800",
-    marginBottom: 6,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
   },
   emptySubText: {
     fontSize: 13,
     textAlign: "center",
-    fontWeight: "500",
-    lineHeight: 18,
-    paddingHorizontal: 30,
+    maxWidth: 240,
     marginBottom: 20,
   },
   addFirstBtn: {
@@ -456,59 +472,137 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
   },
-  modalOverlay: {
+  podiumContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+    marginBottom: 24,
+    paddingTop: 10,
+  },
+  podiumCard: {
     flex: 1,
-    justifyContent: "flex-end",
+    borderRadius: 20,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
   },
-  modalContent: {
-    padding: 24,
-    paddingBottom: 40,
-    borderTopLeftRadius: 32, // M3 Bottom Sheet corner radius
-    borderTopRightRadius: 32,
+  podiumCard1: {
+    minHeight: 140,
+    justifyContent: "center",
   },
-  modalHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(127,127,127,0.4)",
-    alignSelf: "center",
-    marginBottom: 18,
+  podiumCard2: {
+    minHeight: 120,
+    justifyContent: "center",
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 20,
-    letterSpacing: -0.5,
+  podiumCard3: {
+    minHeight: 110,
+    justifyContent: "center",
   },
-  inputLabel: {
+  rankCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  podiumUsername: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  podiumRating: {
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  leaderboard: {
+    gap: 8,
+  },
+  sectionHeading: {
     fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.8,
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  input: {
-    height: 52,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 24,
-  },
-  modalActions: {
+  leaderboardCard: {
     flexDirection: "row",
-    justifyContent: "flex-end",
     alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 16,
     gap: 12,
   },
-  cancelBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
+  rankNumber: {
+    fontSize: 13,
+    fontWeight: "700",
+    width: 28,
   },
-  confirmBtn: {
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  userRank: {
+    fontSize: 11,
+    fontWeight: "500",
+    marginTop: 2,
+  },
+  ratingText: {
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  youPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  youText: {
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  deleteBtn: {
+    padding: 6,
+    marginLeft: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    marginBottom: 14,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     paddingVertical: 12,
-    paddingHorizontal: 22,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+  submitBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 999,
   },
 });
-

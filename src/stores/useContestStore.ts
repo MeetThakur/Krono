@@ -38,65 +38,91 @@ export const useContestStore = create<ContestState>((set, get) => ({
   loadContests: async () => {
     set({ isLoading: true });
     try {
-      const contests = await getUpcomingContests();
-      set({ upcomingContests: contests, isLoading: false });
+      const cached = await getUpcomingContests();
+      if (cached && cached.length > 0) {
+        set({ upcomingContests: cached, isLoading: false });
+        // Background sync to ensure fresh data
+        get().syncContests();
+      } else {
+        // No cache, trigger full sync
+        await get().syncContests();
+      }
     } catch (error) {
-      set({ error: "Failed to load contests", isLoading: false });
+      console.warn("Failed to load cached contests, syncing directly:", error);
+      await get().syncContests();
     }
   },
 
   syncContests: async () => {
     set({ isLoading: true, error: null });
     try {
+      const allContests: Contest[] = [];
+
       // 1. Fetch from Codeforces
-      const cfContestsRaw = await codeforcesApi.getContestList();
-      const cfContests = cfContestsRaw.map(normalizeCodeforcesContest);
+      try {
+        const cfContestsRaw = await codeforcesApi.getContestList();
+        if (cfContestsRaw && cfContestsRaw.length > 0) {
+          const cfContests = cfContestsRaw.map(normalizeCodeforcesContest);
+          allContests.push(...cfContests);
+        }
+      } catch (cfError) {
+        console.warn("Failed to fetch Codeforces contests:", cfError);
+      }
 
       // 2. Fetch from LeetCode
-      let lcContests: Contest[] = [];
       try {
         const lcContestsRaw = await leetcodeApi.getUpcomingContests();
         if (lcContestsRaw && lcContestsRaw.length > 0) {
-          lcContests = lcContestsRaw.map(normalizeLeetCodeContest);
+          const lcContests = lcContestsRaw.map(normalizeLeetCodeContest);
+          allContests.push(...lcContests);
         }
       } catch (lcError) {
         console.warn("Failed to fetch LeetCode contests:", lcError);
-        // Continue without LeetCode contests
       }
 
       // 3. Fetch from CodeChef
-      let ccContests: Contest[] = [];
       try {
         const ccContestsRaw = await codechefApi.getContestList();
         if (ccContestsRaw && ccContestsRaw.length > 0) {
-          ccContests = ccContestsRaw.map(normalizeCodeChefContest);
+          const ccContests = ccContestsRaw.map(normalizeCodeChefContest);
+          allContests.push(...ccContests);
         }
       } catch (ccError) {
         console.warn("Failed to fetch CodeChef contests:", ccError);
       }
 
       // 4. Fetch from AtCoder
-      let acContests: Contest[] = [];
       try {
         const acContestsRaw = await atcoderApi.getContestList();
         if (acContestsRaw && acContestsRaw.length > 0) {
-          acContests = acContestsRaw.map(normalizeAtCoderContest);
+          const acContests = acContestsRaw.map(normalizeAtCoderContest);
+          allContests.push(...acContests);
         }
       } catch (acError) {
         console.warn("Failed to fetch AtCoder contests:", acError);
       }
 
-      // 5. Combine and save to DB (local cache)
-      const allContests = [
-        ...cfContests,
-        ...lcContests,
-        ...ccContests,
-        ...acContests,
-      ];
-      await saveContests(allContests);
+      // 5. Save to database if any contests fetched
+      if (allContests.length > 0) {
+        try {
+          await saveContests(allContests);
+        } catch (dbError) {
+          console.warn("Failed to cache contests to database:", dbError);
+        }
+      }
 
-      // 6. Reload from DB to get the sorted, filtered list
-      const upcoming = await getUpcomingContests();
+      // 6. Reload from DB or filter in-memory
+      let upcoming: Contest[] = [];
+      try {
+        upcoming = await getUpcomingContests();
+      } catch (e) {
+        // Fallback to in-memory filter if DB query fails
+        const now = Date.now();
+        upcoming = allContests.filter((c) => {
+          const end = new Date(c.endTime).getTime();
+          return end > now;
+        }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+      }
 
       set({
         upcomingContests: upcoming,
@@ -109,9 +135,6 @@ export const useContestStore = create<ContestState>((set, get) => ({
         const { notificationService } =
           await import("../services/notificationService");
         await notificationService.scheduleAllReminders(upcoming);
-        console.log(
-          `✅ Scheduled notifications for ${upcoming.length} contests`,
-        );
       } catch (e) {
         console.warn("⚠️ Failed to schedule notifications:", e);
       }
@@ -132,7 +155,6 @@ export const useContestStore = create<ContestState>((set, get) => ({
       let updatedContest = { ...contest };
 
       if (enable) {
-        // Schedule - use dynamic import to avoid startup issues
         try {
           const { notificationService } =
             await import("../services/notificationService");
@@ -152,7 +174,11 @@ export const useContestStore = create<ContestState>((set, get) => ({
         updatedContest.reminderSet = false;
       }
 
-      await saveContest(updatedContest);
+      try {
+        await saveContest(updatedContest);
+      } catch (e) {
+        console.warn("Failed to persist reminder to DB:", e);
+      }
 
       set((state) => ({
         upcomingContests: state.upcomingContests.map((c) =>

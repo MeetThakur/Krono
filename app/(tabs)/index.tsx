@@ -1,22 +1,21 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-
 import React, { useEffect, useState } from "react";
 import {
-    Linking,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    View,
+  Linking,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
 } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Surface, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ErrorBoundary } from "../../src/components/common/ErrorBoundary";
 import {
-    DashboardSkeleton,
-    Skeleton,
+  DashboardSkeleton,
+  Skeleton,
 } from "../../src/components/common/SkeletonLoader";
 import { ContestList } from "../../src/components/contests/ContestList";
 import { CumulativeStats } from "../../src/components/profile/CumulativeStats";
@@ -26,14 +25,16 @@ import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
 
-// Difficulty → color
-const getDifficultyColor = (difficulty?: string): string => {
+// Minimal difficulty colors
+const getDifficultyColor = (difficulty?: string, dark: boolean = false): string => {
   const d = (difficulty || "").toLowerCase();
   if (d.includes("easy") || d.includes("basic") || d.includes("school"))
-    return "#10B981"; // Vibrant emerald
-  if (d.includes("medium") || d.includes("intermediate")) return "#F59E0B"; // Vibrant amber
-  if (d.includes("hard") || d.includes("advanced")) return "#EF4444"; // Vibrant rose
-  return "#64748B";
+    return dark ? "#34D399" : "#059669";
+  if (d.includes("medium") || d.includes("intermediate"))
+    return dark ? "#FBBF24" : "#D97706";
+  if (d.includes("hard") || d.includes("advanced"))
+    return dark ? "#F87171" : "#DC2626";
+  return dark ? "#94A3B8" : "#64748B";
 };
 
 export default function DashboardScreen() {
@@ -58,13 +59,13 @@ export default function DashboardScreen() {
   const [isReorderModalVisible, setReorderModalVisible] = useState(false);
 
   useEffect(() => {
-    const initProfiles = async () => {
+    const initData = async () => {
       await loadProfiles();
       refreshProfiles();
+      loadContests();
+      refreshPotd();
     };
-    initProfiles();
-    loadContests();
-    refreshPotd();
+    initData();
   }, []);
 
   const handleSync = async () => {
@@ -78,37 +79,22 @@ export default function DashboardScreen() {
   };
 
   const isLoading = isProfileLoading || isContestLoading || isPotdLoading;
-
   const now = Date.now();
-  const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
 
   const ongoingContests = upcomingContests.filter((c) => {
     if (c.phase === "running") return true;
-    const start =
-      c.startTime instanceof Date
-        ? c.startTime.getTime()
-        : new Date(c.startTime).getTime();
-    const end = c.endTime
-      ? c.endTime instanceof Date
-        ? c.endTime.getTime()
-        : new Date(c.endTime).getTime()
-      : start;
+    const start = new Date(c.startTime).getTime();
+    const end = c.endTime ? new Date(c.endTime).getTime() : start + (c.durationSeconds || 7200) * 1000;
     return start <= now && now <= end;
   });
 
   const upcomingOnly = upcomingContests.filter((c) => {
     if (c.phase === "running") return false;
-    const start =
-      c.startTime instanceof Date
-        ? c.startTime.getTime()
-        : new Date(c.startTime).getTime();
-    const end = c.endTime
-      ? c.endTime instanceof Date
-        ? c.endTime.getTime()
-        : new Date(c.endTime).getTime()
-      : start;
+    const start = new Date(c.startTime).getTime();
+    const end = c.endTime ? new Date(c.endTime).getTime() : start + (c.durationSeconds || 7200) * 1000;
     if (start <= now && now <= end) return false;
-    return start <= sevenDaysFromNow;
+    if (end < now) return false;
+    return true;
   });
 
   if (isLoading && profiles.length === 0 && upcomingContests.length === 0) {
@@ -116,7 +102,7 @@ export default function DashboardScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <View>
-            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>TODAY</Text>
+            <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>OVERVIEW</Text>
             <Text style={[styles.logo, { color: colors.onSurface }]}>Krono</Text>
           </View>
           <Pressable
@@ -147,11 +133,11 @@ export default function DashboardScreen() {
   return (
     <ErrorBoundary fallbackTitle="Dashboard Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Expressive top app bar */}
+        {/* Minimal M3 Top App Bar */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 8 }]}>
           <View>
             <View style={[styles.datePill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-              <MaterialCommunityIcons name="calendar-today" size={12} color={colors.onSurfaceVariant} style={{ marginRight: 5 }} />
+              <MaterialCommunityIcons name="calendar-today" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 5 }} />
               <Text style={[styles.greeting, { color: colors.onSurfaceVariant }]}>
                 {currentDate}
               </Text>
@@ -194,12 +180,46 @@ export default function DashboardScreen() {
             />
           }
         >
-          {/* Profiles Carousel */}
+          {/* Live Now Banner */}
+          {ongoingContests.length > 0 && (
+            <View style={styles.liveSection}>
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push("/contests");
+                }}
+                style={({ pressed }) => [
+                  styles.liveBanner,
+                  {
+                    backgroundColor: dark ? "rgba(239, 68, 68, 0.1)" : "rgba(239, 68, 68, 0.08)",
+                    borderColor: "rgba(239, 68, 68, 0.3)",
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  },
+                ]}
+              >
+                <View style={styles.liveDot} />
+                <View style={{ flex: 1, marginHorizontal: 8 }}>
+                  <Text style={styles.liveBannerTitle}>
+                    {ongoingContests.length} {ongoingContests.length === 1 ? "Contest" : "Contests"} Live Now
+                  </Text>
+                  <Text numberOfLines={1} style={styles.liveBannerSub}>
+                    {ongoingContests[0].name}
+                  </Text>
+                </View>
+                <View style={styles.liveJoinBtn}>
+                  <Text style={styles.liveJoinText}>Join</Text>
+                  <MaterialCommunityIcons name="arrow-right" size={12} color="#FFFFFF" />
+                </View>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Profiles Section */}
           {profiles.length > 0 ? (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionLabel, { color: colors.onSurfaceVariant }]}>
-                  CONNECTED PROFILES
+                  PROFILES
                 </Text>
                 <Pressable
                   onPress={() => {
@@ -214,8 +234,8 @@ export default function DashboardScreen() {
                     }
                   ]}
                 >
-                  <MaterialCommunityIcons name="swap-vertical" size={16} color={colors.primary} style={{ marginRight: 4 }} />
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.primary }}>
+                  <MaterialCommunityIcons name="swap-vertical" size={14} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant }}>
                     Reorder
                   </Text>
                 </Pressable>
@@ -230,11 +250,6 @@ export default function DashboardScreen() {
                   {
                     backgroundColor: dark ? colors.surfaceVariant : colors.surface,
                     borderColor: colors.outline,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: dark ? 0.15 : 0.03,
-                    shadowRadius: 10,
-                    elevation: 2,
                     transform: [{ scale: pressed ? 0.98 : 1 }]
                   },
                 ]}
@@ -243,11 +258,11 @@ export default function DashboardScreen() {
                   router.push("/settings");
                 }}
               >
-                <View style={[styles.connectIconCircle, { backgroundColor: colors.primaryContainer }]}>
+                <View style={[styles.connectIconCircle, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
                   <MaterialCommunityIcons
                     name="account-plus-outline"
-                    size={22}
-                    color={colors.primary}
+                    size={20}
+                    color={colors.onSurface}
                   />
                 </View>
                 <View style={{ flex: 1, marginLeft: 14 }}>
@@ -300,51 +315,45 @@ export default function DashboardScreen() {
                   styles.potdCard,
                   {
                     backgroundColor: dark ? colors.surfaceVariant : colors.surface,
-                    borderColor: dark ? "#FFA11640" : "#FFA11670",
-                    shadowColor: "#FFA116",
-                    shadowOffset: { width: 0, height: 6 },
-                    shadowOpacity: dark ? 0.2 : 0.1,
-                    shadowRadius: 16,
-                    elevation: 4,
+                    borderColor: colors.outline,
                     transform: [{ scale: pressed ? 0.98 : 1 }],
-                    opacity: pressed ? 0.96 : 1,
+                    opacity: pressed ? 0.95 : 1,
                   },
                 ]}
               >
                 {isPotdLoading && !leetcode ? (
-                  <View style={{ gap: 8, padding: 18 }}>
+                  <View style={{ gap: 8, padding: 16 }}>
                     <Skeleton width="85%" height={16} />
                     <Skeleton width="40%" height={12} />
                   </View>
                 ) : (
                   <View style={styles.potdInner}>
-                    <View style={[styles.potdIconBadge, { backgroundColor: "rgba(255, 161, 22, 0.15)" }]}>
-                      <MaterialCommunityIcons name="code-braces" size={22} color="#FFA116" />
+                    <View style={[styles.potdIconBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                      <MaterialCommunityIcons name="code-tags" size={18} color={colors.onSurface} />
                     </View>
                     <View style={{ flex: 1, marginLeft: 12 }}>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                        <Text
-                          style={{
-                            fontSize: 11,
-                            color: "#FFA116",
-                            fontWeight: "800",
-                            letterSpacing: 0.5,
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          LeetCode POTD
-                        </Text>
-                      </View>
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          color: colors.onSurfaceVariant,
+                          fontWeight: "700",
+                          letterSpacing: 0.4,
+                          textTransform: "uppercase",
+                          marginBottom: 2,
+                        }}
+                      >
+                        LeetCode Daily
+                      </Text>
                       <Text
                         numberOfLines={1}
                         style={{
                           fontWeight: "800",
-                          fontSize: 15,
+                          fontSize: 14,
                           color: colors.onSurface,
-                          lineHeight: 20,
+                          lineHeight: 19,
                         }}
                       >
-                        {leetcode?.title || "No problem today"}
+                        {leetcode?.title || "Problem of the Day"}
                       </Text>
                     </View>
                     {leetcode?.difficulty && (
@@ -353,13 +362,13 @@ export default function DashboardScreen() {
                           styles.diffBadge,
                           {
                             backgroundColor:
-                              getDifficultyColor(leetcode.difficulty) + "18",
+                              getDifficultyColor(leetcode.difficulty, dark) + "18",
                           },
                         ]}
                       >
                         <Text
                           style={{
-                            color: getDifficultyColor(leetcode.difficulty),
+                            color: getDifficultyColor(leetcode.difficulty, dark),
                             fontWeight: "800",
                             fontSize: 11,
                           }}
@@ -369,37 +378,16 @@ export default function DashboardScreen() {
                       </View>
                     )}
                     <MaterialCommunityIcons
-                      name="chevron-right"
-                      size={20}
+                      name="open-in-new"
+                      size={16}
                       color={colors.onSurfaceVariant}
-                      style={{ opacity: 0.5, marginLeft: 4 }}
+                      style={{ opacity: 0.5, marginLeft: 6 }}
                     />
                   </View>
                 )}
               </Pressable>
             </View>
           </View>
-
-          {/* Live Now */}
-          {ongoingContests.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.liveHeader}>
-                <View style={styles.liveDot} />
-                <Text
-                  style={{
-                    fontWeight: "800",
-                    fontSize: 12,
-                    color: "#EF4444",
-                    letterSpacing: 0.8,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  LIVE ROUNDS NOW
-                </Text>
-              </View>
-              <ContestList contests={ongoingContests} emptyMessage="" compact />
-            </View>
-          )}
 
           {/* Upcoming Contests */}
           <View style={styles.section}>
@@ -428,25 +416,26 @@ export default function DashboardScreen() {
                 >
                   <Text
                     style={{
-                      color: colors.primary,
+                      color: colors.onSurfaceVariant,
                       fontWeight: "700",
-                      fontSize: 12,
+                      fontSize: 11,
                     }}
                   >
-                    See all
+                    View all
                   </Text>
-                  <MaterialCommunityIcons name="arrow-right" size={13} color={colors.primary} style={{ marginLeft: 3 }} />
+                  <MaterialCommunityIcons name="arrow-right" size={12} color={colors.onSurfaceVariant} style={{ marginLeft: 3 }} />
                 </Pressable>
               )}
             </View>
             <ContestList
               contests={upcomingOnly}
-              emptyMessage="No contests in the next 7 days."
+              emptyMessage="No upcoming contests found. Pull down to refresh."
               limit={5}
               compact
             />
           </View>
         </ScrollView>
+
         <ReorderProfilesModal 
           visible={isReorderModalVisible}
           onDismiss={() => setReorderModalVisible(false)}
@@ -471,43 +460,79 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
     marginBottom: 4,
-  },
-  logo: {
-    fontWeight: "900",
-    fontSize: 32,
-    letterSpacing: -0.8,
-    lineHeight: 36,
   },
   greeting: {
     fontSize: 11,
     fontWeight: "700",
-    textTransform: "uppercase",
     letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  logo: {
+    fontSize: 28,
+    fontWeight: "900",
+    letterSpacing: -0.5,
   },
   settingsBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
   },
   content: {
-    paddingTop: 10,
+    paddingTop: 8,
+  },
+  liveSection: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  liveBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#EF4444",
+  },
+  liveBannerTitle: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#EF4444",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  liveBannerSub: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#EF4444",
+  },
+  liveJoinBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  liveJoinText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#FFFFFF",
   },
   section: {
-    marginBottom: 32,
-  },
-  sectionLabel: {
-    fontWeight: "800",
-    letterSpacing: 1.2,
-    fontSize: 11,
-    paddingHorizontal: 20,
-    textTransform: "uppercase",
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -515,6 +540,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     marginBottom: 12,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    paddingHorizontal: 20,
+    marginBottom: 10,
   },
   reorderBtn: {
     flexDirection: "row",
@@ -527,59 +560,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   connectCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
     marginHorizontal: 20,
-    borderRadius: 24, // M3 Expressive squircle
+    padding: 16,
+    borderRadius: 20,
     borderWidth: 1,
   },
   connectIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
   potdCard: {
-    borderRadius: 24, // M3 Expressive squircle
-    borderWidth: 1.5,
+    borderRadius: 20,
+    borderWidth: 1,
     overflow: "hidden",
   },
   potdInner: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: 14,
   },
   potdIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
   },
   diffBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    marginLeft: 6,
-  },
-  liveHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 20,
-    marginBottom: 12,
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#EF4444",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
 });
-

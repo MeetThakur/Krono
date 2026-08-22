@@ -18,21 +18,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
   const { colors, dark } = useTheme();
 
   const platformConfig = PLATFORMS[profile.platformId];
-  
-  let platformColor = platformConfig?.color || "#181A20";
-  if (profile.platformId === "atcoder") {
-    platformColor = dark ? "#252836" : "#181A20";
-  }
-
-  // Detect light card backgrounds for high contrast text
-  const isLightCard =
-    profile.platformId === "leetcode" ||
-    platformColor.toUpperCase() === "#FFFFFF";
-
-  const textColor = isLightCard ? "#0F172A" : "#FFFFFF";
-  const textMuted = isLightCard ? "rgba(15, 23, 42, 0.7)" : "rgba(255, 255, 255, 0.75)";
-  const pillBg = isLightCard ? "rgba(0, 0, 0, 0.08)" : "rgba(255, 255, 255, 0.16)";
-  const pillText = isLightCard ? "#0F172A" : "#FFFFFF";
+  const platformColor = platformConfig?.color || colors.primary;
 
   const handle = profile.username || "Unknown";
   let heroText: string | number = profile.rating !== undefined ? profile.rating : "—";
@@ -42,7 +28,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
 
   if (profile.platformId === "geeksforgeeks" || profile.platformId === "hackerrank") {
     heroText = profile.problemsSolved || 0;
-    rank = "Problems Solved";
+    rank = "Solved";
     maxRating = 0;
     showProblemsSolvedInFooter = false;
   }
@@ -65,68 +51,65 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
         style={[
           styles.card,
           {
-            backgroundColor: platformColor,
-            shadowColor: platformColor,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: dark ? 0.35 : 0.2,
-            shadowRadius: 16,
-            elevation: 6,
+            backgroundColor: dark ? colors.surfaceVariant : colors.surface,
+            borderColor: colors.outline,
           },
         ]}
         elevation={0}
       >
         <View style={styles.cardInner}>
-          {/* Background Watermark Icon */}
-          <MaterialCommunityIcons
-            name={(platformConfig?.icon as any) || "code-tags"}
-            size={160}
-            color={isLightCard ? "#000000" : "#FFFFFF"}
-            style={[styles.watermarkIcon, { opacity: isLightCard ? 0.06 : 0.1 }]}
-          />
-
-          {/* Top Row: Platform Badge + Sync Status */}
+          {/* Top Bar: Platform & Status */}
           <View style={styles.topRow}>
-            <View style={[styles.platformPill, { backgroundColor: pillBg }]}>
-              <MaterialCommunityIcons
-                name={(platformConfig?.icon as any) || "code-tags"}
-                size={14}
-                color={pillText}
-                style={{ marginRight: 6 }}
-              />
-              <Text style={[styles.platformLabel, { color: pillText }]}>
+            <View style={[styles.platformPill, { backgroundColor: dark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)" }]}>
+              <View style={[styles.platformDot, { backgroundColor: platformColor }]} />
+              <Text style={[styles.platformLabel, { color: colors.onSurfaceVariant }]}>
                 {platformConfig?.name || profile.platformId}
               </Text>
             </View>
-            {profile.isStale && (
-              <View style={[styles.stalePill, { backgroundColor: pillBg }]}>
+            
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              {profile.isStale && (
+                <View style={[styles.statusIcon, { backgroundColor: dark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)" }]}>
+                  <MaterialCommunityIcons 
+                    name="cloud-off-outline" 
+                    size={12} 
+                    color={colors.onSurfaceVariant} 
+                  />
+                </View>
+              )}
+              <View style={[styles.statusIcon, { backgroundColor: dark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)" }]}>
                 <MaterialCommunityIcons 
-                  name="cloud-off-outline" 
-                  size={13} 
-                  color={pillText} 
-                  style={{ opacity: 0.8 }}
+                  name="arrow-top-right" 
+                  size={12} 
+                  color={colors.onSurfaceVariant} 
                 />
               </View>
-            )}
+            </View>
           </View>
 
-          {/* Middle: Rating Hero & Rank */}
+          {/* Rating / Score Hero */}
           <View style={styles.heroContainer}>
-            <Text
-              style={[
-                styles.heroRating,
-                {
-                  color: textColor,
-                  fontFamily: "JetBrainsMono_700Bold",
-                },
-              ]}
-            >
-              {heroText}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+              <Text
+                style={[
+                  styles.heroRating,
+                  {
+                    color: colors.onSurface,
+                    fontFamily: "JetBrainsMono_700Bold",
+                  },
+                ]}
+              >
+                {heroText}
+              </Text>
+              <Text style={[styles.ratingUnit, { color: colors.onSurfaceVariant }]}>
+                {profile.platformId === "geeksforgeeks" || profile.platformId === "hackerrank" ? "problems" : "rating"}
+              </Text>
+            </View>
 
             {rank ? (
-              <View style={[styles.rankPill, { backgroundColor: pillBg }]}>
+              <View style={[styles.rankPill, { backgroundColor: dark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.04)" }]}>
                 <Text
-                  style={[styles.rankText, { color: textColor }]}
+                  style={[styles.rankText, { color: colors.onSurfaceVariant }]}
                   numberOfLines={1}
                 >
                   {rank}
@@ -135,31 +118,50 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
             ) : null}
           </View>
 
-          {/* Bottom Row: Handle & Peak stats */}
-          <View style={styles.footer}>
+          {/* Bottom Row: Handle & Peak */}
+          <View style={[styles.footer, { borderTopColor: dark ? "rgba(255, 255, 255, 0.06)" : "rgba(0, 0, 0, 0.06)" }]}>
             <Text
-              style={[styles.handleText, { color: textMuted }]}
+              style={[styles.handleText, { color: colors.onSurface }]}
               numberOfLines={1}
             >
               @{handle}
             </Text>
 
-            <View style={styles.statRow}>
-              {maxRating !== undefined && maxRating > 0 && (
-                <View style={[styles.statPill, { backgroundColor: pillBg }]}>
-                  <Text style={[styles.statText, { color: pillText, fontFamily: "JetBrainsMono_700Bold" }]}>
-                    Peak {maxRating}
-                  </Text>
-                </View>
-              )}
-              {showProblemsSolvedInFooter && (profile.problemsSolved || 0) > 0 && (
-                <View style={[styles.statPill, { backgroundColor: pillBg, marginLeft: 6 }]}>
-                  <Text style={[styles.statText, { color: pillText, fontFamily: "JetBrainsMono_700Bold" }]}>
-                    {profile.problemsSolved} Solved
-                  </Text>
-                </View>
-              )}
-            </View>
+            {maxRating && maxRating > 0 ? (
+              <View style={styles.statChip}>
+                <Text style={[styles.statLabel, { color: colors.onSurfaceVariant }]}>
+                  PEAK
+                </Text>
+                <Text
+                  style={[
+                    styles.statValue,
+                    {
+                      color: colors.onSurface,
+                      fontFamily: "JetBrainsMono_700Bold",
+                    },
+                  ]}
+                >
+                  {maxRating}
+                </Text>
+              </View>
+            ) : showProblemsSolvedInFooter && profile.problemsSolved ? (
+              <View style={styles.statChip}>
+                <Text style={[styles.statLabel, { color: colors.onSurfaceVariant }]}>
+                  SOLVED
+                </Text>
+                <Text
+                  style={[
+                    styles.statValue,
+                    {
+                      color: colors.onSurface,
+                      fontFamily: "JetBrainsMono_700Bold",
+                    },
+                  ]}
+                >
+                  {profile.problemsSolved}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </Surface>
@@ -169,25 +171,19 @@ export const ProfileCard: React.FC<ProfileCardProps> = React.memo(({
 
 const styles = StyleSheet.create({
   pressable: {
-    marginRight: 14,
+    marginRight: 12,
   },
   card: {
-    width: 275,
-    height: 175,
-    borderRadius: 24, // M3 Expressive squircle
+    width: 270,
+    height: 180,
+    borderRadius: 24,
+    borderWidth: 1,
     overflow: "hidden",
   },
   cardInner: {
     flex: 1,
     padding: 16,
     justifyContent: "space-between",
-    position: "relative",
-  },
-  watermarkIcon: {
-    position: "absolute",
-    right: -30,
-    bottom: -30,
-    transform: [{ rotate: "-10deg" }],
   },
   topRow: {
     flexDirection: "row",
@@ -197,35 +193,49 @@ const styles = StyleSheet.create({
   platformPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 999,
+  },
+  platformDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 6,
   },
   platformLabel: {
     fontWeight: "700",
     fontSize: 11,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
   },
-  stalePill: {
-    padding: 4,
-    borderRadius: 999,
+  statusIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
   heroContainer: {
-    justifyContent: "center",
-    marginVertical: 4,
+    marginVertical: 2,
   },
   heroRating: {
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 38,
     letterSpacing: -0.5,
     includeFontPadding: false,
+  },
+  ratingUnit: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
   rankPill: {
     alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: 6,
     marginTop: 4,
   },
   rankText: {
@@ -236,24 +246,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingTop: 10,
+    borderTopWidth: 1,
   },
   handleText: {
-    fontWeight: "600",
+    fontWeight: "700",
     fontSize: 12,
-    maxWidth: "40%",
+    maxWidth: "50%",
   },
-  statRow: {
+  statChip: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
   },
-  statPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+  statLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.4,
   },
-  statText: {
-    fontSize: 10,
-    letterSpacing: 0.2,
+  statValue: {
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
-

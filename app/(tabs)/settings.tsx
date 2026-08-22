@@ -307,25 +307,22 @@ export default function SettingsScreen() {
             >
               {profiles.map((profile, i) => {
                 const platformConfig = PLATFORMS[profile.platformId];
-                let platformColor = platformConfig?.color || colors.primary;
-                if (profile.platformId === "atcoder") {
-                  platformColor = dark ? "#FFFFFF" : "#181A20";
-                }
+                const platformColor = platformConfig?.color || colors.primary;
 
                 return (
                   <React.Fragment key={profile.id}>
-                    {i > 0 && <Divider style={{ opacity: 0.3, marginVertical: 4 }} />}
+                    {i > 0 && <Divider style={{ opacity: 0.2, marginVertical: 4 }} />}
                     <View style={styles.profileRow}>
                       <View
                         style={[
                           styles.platformIconCircle,
-                          { backgroundColor: platformColor + "18" },
+                          { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" },
                         ]}
                       >
                         <MaterialCommunityIcons
                           name={(platformConfig?.icon as any) || "code-tags"}
                           size={18}
-                          color={platformColor}
+                          color={colors.onSurface}
                         />
                       </View>
                       <View style={{ flex: 1, marginLeft: 12 }}>
@@ -344,7 +341,7 @@ export default function SettingsScreen() {
                           <Text
                             style={{
                               fontWeight: "700",
-                              color: platformColor,
+                              color: colors.onSurface,
                               fontFamily: "JetBrainsMono_700Bold",
                             }}
                           >
@@ -379,11 +376,6 @@ export default function SettingsScreen() {
             </Text>
             <View style={styles.platformGrid}>
               {availablePlatforms.map((platform) => {
-                let platformColor = platform.color;
-                if (platform.id === "atcoder") {
-                  platformColor = dark ? "#FFFFFF" : "#181A20";
-                }
-
                 return (
                   <Pressable
                     key={platform.id}
@@ -401,13 +393,13 @@ export default function SettingsScreen() {
                     <View
                       style={[
                         styles.platformIconBg,
-                        { backgroundColor: platformColor + "18" },
+                        { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" },
                       ]}
                     >
                       <MaterialCommunityIcons
                         name={platform.icon as any}
-                        size={24}
-                        color={platformColor}
+                        size={22}
+                        color={colors.onSurface}
                       />
                     </View>
                     <Text

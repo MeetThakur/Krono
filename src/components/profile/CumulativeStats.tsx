@@ -29,9 +29,9 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
   );
 
   const stats = [
-    { value: totalSolved, label: "Solved", icon: "check-decagram-outline", color: "#10B981" },
-    { value: totalSubmissions, label: "Submissions", icon: "code-tags", color: "#3B82F6" },
-    { value: totalContests, label: "Contests", icon: "trophy-outline", color: "#F59E0B" },
+    { value: totalSolved, label: "Solved", icon: "check-decagram-outline" },
+    { value: totalSubmissions, label: "Submissions", icon: "code-tags" },
+    { value: totalContests, label: "Contests", icon: "trophy-outline" },
   ];
 
   return (
@@ -42,11 +42,6 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
           {
             backgroundColor: dark ? colors.surfaceVariant : colors.surface,
             borderColor: colors.outline,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: dark ? 0.2 : 0.04,
-            shadowRadius: 16,
-            elevation: 3,
           },
         ]}
       >
@@ -63,8 +58,8 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
               />
             )}
             <View style={styles.statItem}>
-              <View style={[styles.iconCircle, { backgroundColor: stat.color + "18" }]}>
-                <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.color} />
+              <View style={[styles.iconCircle, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                <MaterialCommunityIcons name={stat.icon as any} size={16} color={colors.onSurfaceVariant} />
               </View>
               <Text
                 style={[

@@ -2,7 +2,6 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import * as WebBrowser from 'expo-web-browser';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from '../../hooks/useTheme';
 import { Contest } from '../../types/contest';
 import { PLATFORMS } from '../../types/platform';
@@ -61,18 +60,13 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({ contest, isLast }) =
         {!isLast && <View style={[styles.timelineLine, { backgroundColor: colors.outline }]} />}
       </View>
 
-      {/* Right: M3 Expressive Card */}
+      {/* Right: Minimal M3 Card */}
       <TouchableOpacity 
         style={[
           styles.cardContainer, 
           { 
             backgroundColor: isDarkMode ? colors.surfaceContainerHigh : colors.surface, 
             borderColor: colors.outline,
-            shadowColor: brandColor,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: isDarkMode ? 0.2 : 0.06,
-            shadowRadius: 12,
-            elevation: 3,
           }
         ]} 
         onPress={handlePress}
@@ -80,14 +74,9 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({ contest, isLast }) =
       >
         <View style={styles.cardContent}>
           <View style={styles.headerRow}>
-            <View style={[styles.platformPill, { backgroundColor: brandColor + "18" }]}>
-              <MaterialCommunityIcons
-                name={(platformConfig?.icon as any) || "code-tags"}
-                size={12}
-                color={brandColor}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[styles.platformName, { color: brandColor }]}>
+            <View style={[styles.platformPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+              <View style={[styles.platformDot, { backgroundColor: brandColor }]} />
+              <Text style={[styles.platformName, { color: colors.text.secondary }]}>
                 {platformConfig?.name || contest.platformId}
               </Text>
             </View>
@@ -141,7 +130,7 @@ const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 20, // M3 Expressive squircle
+    borderRadius: 20,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -161,6 +150,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
+  },
+  platformDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
   },
   platformName: {
     fontSize: 10,
