@@ -6,7 +6,6 @@ import {
   Linking,
   Pressable,
   RefreshControl,
-  ScrollView,
   SectionList,
   StyleSheet,
   View,
@@ -15,6 +14,7 @@ import { Surface, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ErrorBoundary } from "../../src/components/common/ErrorBoundary";
 import { ContestsSkeleton } from "../../src/components/common/SkeletonLoader";
+import { PlatformSelector } from "../../src/components/contests/PlatformSelector";
 import { useContestStore } from "../../src/stores/useContestStore";
 import { Contest } from "../../src/types/contest";
 import { Platform, PlatformId, PLATFORMS } from "../../src/types/platform";
@@ -92,6 +92,12 @@ export default function ContestsScreen() {
     return result;
   }, [upcomingContests, selectedPlatform]);
 
+  const availablePlatforms = useMemo(() => {
+    return (Object.values(PLATFORMS) as Platform[]).filter(
+      (p: Platform) => ["codeforces", "leetcode", "codechef", "atcoder", "geeksforgeeks", "hackerrank"].includes(p.id)
+    );
+  }, []);
+
   const renderContestItem = useCallback(({ item }: { item: Contest }) => {
     const startDate = new Date(item.startTime);
     const totalMinutes = Math.round(item.durationSeconds / 60);
@@ -140,8 +146,7 @@ export default function ContestsScreen() {
                   fontSize: 11,
                   fontWeight: "800",
                   textTransform: "uppercase",
-                  letterSpacing: 0.4,
-                  marginLeft: 5,
+                  letterSpacing: 0.5,
                 }}
               >
                 {platformConfig?.name || item.platformId}
@@ -157,7 +162,7 @@ export default function ContestsScreen() {
               <View style={[styles.dateChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
                 <MaterialCommunityIcons
                   name="calendar-clock"
-                  size={12}
+                  size={13}
                   color={colors.onSurfaceVariant}
                 />
                 <Text
@@ -165,7 +170,7 @@ export default function ContestsScreen() {
                     fontSize: 11,
                     color: colors.onSurfaceVariant,
                     fontWeight: "700",
-                    marginLeft: 5,
+                    marginLeft: 6,
                     fontFamily: "JetBrainsMono_700Bold",
                   }}
                 >
@@ -191,7 +196,7 @@ export default function ContestsScreen() {
             <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
               <MaterialCommunityIcons
                 name="timer-outline"
-                size={13}
+                size={14}
                 color={colors.onSurfaceVariant}
               />
               <Text
@@ -199,7 +204,7 @@ export default function ContestsScreen() {
                   color: colors.onSurfaceVariant,
                   fontWeight: "700",
                   fontSize: 11,
-                  marginLeft: 5,
+                  marginLeft: 6,
                 }}
               >
                 {durationText}
@@ -225,7 +230,7 @@ export default function ContestsScreen() {
               >
                 <MaterialCommunityIcons
                   name={item.reminderSet ? "bell-ring" : "bell-outline"}
-                  size={15}
+                  size={16}
                   color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
                 />
               </Pressable>
@@ -248,7 +253,7 @@ export default function ContestsScreen() {
                 </Text>
                 <MaterialCommunityIcons
                   name="open-in-new"
-                  size={12}
+                  size={13}
                   color={dark ? "#0F172A" : "#FFFFFF"}
                 />
               </Pressable>
@@ -275,7 +280,7 @@ export default function ContestsScreen() {
   return (
     <ErrorBoundary fallbackTitle="Contests Error">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Google Native M3 Header */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
           <View>
             <View style={[styles.countPill, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
@@ -290,95 +295,15 @@ export default function ContestsScreen() {
           </View>
         </View>
 
-        {/* Google M3 Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipsContainer}
-          style={styles.chipsScroll}
-        >
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setSelectedPlatform("all");
-            }}
-            style={({ pressed }) => [
-              styles.chip,
-              {
-                backgroundColor:
-                  selectedPlatform === "all"
-                    ? colors.primary
-                    : (dark ? colors.surfaceVariant : colors.surface),
-                borderColor:
-                  selectedPlatform === "all"
-                    ? "transparent"
-                    : colors.outline,
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-              },
-            ]}
-          >
-            <MaterialCommunityIcons
-              name="apps"
-              size={15}
-              color={selectedPlatform === "all" ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurfaceVariant}
-              style={{ marginRight: 4 }}
-            />
-            <Text
-              style={{
-                color:
-                  selectedPlatform === "all"
-                    ? (dark ? "#0F172A" : "#FFFFFF")
-                    : colors.onSurface,
-                fontWeight: "700",
-                fontSize: 13,
-              }}
-            >
-              All
-            </Text>
-          </Pressable>
-
-          {(Object.values(PLATFORMS) as Platform[])
-            .filter((p: Platform) => ["codeforces", "leetcode", "codechef", "atcoder", "geeksforgeeks", "hackerrank"].includes(p.id))
-            .map((platform: Platform) => {
-            const isSelected = selectedPlatform === platform.id;
-
-            return (
-              <Pressable
-                key={platform.id}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelectedPlatform(platform.id);
-                }}
-                style={({ pressed }) => [
-                  styles.chip,
-                  {
-                    backgroundColor: isSelected ? colors.primary : (dark ? colors.surfaceVariant : colors.surface),
-                    borderColor: isSelected ? "transparent" : colors.outline,
-                    transform: [{ scale: pressed ? 0.96 : 1 }],
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.chipDot,
-                    {
-                      backgroundColor: isSelected ? (dark ? "#0F172A" : "#FFFFFF") : platform.color,
-                    },
-                  ]}
-                />
-                <Text
-                  style={{
-                    color: isSelected ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurface,
-                    fontWeight: "700",
-                    fontSize: 13,
-                  }}
-                >
-                  {platform.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        {/* Spacious Platform Filter Chips */}
+        <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
+          <PlatformSelector
+            platforms={availablePlatforms}
+            selectedPlatform={selectedPlatform}
+            onSelectPlatform={(p) => setSelectedPlatform(p)}
+            hideAllOption={false}
+          />
+        </View>
 
         {/* Grouped Contest List */}
         <SectionList
@@ -466,7 +391,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   countPill: {
     flexDirection: "row",
@@ -488,39 +413,13 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     letterSpacing: -1,
   },
-  chipsScroll: {
-    maxHeight: 52,
-    marginBottom: 6,
-  },
-  chipsContainer: {
-    paddingHorizontal: 20,
-    gap: 8,
-    alignItems: "center",
-    paddingVertical: 4,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-    alignSelf: "center",
-  },
-  chipDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    marginRight: 6,
-  },
   listContent: {
     paddingHorizontal: 20,
   },
   sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 18,
+    paddingTop: 16,
     paddingBottom: 10,
   },
   livePill: {
@@ -528,14 +427,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     backgroundColor: "rgba(239, 68, 68, 0.12)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   livePulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: "#EF4444",
   },
   liveText: {
@@ -560,20 +459,21 @@ const styles = StyleSheet.create({
   platformBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   platformDot: {
     width: 7,
     height: 7,
     borderRadius: 3.5,
+    marginRight: 6,
   },
   dateChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 999,
   },
   contestTitle: {
@@ -593,8 +493,8 @@ const styles = StyleSheet.create({
   metaPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
   },
   actionsRow: {
@@ -603,9 +503,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -614,8 +514,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
     borderRadius: 999,
   },
   openBtnText: {
