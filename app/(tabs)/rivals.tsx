@@ -23,11 +23,11 @@ export default function RivalsScreen() {
   const insets = useSafeAreaInsets();
   const { profiles } = useProfileStore();
   const { 
-    rivals,
+    rivals, 
     addRival, 
     removeRival, 
-    refreshRivals,
-    loadRivals,
+    refreshRivals, 
+    loadRivals, 
     isLoading 
   } = useRivalsStore();
 
@@ -104,8 +104,11 @@ export default function RivalsScreen() {
   }, [profiles, rivals, activePlatform]);
 
   const currentPlatformConfig = PLATFORMS[activePlatform as PlatformId];
-  const topThree = leaderboard.slice(0, 3);
-  const remainingRivals = leaderboard.slice(3);
+  const maxRating = leaderboard.length > 0 ? (leaderboard[0].rating || leaderboard[0].problemsSolved || 1) : 1;
+
+  // Head to Head Matchup: You vs Top Rival (or Rival #1 vs Rival #2)
+  const myUser = leaderboard.find((u) => u.isMe);
+  const topOpponent = leaderboard.find((u) => !u.isMe);
 
   const availablePlatforms = useMemo(() => {
     return (Object.values(PLATFORMS) as Platform[]).filter(
@@ -119,9 +122,9 @@ export default function RivalsScreen() {
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 20) + 12 }]}>
         <View>
           <View style={[styles.rivalPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-            <MaterialCommunityIcons name="trophy-award" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
+            <MaterialCommunityIcons name="sword-cross" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 4 }} />
             <Text style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-              Google Play Style Leaderboard
+              STANDINGS & HEAD-TO-HEAD
             </Text>
           </View>
           <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Rivals</Text>
@@ -144,7 +147,7 @@ export default function RivalsScreen() {
         </Pressable>
       </View>
 
-      {/* Platform Selector */}
+      {/* Platform Selector Chips */}
       <View style={{ paddingHorizontal: 20, paddingBottom: 6 }}>
         <PlatformSelector
           platforms={availablePlatforms}
@@ -168,7 +171,7 @@ export default function RivalsScreen() {
               No competitors yet
             </Text>
             <Text style={[styles.emptySubText, { color: colors.onSurfaceVariant }]}>
-              Add friends or link your {currentPlatformConfig?.name} handle to climb the leaderboard!
+              Add friends or link your {currentPlatformConfig?.name} handle to compare standings!
             </Text>
             <Pressable
               onPress={() => setAddModalVisible(true)}
@@ -188,121 +191,148 @@ export default function RivalsScreen() {
           </View>
         ) : (
           <View>
-            {/* Google Play Games 3D-Style Podium */}
-            {topThree.length > 0 && (
-              <View style={styles.podiumContainer}>
-                {/* 2nd Place (Silver - Left) */}
-                {topThree.length >= 2 ? (
-                  <Surface style={[styles.podiumCard, styles.podiumCard2, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#94A3B8" + "40" }]}>
-                    <View style={[styles.rankCircle, { backgroundColor: "#94A3B8" + "25" }]}>
-                      <MaterialCommunityIcons name="medal" size={18} color="#94A3B8" />
-                    </View>
-                    <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
-                      @{topThree[1].username}
+            {/* Head to Head Matchup Arena Card */}
+            {myUser && topOpponent && (
+              <Surface
+                style={[
+                  styles.matchupCard,
+                  {
+                    backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
+                    borderColor: colors.outline,
+                  },
+                ]}
+                elevation={0}
+              >
+                <View style={styles.matchupHeader}>
+                  <Text style={[styles.matchupTag, { color: colors.onSurfaceVariant }]}>
+                    HEAD-TO-HEAD MATCHUP
+                  </Text>
+                  <View style={[styles.platformPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                    <View style={[styles.dot, { backgroundColor: currentPlatformConfig?.color || colors.primary }]} />
+                    <Text style={[styles.platformText, { color: colors.onSurfaceVariant }]}>
+                      {currentPlatformConfig?.name}
                     </Text>
-                    {topThree[1].isMe && (
-                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
-                        <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
-                      </View>
-                    )}
-                    <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
-                      {topThree[1].rating ?? "—"}
-                    </Text>
-                    <Text style={styles.placeLabel}>2ND</Text>
-                  </Surface>
-                ) : <View style={{ flex: 1 }} />}
-
-                {/* 1st Place (Gold - Center Raised) */}
-                <Surface style={[styles.podiumCard, styles.podiumCard1, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#F59E0B", borderWidth: 2 }]}>
-                  <View style={[styles.rankCircle, { backgroundColor: "#F59E0B" + "30" }]}>
-                    <MaterialCommunityIcons name="crown" size={22} color="#F59E0B" />
                   </View>
-                  <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface, fontWeight: "900", fontSize: 13 }]}>
-                    @{topThree[0].username}
-                  </Text>
-                  {topThree[0].isMe && (
-                    <View style={[styles.youPill, { backgroundColor: "#F59E0B" + "25" }]}>
-                      <Text style={[styles.youText, { color: "#F59E0B" }]}>YOU</Text>
-                    </View>
-                  )}
-                  <Text style={[styles.podiumRating, { color: "#F59E0B", fontFamily: "JetBrainsMono_700Bold", fontSize: 22 }]}>
-                    {topThree[0].rating ?? "—"}
-                  </Text>
-                  <Text style={[styles.placeLabel, { color: "#F59E0B" }]}>1ST CHAMPION</Text>
-                </Surface>
+                </View>
 
-                {/* 3rd Place (Bronze - Right) */}
-                {topThree.length >= 3 ? (
-                  <Surface style={[styles.podiumCard, styles.podiumCard3, { backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface, borderColor: "#B45309" + "40" }]}>
-                    <View style={[styles.rankCircle, { backgroundColor: "#B45309" + "25" }]}>
-                      <MaterialCommunityIcons name="shield-star" size={18} color="#B45309" />
+                <View style={styles.matchupRow}>
+                  {/* Left: You */}
+                  <View style={styles.matchupSide}>
+                    <View style={[styles.matchupAvatar, { backgroundColor: colors.primary }]}>
+                      <Text style={{ color: isDarkMode ? "#0F172A" : "#FFFFFF", fontWeight: "900", fontSize: 16 }}>
+                        {myUser.username.substring(0, 2).toUpperCase()}
+                      </Text>
                     </View>
-                    <Text numberOfLines={1} style={[styles.podiumUsername, { color: colors.onSurface }]}>
-                      @{topThree[2].username}
+                    <Text numberOfLines={1} style={[styles.matchupHandle, { color: colors.onSurface }]}>
+                      @{myUser.username}
                     </Text>
-                    {topThree[2].isMe && (
-                      <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
-                        <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
-                      </View>
+                    <Text style={[styles.matchupRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                      {myUser.rating ?? myUser.problemsSolved ?? "—"}
+                    </Text>
+                    <Text style={[styles.matchupRole, { color: colors.primary }]}>YOU</Text>
+                  </View>
+
+                  {/* Center: VS Badge */}
+                  <View style={styles.vsContainer}>
+                    <View style={[styles.vsBadge, { backgroundColor: isDarkMode ? "#282A36" : "#E2E8F0" }]}>
+                      <Text style={[styles.vsText, { color: colors.onSurface }]}>VS</Text>
+                    </View>
+                    {myUser.rating && topOpponent.rating && (
+                      <Text
+                        style={[
+                          styles.deltaText,
+                          {
+                            color: myUser.rating >= topOpponent.rating ? "#10B981" : "#EF4444",
+                            fontFamily: "JetBrainsMono_700Bold",
+                          },
+                        ]}
+                      >
+                        {myUser.rating >= topOpponent.rating
+                          ? `+${myUser.rating - topOpponent.rating}`
+                          : `-${topOpponent.rating - myUser.rating}`}
+                      </Text>
                     )}
-                    <Text style={[styles.podiumRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
-                      {topThree[2].rating ?? "—"}
+                  </View>
+
+                  {/* Right: Top Opponent */}
+                  <View style={styles.matchupSide}>
+                    <View style={[styles.matchupAvatar, { backgroundColor: isDarkMode ? "#333544" : "#CBD5E1" }]}>
+                      <Text style={{ color: colors.onSurface, fontWeight: "900", fontSize: 16 }}>
+                        {topOpponent.username.substring(0, 2).toUpperCase()}
+                      </Text>
+                    </View>
+                    <Text numberOfLines={1} style={[styles.matchupHandle, { color: colors.onSurface }]}>
+                      @{topOpponent.username}
                     </Text>
-                    <Text style={styles.placeLabel}>3RD</Text>
-                  </Surface>
-                ) : <View style={{ flex: 1 }} />}
-              </View>
+                    <Text style={[styles.matchupRating, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                      {topOpponent.rating ?? topOpponent.problemsSolved ?? "—"}
+                    </Text>
+                    <Text style={[styles.matchupRole, { color: colors.onSurfaceVariant }]}>RIVAL #1</Text>
+                  </View>
+                </View>
+              </Surface>
             )}
 
-            {/* Runners Up List */}
-            {remainingRivals.length > 0 && (
-              <View style={styles.leaderboard}>
-                <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
-                  RUNNERS UP
-                </Text>
-                {remainingRivals.map((user, index) => {
-                  const actualRank = index + 4;
-                  const isUserMe = user.isMe;
+            {/* Standings List */}
+            <View style={styles.leaderboardSection}>
+              <Text style={[styles.sectionHeading, { color: colors.onSurfaceVariant }]}>
+                ALL STANDINGS
+              </Text>
 
-                  return (
-                    <Surface 
-                      key={user.rivalId} 
-                      style={[
-                        styles.leaderboardCard, 
-                        { 
-                          backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
-                          borderColor: isUserMe ? colors.primary : colors.outline,
-                          borderWidth: 1,
-                        }
-                      ]}
-                      elevation={0}
-                    >
-                      <View style={[styles.rankBadgeCircle, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-                        <Text style={[styles.rankNumber, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
-                          #{actualRank}
+              {leaderboard.map((user, index) => {
+                const rankNum = index + 1;
+                const isUserMe = user.isMe;
+                const userRating = user.rating ?? user.problemsSolved ?? 0;
+                const progressPercent = Math.min(100, Math.max(15, (userRating / maxRating) * 100));
+
+                let rankBadgeColor = colors.onSurfaceVariant;
+                if (rankNum === 1) rankBadgeColor = "#F59E0B";
+                else if (rankNum === 2) rankBadgeColor = "#94A3B8";
+                else if (rankNum === 3) rankBadgeColor = "#B45309";
+
+                return (
+                  <Surface 
+                    key={user.rivalId} 
+                    style={[
+                      styles.standingCard, 
+                      { 
+                        backgroundColor: isDarkMode ? colors.surfaceVariant : colors.surface,
+                        borderColor: isUserMe ? colors.primary : colors.outline,
+                        borderWidth: isUserMe ? 1.5 : 1,
+                      }
+                    ]}
+                    elevation={0}
+                  >
+                    {/* Top Row: Rank Number + Avatar + Handle + Score */}
+                    <View style={styles.standingTopRow}>
+                      <View style={[styles.rankBox, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                        <Text style={[styles.rankNumberText, { color: rankBadgeColor, fontFamily: "JetBrainsMono_700Bold" }]}>
+                          {rankNum < 10 ? `0${rankNum}` : rankNum}
                         </Text>
                       </View>
-                      
-                      <View style={styles.userInfo}>
+
+                      <View style={styles.userInfoCol}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                          <Text style={[styles.username, { color: colors.onSurface }]} numberOfLines={1}>
+                          <Text style={[styles.usernameText, { color: colors.onSurface }]} numberOfLines={1}>
                             @{user.username}
                           </Text>
                           {isUserMe && (
-                            <View style={[styles.youPill, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)" }]}>
-                              <Text style={[styles.youText, { color: colors.onSurface }]}>YOU</Text>
+                            <View style={[styles.youTag, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)" }]}>
+                              <Text style={[styles.youTagText, { color: colors.onSurface }]}>YOU</Text>
                             </View>
                           )}
                         </View>
-                        <Text style={[styles.userRank, { color: colors.onSurfaceVariant }]} numberOfLines={1}>
+                        <Text style={[styles.rankSubtitle, { color: colors.onSurfaceVariant }]}>
                           {user.rank || "Active"} • {user.problemsSolved ?? 0} Solved
                         </Text>
                       </View>
-                      
-                      <Text style={[styles.ratingText, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
-                        {user.rating ?? "—"}
-                      </Text>
-                      
+
+                      <View style={styles.scoreCol}>
+                        <Text style={[styles.ratingBig, { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" }]}>
+                          {user.rating ?? user.problemsSolved ?? "—"}
+                        </Text>
+                      </View>
+
                       {!isUserMe && (
                         <Pressable 
                           onPress={() => {
@@ -320,11 +350,24 @@ export default function RivalsScreen() {
                           <Ionicons name="trash-outline" size={16} color={colors.error} />
                         </Pressable>
                       )}
-                    </Surface>
-                  );
-                })}
-              </View>
-            )}
+                    </View>
+
+                    {/* Progress Bar relative to Top Leader */}
+                    <View style={[styles.progressBarBg, { backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                      <View 
+                        style={[
+                          styles.progressBarFill, 
+                          { 
+                            width: `${progressPercent}%`,
+                            backgroundColor: isUserMe ? colors.primary : (rankNum === 1 ? "#F59E0B" : colors.onSurfaceVariant),
+                          }
+                        ]} 
+                      />
+                    </View>
+                  </Surface>
+                );
+              })}
+            </View>
           </View>
         )}
       </ScrollView>
@@ -347,7 +390,7 @@ export default function RivalsScreen() {
             ]}
           >
             <Text style={[styles.modalTitle, { color: colors.onSurface }]}>
-              Add a Rival
+              Add a Competitor
             </Text>
             
             <View style={{ marginBottom: 14 }}>
@@ -478,113 +521,167 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
   },
-  podiumContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 10,
-    marginBottom: 26,
-    paddingTop: 14,
-  },
-  podiumCard: {
-    flex: 1,
-    borderRadius: 24, // Google M3 Podium squircle
-    padding: 12,
-    alignItems: "center",
+  matchupCard: {
+    borderRadius: 28, // Head to Head M3 Squircle
+    padding: 18,
     borderWidth: 1,
+    marginBottom: 24,
   },
-  podiumCard1: {
-    minHeight: 155,
+  matchupHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  matchupTag: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+  },
+  platformPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  platformText: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  matchupRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  matchupSide: {
+    alignItems: "center",
+    flex: 1,
+  },
+  matchupAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
     justifyContent: "center",
+    marginBottom: 8,
   },
-  podiumCard2: {
-    minHeight: 130,
-    justifyContent: "center",
+  matchupHandle: {
+    fontSize: 13,
+    fontWeight: "800",
+    marginBottom: 2,
+    maxWidth: 90,
   },
-  podiumCard3: {
-    minHeight: 118,
-    justifyContent: "center",
+  matchupRating: {
+    fontSize: 18,
+    fontWeight: "900",
   },
-  rankCircle: {
+  matchupRole: {
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    marginTop: 2,
+  },
+  vsContainer: {
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  vsBadge: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 6,
-  },
-  podiumUsername: {
-    fontSize: 12,
-    fontWeight: "800",
     marginBottom: 4,
   },
-  podiumRating: {
-    fontSize: 17,
+  vsText: {
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  deltaText: {
+    fontSize: 11,
     fontWeight: "900",
   },
-  placeLabel: {
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 0.6,
-    marginTop: 4,
-    opacity: 0.7,
-  },
-  leaderboard: {
+  leaderboardSection: {
     gap: 10,
   },
   sectionHeading: {
     fontSize: 11,
     fontWeight: "900",
     letterSpacing: 1.2,
-    marginBottom: 6,
     textTransform: "uppercase",
+    marginBottom: 4,
   },
-  leaderboardCard: {
+  standingCard: {
+    borderRadius: 22,
+    padding: 14,
+    borderWidth: 1,
+  },
+  standingTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 20,
     gap: 12,
+    marginBottom: 10,
   },
-  rankBadgeCircle: {
+  rankBox: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
-  rankNumber: {
-    fontSize: 12,
-    fontWeight: "800",
+  rankNumberText: {
+    fontSize: 13,
+    fontWeight: "900",
   },
-  userInfo: {
+  userInfoCol: {
     flex: 1,
   },
-  username: {
+  usernameText: {
     fontSize: 14,
     fontWeight: "800",
   },
-  userRank: {
-    fontSize: 11,
-    fontWeight: "600",
-    marginTop: 2,
-  },
-  ratingText: {
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  youPill: {
+  youTag: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
   },
-  youText: {
+  youTagText: {
     fontSize: 9,
+    fontWeight: "900",
+  },
+  rankSubtitle: {
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 1,
+  },
+  scoreCol: {
+    alignItems: "flex-end",
+  },
+  ratingBig: {
+    fontSize: 16,
     fontWeight: "900",
   },
   deleteBtn: {
     padding: 6,
-    marginLeft: 4,
+    marginLeft: 2,
+  },
+  progressBarBg: {
+    height: 4,
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 2,
   },
   modalOverlay: {
     flex: 1,

@@ -108,10 +108,6 @@ export default function ContestsScreen() {
     const platformColor = platformConfig?.color || colors.primary;
     const isLive = item.phase === "running";
 
-    const dayNumber = format(startDate, "d");
-    const monthShort = format(startDate, "MMM").toUpperCase();
-    const timeFormatted = format(startDate, "HH:mm");
-
     return (
       <Pressable
         onPress={() => {
@@ -119,68 +115,29 @@ export default function ContestsScreen() {
           if (item.url) Linking.openURL(item.url);
         }}
         style={({ pressed }) => [
-          styles.timelineItemRow,
+          styles.cardPressable,
           { transform: [{ scale: pressed ? 0.98 : 1 }], opacity: pressed ? 0.95 : 1 },
         ]}
       >
-        {/* Google Calendar Date Squircle */}
-        <View
-          style={[
-            styles.dateBox,
-            {
-              backgroundColor: isLive
-                ? (dark ? "#450A0A" : "#FEE2E2")
-                : (dark ? colors.surfaceVariant : colors.surface),
-              borderColor: isLive ? "#EF4444" : colors.outline,
-            },
-          ]}
-        >
-          {isLive ? (
-            <>
-              <View style={styles.livePulseDot} />
-              <Text style={[styles.liveText, { color: "#EF4444" }]}>LIVE</Text>
-            </>
-          ) : (
-            <>
-              <Text
-                style={[
-                  styles.dateDay,
-                  { color: colors.onSurface, fontFamily: "JetBrainsMono_700Bold" },
-                ]}
-              >
-                {dayNumber}
-              </Text>
-              <Text
-                style={[
-                  styles.dateMonth,
-                  { color: colors.onSurfaceVariant },
-                ]}
-              >
-                {monthShort}
-              </Text>
-            </>
-          )}
-        </View>
-
-        {/* Right Ticket Card */}
         <Surface
           style={[
             styles.card,
             {
               backgroundColor: dark ? colors.surfaceVariant : colors.surface,
-              borderColor: isLive ? "rgba(239, 68, 68, 0.4)" : colors.outline,
+              borderColor: isLive ? "rgba(239, 68, 68, 0.45)" : colors.outline,
+              borderWidth: 1,
             },
           ]}
           elevation={0}
         >
-          {/* Header Row: Platform & Meta */}
+          {/* Top Row: Platform Badge + Date/Time */}
           <View style={styles.cardHeader}>
             <View style={[styles.platformBadge, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
               <View style={[styles.platformDot, { backgroundColor: platformColor }]} />
               <Text
                 style={{
                   color: colors.onSurfaceVariant,
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: "800",
                   textTransform: "uppercase",
                   letterSpacing: 0.4,
@@ -191,19 +148,31 @@ export default function ContestsScreen() {
               </Text>
             </View>
 
-            <View style={styles.metaBadges}>
-              <View style={[styles.timeChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-                <MaterialCommunityIcons name="clock-outline" size={11} color={colors.onSurfaceVariant} style={{ marginRight: 3 }} />
-                <Text style={[styles.timeChipText, { color: colors.onSurfaceVariant, fontFamily: "JetBrainsMono_700Bold" }]}>
-                  {timeFormatted}
+            {isLive ? (
+              <View style={styles.livePill}>
+                <View style={styles.livePulseDot} />
+                <Text style={styles.liveText}>LIVE NOW</Text>
+              </View>
+            ) : (
+              <View style={[styles.dateChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
+                <MaterialCommunityIcons
+                  name="calendar-clock"
+                  size={12}
+                  color={colors.onSurfaceVariant}
+                />
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: colors.onSurfaceVariant,
+                    fontWeight: "700",
+                    marginLeft: 5,
+                    fontFamily: "JetBrainsMono_700Bold",
+                  }}
+                >
+                  {format(startDate, "MMM d, HH:mm")}
                 </Text>
               </View>
-              <View style={[styles.timeChip, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-                <Text style={[styles.timeChipText, { color: colors.onSurfaceVariant }]}>
-                  {durationText}
-                </Text>
-              </View>
-            </View>
+            )}
           </View>
 
           {/* Contest Title */}
@@ -217,62 +186,73 @@ export default function ContestsScreen() {
             {item.name}
           </Text>
 
-          {/* Footer Actions */}
+          {/* Footer: Duration + Reminder + Open Action */}
           <View style={[styles.cardFooter, { borderTopColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.reminderBtn,
-                {
-                  backgroundColor: item.reminderSet
-                    ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)")
-                    : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
-                  transform: [{ scale: pressed ? 0.92 : 1 }],
-                },
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                toggleReminder(item.id, !item.reminderSet);
-              }}
-            >
+            <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
               <MaterialCommunityIcons
-                name={item.reminderSet ? "bell-ring" : "bell-outline"}
-                size={14}
-                color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
+                name="timer-outline"
+                size={13}
+                color={colors.onSurfaceVariant}
               />
               <Text
                 style={{
-                  fontSize: 11,
+                  color: colors.onSurfaceVariant,
                   fontWeight: "700",
-                  color: item.reminderSet ? colors.primary : colors.onSurfaceVariant,
-                  marginLeft: 4,
+                  fontSize: 11,
+                  marginLeft: 5,
                 }}
               >
-                {item.reminderSet ? "Reminder Set" : "Remind"}
+                {durationText}
               </Text>
-            </Pressable>
+            </View>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.openBtn,
-                {
-                  backgroundColor: colors.primary,
-                  transform: [{ scale: pressed ? 0.94 : 1 }],
-                },
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                if (item.url) Linking.openURL(item.url);
-              }}
-            >
-              <Text style={[styles.openBtnText, { color: dark ? "#0F172A" : "#FFFFFF" }]}>
-                Open
-              </Text>
-              <MaterialCommunityIcons
-                name="arrow-top-right"
-                size={13}
-                color={dark ? "#0F172A" : "#FFFFFF"}
-              />
-            </Pressable>
+            <View style={styles.actionsRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: item.reminderSet
+                      ? (dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)")
+                      : (dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)"),
+                    borderColor: item.reminderSet ? colors.primary : colors.outline,
+                    transform: [{ scale: pressed ? 0.92 : 1 }],
+                  },
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  toggleReminder(item.id, !item.reminderSet);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={item.reminderSet ? "bell-ring" : "bell-outline"}
+                  size={15}
+                  color={item.reminderSet ? colors.primary : colors.onSurfaceVariant}
+                />
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [
+                  styles.openBtn,
+                  {
+                    backgroundColor: colors.primary,
+                    transform: [{ scale: pressed ? 0.94 : 1 }],
+                  },
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (item.url) Linking.openURL(item.url);
+                }}
+              >
+                <Text style={[styles.openBtnText, { color: dark ? "#0F172A" : "#FFFFFF" }]}>
+                  Open
+                </Text>
+                <MaterialCommunityIcons
+                  name="open-in-new"
+                  size={12}
+                  color={dark ? "#0F172A" : "#FFFFFF"}
+                />
+              </Pressable>
+            </View>
           </View>
         </Surface>
       </Pressable>
@@ -553,110 +533,93 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   livePulseDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: "#EF4444",
   },
-  timelineItemRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
-  },
-  dateBox: {
-    width: 54,
-    height: 64,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-  },
-  dateDay: {
-    fontSize: 18,
-    fontWeight: "900",
-    lineHeight: 22,
-  },
-  dateMonth: {
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-    marginTop: 1,
-  },
   liveText: {
+    color: "#EF4444",
     fontSize: 10,
     fontWeight: "900",
     letterSpacing: 0.5,
+  },
+  cardPressable: {
+    marginBottom: 10,
   },
   card: {
-    flex: 1,
     borderRadius: 24,
-    borderWidth: 1,
-    padding: 14,
-    justifyContent: "space-between",
+    padding: 16,
+    overflow: "hidden",
   },
   cardHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    justifyContent: "space-between",
   },
   platformBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   platformDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
-  metaBadges: {
-    flexDirection: "row",
-    gap: 5,
-  },
-  timeChip: {
+  dateChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  timeChipText: {
-    fontSize: 10,
-    fontWeight: "700",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   contestTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "800",
-    lineHeight: 19,
-    marginBottom: 10,
+    lineHeight: 21,
+    marginTop: 12,
+    marginBottom: 6,
   },
   cardFooter: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: 10,
+    justifyContent: "space-between",
+    paddingTop: 12,
     borderTopWidth: 1,
   },
-  reminderBtn: {
+  metaPill: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  iconBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   openBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    gap: 4,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 999,
   },
   openBtnText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
   },
   emptyContainer: {
