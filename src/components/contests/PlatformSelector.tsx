@@ -43,7 +43,7 @@ export function PlatformSelector({
         >
           <MaterialCommunityIcons
             name="apps"
-            size={16}
+            size={15}
             color={selectedPlatform === "all" ? (dark ? "#0F172A" : "#FFFFFF") : colors.onSurfaceVariant}
             style={{ marginRight: 6 }}
           />
@@ -106,23 +106,22 @@ export function PlatformSelector({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    gap: 10,
-    paddingVertical: 12,
+    gap: 8,
+    paddingVertical: 8,
     alignItems: "center",
   },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginRight: 6,
   },
 });
-

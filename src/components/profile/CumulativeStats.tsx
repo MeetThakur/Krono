@@ -29,9 +29,27 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
   );
 
   const stats = [
-    { value: totalSolved, label: "Solved", icon: "check-decagram-outline" },
-    { value: totalSubmissions, label: "Submissions", icon: "code-tags" },
-    { value: totalContests, label: "Contests", icon: "trophy-outline" },
+    { 
+      value: totalSolved, 
+      label: "Solved", 
+      icon: "check-decagram-outline",
+      iconColor: dark ? "#34D399" : "#059669",
+      bgColor: dark ? "rgba(52, 211, 153, 0.15)" : "rgba(5, 150, 105, 0.12)",
+    },
+    { 
+      value: totalSubmissions, 
+      label: "Submissions", 
+      icon: "code-tags",
+      iconColor: dark ? "#60A5FA" : "#2563EB",
+      bgColor: dark ? "rgba(96, 165, 250, 0.15)" : "rgba(37, 99, 235, 0.12)",
+    },
+    { 
+      value: totalContests, 
+      label: "Contests", 
+      icon: "trophy-outline",
+      iconColor: dark ? "#FBBF24" : "#D97706",
+      bgColor: dark ? "rgba(251, 191, 36, 0.15)" : "rgba(217, 119, 6, 0.12)",
+    },
   ];
 
   return (
@@ -58,8 +76,8 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
               />
             )}
             <View style={styles.statItem}>
-              <View style={[styles.iconCircle, { backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)" }]}>
-                <MaterialCommunityIcons name={stat.icon as any} size={16} color={colors.onSurfaceVariant} />
+              <View style={[styles.iconCircle, { backgroundColor: stat.bgColor }]}>
+                <MaterialCommunityIcons name={stat.icon as any} size={18} color={stat.iconColor} />
               </View>
               <Text
                 style={[
@@ -88,13 +106,13 @@ export function CumulativeStats({ profiles }: CumulativeStatsProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
-    marginBottom: 28,
+    marginBottom: 24,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-evenly",
-    borderRadius: 24, // M3 Expressive squircle
+    borderRadius: 24,
     borderWidth: 1,
     paddingVertical: 18,
     paddingHorizontal: 8,
@@ -104,9 +122,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -118,10 +136,10 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 10,
+    fontWeight: "800",
     marginTop: 2,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   divider: {
@@ -129,4 +147,3 @@ const styles = StyleSheet.create({
     height: 36,
   },
 });
-
