@@ -18,6 +18,7 @@ import { PlatformSelector } from "../../src/components/contests/PlatformSelector
 import { useContestStore } from "../../src/stores/useContestStore";
 import { Contest } from "../../src/types/contest";
 import { Platform, PlatformId, PLATFORMS } from "../../src/types/platform";
+import { addContestToCalendar } from "../../src/utils/calendar";
 
 export default function ContestsScreen() {
   const { colors, dark } = useTheme();
@@ -212,6 +213,27 @@ export default function ContestsScreen() {
             </View>
 
             <View style={styles.actionsRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    borderColor: colors.outline,
+                    transform: [{ scale: pressed ? 0.92 : 1 }],
+                  },
+                ]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  addContestToCalendar(item);
+                }}
+              >
+                <MaterialCommunityIcons
+                  name="calendar-plus"
+                  size={16}
+                  color={colors.onSurfaceVariant}
+                />
+              </Pressable>
+
               <Pressable
                 style={({ pressed }) => [
                   styles.iconBtn,

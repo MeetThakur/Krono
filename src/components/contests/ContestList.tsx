@@ -7,6 +7,7 @@ import { Surface, Text, useTheme } from "react-native-paper";
 import { useContestStore } from "../../stores/useContestStore";
 import { Contest } from "../../types/contest";
 import { PLATFORMS } from "../../types/platform";
+import { addContestToCalendar } from "../../utils/calendar";
 import { ContestsSkeleton } from "../common/SkeletonLoader";
 
 interface ContestListProps {
@@ -159,7 +160,7 @@ export function ContestList({
                 {contest.name}
               </Text>
 
-              {/* Footer: Duration + Reminder + Open Action */}
+              {/* Footer: Duration + Calendar + Reminder + Open Action */}
               <View style={[styles.cardFooter, { borderTopColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }]}>
                 <View style={[styles.metaPill, { backgroundColor: dark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)" }]}>
                   <MaterialCommunityIcons
@@ -180,6 +181,29 @@ export function ContestList({
                 </View>
 
                 <View style={styles.actionsRow}>
+                  {/* Add to Calendar Button */}
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.iconBtn,
+                      {
+                        backgroundColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        borderColor: colors.outline,
+                        transform: [{ scale: pressed ? 0.92 : 1 }],
+                      },
+                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      addContestToCalendar(contest);
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="calendar-plus"
+                      size={15}
+                      color={colors.onSurfaceVariant}
+                    />
+                  </Pressable>
+
+                  {/* Reminder Toggle Button */}
                   <Pressable
                     style={({ pressed }) => [
                       styles.iconBtn,
@@ -203,6 +227,7 @@ export function ContestList({
                     />
                   </Pressable>
 
+                  {/* Open Contest Button */}
                   <Pressable
                     style={({ pressed }) => [
                       styles.openBtn,
