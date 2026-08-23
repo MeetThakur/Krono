@@ -28,6 +28,10 @@
       }
     },
     "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#12141A"
+      },
       "versionCode": 160,
 
       "predictiveBackGestureEnabled": false,
