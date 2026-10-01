@@ -53,7 +53,8 @@ export const getAllRivals = async (): Promise<UnifiedProfile[]> => {
 export const deleteRival = async (id: string): Promise<void> => {
   const db = await openDatabase();
   await db.withTransactionAsync(async () => {
-    await db.runAsync('DELETE FROM rivals WHERE id = ?', [id]);
+    const altId = id.includes(':') ? id.replace(':', '-') : id.replace('-', ':');
+    await db.runAsync('DELETE FROM rivals WHERE id = ? OR id = ?', [id, altId]);
   });
 };
 

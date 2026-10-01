@@ -15,21 +15,14 @@ TaskManager.defineTask(BACKGROUND_SYNC_TASK, async () => {
 
     console.log('[BackgroundFetch] Starting contest sync...');
     
-    // 1. Fetch latest contests
-    // We use the store's sync action which handles DB + API logic
-    const { syncContests, upcomingContests } = useContestStore.getState();
+    // 1. Fetch latest contests (syncContests handles DB sync + scheduling reminders)
+    const { syncContests } = useContestStore.getState();
     await syncContests();
 
-    // 2. Schedule reminders for the newly fetched data
-    // We re-read the store to get the latest list (syncContests updates the store)
-    // Note: upcomingContests might not be immediately updated in the same closure if using hook selectors, 
-    // but getState() gets the fresh state.
     const latestContests = useContestStore.getState().upcomingContests;
-    
     if (latestContests.length > 0) {
-        await notificationService.scheduleAllReminders(latestContests);
-        console.log(`[BackgroundFetch] Scheduled reminders for ${latestContests.length} contests.`);
-        return BackgroundFetch.BackgroundFetchResult.NewData;
+      console.log(`[BackgroundFetch] Successfully synced ${latestContests.length} upcoming contests.`);
+      return BackgroundFetch.BackgroundFetchResult.NewData;
     }
 
     return BackgroundFetch.BackgroundFetchResult.NoData;

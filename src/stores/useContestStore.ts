@@ -58,51 +58,27 @@ export const useContestStore = create<ContestState>((set, get) => ({
     try {
       const allContests: Contest[] = [];
 
-      // 1. Fetch from Codeforces
-      try {
-        const cfContestsRaw = await codeforcesApi.getContestList();
-        if (cfContestsRaw && cfContestsRaw.length > 0) {
-          const cfContests = cfContestsRaw.map(normalizeCodeforcesContest);
-          allContests.push(...cfContests);
-        }
-      } catch (cfError) {
-        console.warn("Failed to fetch Codeforces contests:", cfError);
-      }
+      // Parallel fetch across platforms
+      const [cfResult, lcResult, ccResult, acResult] = await Promise.allSettled([
+        codeforcesApi.getContestList().then((res) => (res || []).map(normalizeCodeforcesContest)),
+        leetcodeApi.getUpcomingContests().then((res) => (res || []).map(normalizeLeetCodeContest)),
+        codechefApi.getContestList().then((res) => (res || []).map(normalizeCodeChefContest)),
+        atcoderApi.getContestList().then((res) => (res || []).map(normalizeAtCoderContest)),
+      ]);
 
-      // 2. Fetch from LeetCode
-      try {
-        const lcContestsRaw = await leetcodeApi.getUpcomingContests();
-        if (lcContestsRaw && lcContestsRaw.length > 0) {
-          const lcContests = lcContestsRaw.map(normalizeLeetCodeContest);
-          allContests.push(...lcContests);
-        }
-      } catch (lcError) {
-        console.warn("Failed to fetch LeetCode contests:", lcError);
-      }
+      if (cfResult.status === "fulfilled") allContests.push(...cfResult.value);
+      else console.warn("Failed to fetch Codeforces contests:", cfResult.reason);
 
-      // 3. Fetch from CodeChef
-      try {
-        const ccContestsRaw = await codechefApi.getContestList();
-        if (ccContestsRaw && ccContestsRaw.length > 0) {
-          const ccContests = ccContestsRaw.map(normalizeCodeChefContest);
-          allContests.push(...ccContests);
-        }
-      } catch (ccError) {
-        console.warn("Failed to fetch CodeChef contests:", ccError);
-      }
+      if (lcResult.status === "fulfilled") allContests.push(...lcResult.value);
+      else console.warn("Failed to fetch LeetCode contests:", lcResult.reason);
 
-      // 4. Fetch from AtCoder
-      try {
-        const acContestsRaw = await atcoderApi.getContestList();
-        if (acContestsRaw && acContestsRaw.length > 0) {
-          const acContests = acContestsRaw.map(normalizeAtCoderContest);
-          allContests.push(...acContests);
-        }
-      } catch (acError) {
-        console.warn("Failed to fetch AtCoder contests:", acError);
-      }
+      if (ccResult.status === "fulfilled") allContests.push(...ccResult.value);
+      else console.warn("Failed to fetch CodeChef contests:", ccResult.reason);
 
-      // 5. Save to database if any contests fetched
+      if (acResult.status === "fulfilled") allContests.push(...acResult.value);
+      else console.warn("Failed to fetch AtCoder contests:", acResult.reason);
+
+      // 5. Save to database if any contests fetched (preserves existing reminderSet via UPSERT)
       if (allContests.length > 0) {
         try {
           await saveContests(allContests);
@@ -111,17 +87,30 @@ export const useContestStore = create<ContestState>((set, get) => ({
         }
       }
 
-      // 6. Reload from DB or filter in-memory
+      // 6. Reload from DB or filter in-memory with reminder preservation
       let upcoming: Contest[] = [];
       try {
         upcoming = await getUpcomingContests();
       } catch (e) {
-        // Fallback to in-memory filter if DB query fails
+        // Fallback to in-memory filter preserving existing reminder settings
+        const prevMap = new Map(get().upcomingContests.map((c) => [c.id, c]));
         const now = Date.now();
-        upcoming = allContests.filter((c) => {
-          const end = new Date(c.endTime).getTime();
-          return end > now;
-        }).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+        upcoming = allContests
+          .filter((c) => {
+            const end = new Date(c.endTime).getTime();
+            return end > now;
+          })
+          .map((c) => {
+            const prev = prevMap.get(c.id);
+            return prev
+              ? {
+                  ...c,
+                  reminderSet: prev.reminderSet,
+                  scheduledReminders: prev.scheduledReminders,
+                }
+              : c;
+          })
+          .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
       }
 
       set({

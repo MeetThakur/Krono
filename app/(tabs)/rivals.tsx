@@ -100,11 +100,20 @@ export default function RivalsScreen() {
         }
       });
 
-    return list.sort((a, b) => (b.rating || b.problemsSolved || 0) - (a.rating || a.problemsSolved || 0));
+    return list.sort((a, b) => {
+      const aHasRating = typeof a.rating === "number" && a.rating > 0;
+      const bHasRating = typeof b.rating === "number" && b.rating > 0;
+      if (aHasRating && bHasRating) {
+        return (b.rating || 0) - (a.rating || 0);
+      }
+      if (aHasRating && !bHasRating) return -1;
+      if (!aHasRating && bHasRating) return 1;
+      return (b.problemsSolved || 0) - (a.problemsSolved || 0);
+    });
   }, [profiles, rivals, activePlatform]);
 
   const currentPlatformConfig = PLATFORMS[activePlatform as PlatformId];
-  const maxRating = leaderboard.length > 0 ? (leaderboard[0].rating || leaderboard[0].problemsSolved || 1) : 1;
+  const maxRating = leaderboard.length > 0 ? (leaderboard[0].rating ?? leaderboard[0].problemsSolved ?? 1) : 1;
 
   // Head to Head Matchup: You vs Top Rival (or Rival #1 vs Rival #2)
   const myUser = leaderboard.find((u) => u.isMe);

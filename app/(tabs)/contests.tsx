@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { format, isSameDay, isTomorrow } from "date-fns";
 import * as Haptics from "expo-haptics";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Linking,
   Pressable,
@@ -26,9 +26,14 @@ export default function ContestsScreen() {
   const {
     upcomingContests,
     isLoading,
+    loadContests,
     syncContests,
     toggleReminder,
   } = useContestStore();
+
+  useEffect(() => {
+    loadContests();
+  }, [loadContests]);
 
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformId | "all">("all");
   const [refreshing, setRefreshing] = useState(false);

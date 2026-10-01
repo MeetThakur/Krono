@@ -38,7 +38,7 @@ export const useRivalsStore = create<RivalsState>((set, get) => ({
     try {
       const dbRivals = await getAllRivals();
       const rivals: Rival[] = dbRivals.map((data) => ({
-        id: `${data.platformId}-${data.username.toLowerCase()}`,
+        id: data.id,
         platformId: data.platformId,
         username: data.username,
         data,
@@ -50,8 +50,14 @@ export const useRivalsStore = create<RivalsState>((set, get) => ({
   },
 
   addRival: async (platformId: PlatformId, handle: string) => {
-    const id = `${platformId}-${handle.toLowerCase()}`;
-    if (get().rivals.some((r) => r.id === id)) {
+    const handleLower = handle.trim().toLowerCase();
+    if (
+      get().rivals.some(
+        (r) =>
+          r.platformId === platformId &&
+          r.username.toLowerCase() === handleLower
+      )
+    ) {
       set({ error: "Rival already exists" });
       return;
     }
@@ -59,13 +65,13 @@ export const useRivalsStore = create<RivalsState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       // Fetch data immediately
-      const newProfile = await fetchProfile(platformId, handle);
+      const newProfile = await fetchProfile(platformId, handle.trim());
       await saveRival(newProfile);
 
       set((state) => ({
         rivals: [
-          ...state.rivals,
-          { id, platformId, username: handle, data: newProfile },
+          ...state.rivals.filter((r) => r.id !== newProfile.id),
+          { id: newProfile.id, platformId, username: newProfile.username, data: newProfile },
         ],
         isLoading: false,
       }));
@@ -79,13 +85,6 @@ export const useRivalsStore = create<RivalsState>((set, get) => ({
 
   removeRival: async (id: string) => {
     try {
-      // The id in DB is the profile id (e.g. atcoder-user).
-      // Wait, is it? We need to make sure the delete uses the same ID.
-      // Profile ID is usually generated correctly in normalize functions.
-      // Actually, the newProfile.id is usually what we use. Let's find out what id `removeRival` takes.
-      // It takes the "platformId-handle" format. That's also what saveRival stores (as `profile.id`).
-      // Wait, let's be safe. Delete it from SQLite using the id passed in, assuming they match.
-      // Actually `deleteRival` uses `profile.id`. Is `profile.id` equal to `${platformId}-${handle.toLowerCase()}`? Yes, mostly.
       await deleteRival(id);
       set((state) => ({
         rivals: state.rivals.filter((r) => r.id !== id),

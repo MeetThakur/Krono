@@ -66,8 +66,25 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       const newProfile = await fetchProfile(platform, handle);
       await saveProfile(newProfile);
 
-      // Reload from DB to ensure sync
+      // Reload from DB and preserve saved order
       const profiles = await getAllProfiles();
+      const savedOrderStr = await AsyncStorage.getItem(ORDER_STORAGE_KEY);
+      let savedOrder: string[] = savedOrderStr ? JSON.parse(savedOrderStr) : [];
+
+      if (!savedOrder.includes(newProfile.id)) {
+        savedOrder.push(newProfile.id);
+        await AsyncStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(savedOrder));
+      }
+
+      profiles.sort((a, b) => {
+        const indexA = savedOrder.indexOf(a.id);
+        const indexB = savedOrder.indexOf(b.id);
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
       set({ profiles, isLoading: false, lastRefreshedAt: Date.now() });
     } catch (error) {
       console.error("Add Profile Error:", error);
@@ -81,6 +98,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   removeProfile: async (id: string) => {
     try {
       await deleteProfile(id);
+      const savedOrderStr = await AsyncStorage.getItem(ORDER_STORAGE_KEY);
+      if (savedOrderStr) {
+        const savedOrder: string[] = JSON.parse(savedOrderStr);
+        const newOrder = savedOrder.filter((item) => item !== id);
+        await AsyncStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newOrder));
+      }
       set((state) => ({
         profiles: state.profiles.filter((p) => p.id !== id),
       }));

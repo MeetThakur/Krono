@@ -19,11 +19,13 @@ import {
 } from "../../src/components/common/SkeletonLoader";
 import { ContestList } from "../../src/components/contests/ContestList";
 import { CumulativeStats } from "../../src/components/profile/CumulativeStats";
+import { DailyGoalCard } from "../../src/components/profile/DailyGoalCard";
 import { ProfileCarousel } from "../../src/components/profile/ProfileCarousel";
 import { ReorderProfilesModal } from "../../src/components/profile/ReorderProfilesModal";
 import { useContestStore } from "../../src/stores/useContestStore";
 import { usePotdStore } from "../../src/stores/usePotdStore";
 import { useProfileStore } from "../../src/stores/useProfileStore";
+import { useStreakStore } from "../../src/stores/useStreakStore";
 
 // Google M3 Difficulty Tonal Colors
 const getDifficultyTheme = (difficulty?: string, dark: boolean = false) => {
@@ -79,9 +81,19 @@ export default function DashboardScreen() {
       refreshProfiles();
       loadContests();
       refreshPotd();
+      const currentProfiles = useProfileStore.getState().profiles;
+      if (currentProfiles.length > 0) {
+        useStreakStore.getState().syncStreakWithProfiles(currentProfiles);
+      }
     };
     initData();
   }, []);
+
+  useEffect(() => {
+    if (profiles.length > 0) {
+      useStreakStore.getState().syncStreakWithProfiles(profiles);
+    }
+  }, [profiles]);
 
   const handleSync = async () => {
     setIsRefreshing(true);
@@ -90,6 +102,10 @@ export default function DashboardScreen() {
       refreshPotd(),
       syncContests()
     ]);
+    const currentProfiles = useProfileStore.getState().profiles;
+    if (currentProfiles.length > 0) {
+      await useStreakStore.getState().syncStreakWithProfiles(currentProfiles);
+    }
     setIsRefreshing(false);
   };
 
@@ -310,6 +326,13 @@ export default function DashboardScreen() {
               </Pressable>
             </View>
           )}
+
+          {/* Unified Daily Goal & Streak Engine */}
+          <DailyGoalCard
+            onTapPotd={() => {
+              if (leetcode?.url) Linking.openURL(leetcode.url);
+            }}
+          />
 
           {/* Google M3 Bento Grid (Cumulative Stats) */}
           {profiles.length > 0 && <CumulativeStats profiles={profiles} />}

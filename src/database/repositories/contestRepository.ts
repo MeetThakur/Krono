@@ -32,10 +32,20 @@ export const saveContests = async (contests: Contest[]) => {
   await db.withTransactionAsync(async () => {
     for (const contest of contests) {
       await db.runAsync(
-        `INSERT OR REPLACE INTO contests (
+        `INSERT INTO contests (
           id, externalId, platformId, name, startTime, endTime, durationSeconds, 
           url, isRated, phase, reminderSet, scheduledReminders
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          externalId = excluded.externalId,
+          platformId = excluded.platformId,
+          name = excluded.name,
+          startTime = excluded.startTime,
+          endTime = excluded.endTime,
+          durationSeconds = excluded.durationSeconds,
+          url = excluded.url,
+          isRated = excluded.isRated,
+          phase = excluded.phase`,
         [
           contest.id,
           contest.externalId,

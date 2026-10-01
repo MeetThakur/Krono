@@ -246,7 +246,15 @@ export const notificationService = {
       let scheduledCount = 0;
       let skippedCount = 0;
 
-      for (const contest of contests) {
+      // Only schedule reminders for contests that have reminderSet enabled
+      const reminderContests = contests.filter((c) => !!c.reminderSet);
+
+      for (const contest of reminderContests) {
+        // Safety cap: keep well below iOS 64-notification limit
+        if (scheduledCount >= 50) {
+          break;
+        }
+
         const startDate =
           contest.startTime instanceof Date
             ? contest.startTime
