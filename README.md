@@ -10,12 +10,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/React_Native-v0.81-61DAFB?logo=react&logoColor=black&style=flat-square" alt="React Native" />
-  <img src="https://img.shields.io/badge/Expo-v54.0-000000?logo=expo&logoColor=white&style=flat-square" alt="Expo" />
-  <img src="https://img.shields.io/badge/TypeScript-v5.9-3178C6?logo=typescript&logoColor=white&style=flat-square" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Material_Design_3-React_Native_Paper-6750A4?style=flat-square" alt="Material 3" />
-  <img src="https://img.shields.io/badge/State-Zustand-443e38?style=flat-square" alt="Zustand" />
-  <img src="https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite&logoColor=white&style=flat-square" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white&style=flat-square" alt="Kotlin" />
+  <img src="https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square" alt="Compose" />
+  <img src="https://img.shields.io/badge/Architecture-MVVM-green?style=flat-square" alt="MVVM" />
+  <img src="https://img.shields.io/badge/DI-Hilt-00599C?style=flat-square" alt="Hilt" />
+  <img src="https://img.shields.io/badge/Database-Room-orange?logo=sqlite&logoColor=white&style=flat-square" alt="Room" />
+  <img src="https://img.shields.io/badge/Min_SDK-26-brightgreen?style=flat-square" alt="Min SDK" />
+  <img src="https://img.shields.io/badge/Target_SDK-35-blue?style=flat-square" alt="Target SDK" />
 </p>
 
 ---
@@ -34,12 +35,13 @@
 
 ## ✨ Features
 
-- **📅 Consolidated Contest Schedule** — Live, upcoming, and past contests from Codeforces, LeetCode, AtCoder, and CodeChef in one unified, timezone-adjusted view.
-- **⚔️ Rivals & Leaderboards (v1.4.0)** — Add competitive programming rivals and track ratings side-by-side on an automatically-sorted leaderboard per platform.
-- **🔄 Profile Integration & Sync** — Connect multiple competitive programming accounts to automatically pull live ratings, global ranks, and solved problem counts.
-- **📈 Detailed Performance Insights** — View comprehensive stats, interactive rating charts, and complete history of your past contests.
-- **🔔 Smart Background Reminders** — Schedule background fetch notifications so you never miss a round.
-- **🎨 Premium Minimalist Aesthetics** — Beautiful, high-contrast UI featuring distraction-free solid platform colors, elegant elevated surface cards, and full light/dark mode support.
+- **📅 Consolidated Contest Schedule** — Live, upcoming, and past contests from Codeforces, LeetCode, and CodeChef in one unified, timezone-adjusted view.
+- **🔥 Daily Practice Streak & Goal Target** — Practice daily and maintain streaks with customizable goal targets (1, 2, 3, 5, or custom number input with steppers).
+- **⚔️ Rivals & Leaderboards** — Add competitive programming rivals and track ratings side-by-side on an automatically sorted leaderboard per platform.
+- **🔄 Multi-Platform Profile Sync** — Connect Codeforces, LeetCode, and CodeChef accounts to pull live ratings, global ranks, solved problem counts, and problem-of-the-day (POTD).
+- **📊 Activity Hub & Profile Detail** — Interactive bottom sheet with detailed metrics, solved breakdown, and rating histories.
+- **🔔 Smart Contest Reminders** — Background synchronization via WorkManager and precise alarm notifications scheduled before contests (15m, 30m, 1h lead times).
+- **🎨 Modern Material 3 Design** — Dynamic Material You color theming, custom palette seeds, and full Light/Dark/System theme support.
 
 ---
 
@@ -47,38 +49,43 @@
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
-| **Framework** | React Native + Expo SDK 54 | Next-gen hybrid mobile framework running Expo Router |
-| **UI Engine** | React Native Paper | Material Design 3 library supporting theme adaptation |
-| **State** | Zustand | Light-weight, high-performance global state management |
-| **Navigation**| Expo Router v6 | Native-backed file-based routing architecture |
-| **Database** | SQLite + AsyncStorage | Local relational storage & key-value cache persistence |
-| **APIs** | Codeforces, LeetCode, AtCoder | Native API request handlers and scraper logic |
+| **Language** | Kotlin 2.1.0 | 100% native modern Kotlin with Coroutines & Flow |
+| **UI Framework** | Jetpack Compose + Material 3 | Declarative UI with Material 3 Expressive components |
+| **Architecture** | MVVM + Clean Architecture | Unidirectional data flow with ViewModel and StateFlow |
+| **Dependency Injection** | Hilt (Dagger) | Compile-time dependency injection across components |
+| **Local Storage** | Room Database + DataStore | SQLite abstraction for relational data & Proto DataStore for preferences |
+| **Networking** | Retrofit + OkHttp + kotlinx.serialization | Asynchronous HTTP client with JSON serialization |
+| **Image Loading** | Coil 3 | Kotlin-first asynchronous image loading |
+| **Background Tasks** | WorkManager | Guaranteed periodic background sync for contest listings |
+| **Build System** | Gradle Kotlin DSL (KTS) | Version catalogs (`libs.versions.toml`), Android Gradle Plugin 8.8.2 |
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-├── android/                  # Native Android project configuration & build outputs
-├── app/                      # Expo Router navigation and screen entry points
-│   ├── (tabs)/               # Bottom tab navigation screens
-│   │   ├── index.tsx         # Dashboard / Profiles screen
-│   │   ├── contests.tsx      # Contests schedule screen
-│   │   ├── rivals.tsx        # Rivals leaderboard screen
-│   │   └── settings.tsx      # App settings & preferences
-│   ├── _layout.tsx           # Global entry layout with Paper & Navigation Providers
-│   └── onboarding.tsx        # Initial walkthrough setup screen
-├── assets/                   # Images, icons, and branding assets
-└── src/                      # Application source code
-    ├── api/                  # Platform endpoints and request handlers (Codeforces, LeetCode, etc.)
-    ├── components/           # Reusable UI widgets and screen-specific UI components
-    ├── database/             # SQLite configuration and local persistence schemas
-    ├── hooks/                # Custom React hooks (e.g. keyboard states, debounce)
-    ├── services/             # Background fetch, notifications, and scheduler tasks
-    ├── stores/               # Zustand global state stores (Theme, Onboarding, Profiles, Rivals)
-    ├── theme/                # Custom light/dark themes and styling presets
-    ├── types/                # TypeScript interface declarations
-    └── utils/                # Date parsers, formatting helpers, and scraper logic
+app/src/main/java/com/meet11/krono/
+├── core/
+│   ├── designsystem/          # Reusable UI components (ContestCard, DailyGoalCard, PlatformCard, ProfileSheet)
+│   └── theme/                 # KronoTheme, Material 3 color palettes, typography, shapes
+├── data/
+│   ├── api/                   # Retrofit services & response models (Codeforces, LeetCode, CodeChef)
+│   ├── database/              # Room database, entities, and DAOs
+│   ├── preferences/           # Jetpack DataStore preferences manager
+│   └── repository/            # Concrete repository implementations
+├── di/                        # Hilt DI modules (AppModule, DatabaseModule, NetworkModule)
+├── domain/
+│   ├── model/                 # Domain entity models (Contest, Profile, Rival, DailyGoal)
+│   └── repository/            # Repository abstraction interfaces
+├── presentation/
+│   ├── home/                  # Home screen with daily streaks, POTD, and linked profiles
+│   ├── contests/              # Contests schedule screen (Live, Upcoming, Past)
+│   ├── rivals/                # Rivals comparison leaderboard screen
+│   ├── settings/              # Settings, appearance, sync intervals, and notification preferences
+│   └── navigation/            # Navigation host, bottom bar, and destination routes
+├── worker/                    # WorkManager sync workers, alarm receivers, and boot listeners
+├── KronoApplication.kt        # Application class with Hilt initialization
+└── MainActivity.kt            # Single Activity entry point
 ```
 
 ---
@@ -87,82 +94,55 @@
 
 ### Prerequisites
 
-- **Node.js** v18+
-- **npm** or **yarn**
-- Android Emulator / iOS Simulator / Expo Go on a physical device
+- **Android Studio** Ladybug (2024.2+) or newer
+- **JDK 17** (bundled with Android Studio)
+- **Android SDK** with `compileSdk 35` and `minSdk 26`
+- Android device or emulator running Android 8.0+ (API 26+)
 
-### Quick Setup
+### Setup & Run
 
 ```bash
 # 1. Clone the repository
 git clone https://github.com/MeetThakur/Krono.git
 cd Krono
 
-# 2. Install dependencies
-npm install
+# 2. Build debug APK
+./gradlew assembleDebug
 
-# 3. Configure environment variables (optional — needed for upcoming contests)
-cp .env.example .env
-# Edit .env and add your Clist.by API key
-
-# 4. Start the development server
-npm start
+# 3. Install on connected device / emulator
+./gradlew installDebug
 ```
 
-Press `a` for Android, `i` for iOS, or scan the QR code with **Expo Go** on a physical device.
+You can also simply open the project in **Android Studio** and click **Run** (`Ctrl+R` / `Shift+F10`).
 
 ---
 
-## 📦 Local APK Build (arm64-v8a)
+## 📦 Building APKs
 
-Requires **Android Studio** to be installed.
+Build directly from the command line using the Gradle wrapper:
 
-### Option A: Automated Script (Windows Powershell)
-You can run the bundled helper script to automatically find your Android Studio JDK and build the release APK:
+```bash
+# Debug APK (signed with debug keystore)
+./gradlew assembleDebug
 
-```powershell
-# 1. Generate the native Android directory
-npx expo prebuild --platform android
-
-# 2. Run the local build script
-.\local_build.ps1
+# Release APK
+./gradlew assembleRelease
 ```
 
-### Option B: Manual Build Steps
-Alternatively, you can build the APK manually by running:
-
-```powershell
-# Generate native Android project
-npx expo prebuild --platform android
-
-# Set local JDK environment and build release APK for arm64-v8a
-cd android
-$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-$env:Path = "$env:JAVA_HOME\bin;" + $env:Path
-.\gradlew.bat assembleRelease "-PreactNativeArchitectures=arm64-v8a" "-Dorg.gradle.java.home=C:\Program Files\Android\Android Studio\jbr"
-```
-
-> [!TIP]
-> **Troubleshooting: SDK Location Not Found**
-> Running `npx expo prebuild` may wipe your local properties file. If the build fails with `SDK location not found`, create a file at `android/local.properties` and add:
-> `sdk.dir=C:\\Users\\meet1\\AppData\\Local\\Android\\Sdk` (replacing with your actual Android SDK path).
-
-> [!WARNING]
-> **Gradle Worker Daemon Crashes**
-> If you experience daemon connection timeouts or crashes due to build machine load, run `.\gradlew.bat --stop` to clean up active background processes, followed by `.\gradlew.bat clean`.
-
-Output APK will be generated at:
-`android/app/build/outputs/apk/release/app-release.apk`
+Generated outputs:
+- **Debug:** `app/build/outputs/apk/debug/app-debug.apk`
+- **Release:** `app/build/outputs/apk/release/app-release-unsigned.apk`
 
 ---
 
 ## ⚙️ Configuration & Settings
 
-Customize your workspace inside the in-app **Settings** screen:
-- **Appearance** — Toggle between Dark & Light modes (supporting system-synced preferences).
-- **Background Sync** — Configure interval tasks to keep ratings and upcoming contest rosters updated.
-- **Smart Reminders** — Schedule push notification countdown alerts (e.g., 15m, 30m, 1h, 2h before a round).
-- **Manage Profiles** — Instantly link, refresh, or unlink competitive programming handles.
+Customize your experience directly inside the in-app **Settings**:
+- **Theme Mode** — System Default, Light, or Dark.
+- **Palette Seed** — Choose from dynamic palette seeds or Material You dynamic colors.
+- **Daily Goal Target** — Configure your daily solved target (1, 2, 3, 5, or custom numeric value).
+- **Contest Reminders** — Configure alert timing (15m, 30m, 1 hour before start).
+- **Background Sync** — Automatic periodic background refresh for contest schedules and rival ratings.
 
 ---
 
