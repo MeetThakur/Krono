@@ -7,30 +7,9 @@ on:
     branches: [master, main]
 
 jobs:
-  # ─── Job 1: TypeScript type check ────────────────────────────────────────────
-  typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-  # ─── Job 2: Build arm64-v8a release APK ──────────────────────────────────────
+  # ─── Build & Verify Native Android ────────────────────────────────────────────
   build-android:
-    name: Build Android APK (arm64-v8a)
-    needs: typecheck
+    name: Build Android APK
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,35 +21,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      # node_modules must exist before Gradle runs because settings.gradle
-      # calls `node --print require.resolve(...)` to locate native packages.
-      - name: Install dependencies
-        run: npm ci
-
       - name: Cache Gradle packages
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-home-cache-cleanup: true
 
       - name: Make gradlew executable
-        run: chmod +x android/gradlew
+        run: chmod +x gradlew
 
-      - name: Build release APK (arm64-v8a)
-        working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
-        env:
-          NODE_OPTIONS: --max-old-space-size=4096
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK artifact
+      - name: Build release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: krono-arm64-v8a-release-${{ github.sha }}
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: krono-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: krono-release-${{ github.sha }}
+          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: warn
           retention-days: 7
