@@ -131,7 +131,7 @@ Build directly from the command line using the Gradle wrapper:
 
 Generated outputs:
 - **Debug:** `app/build/outputs/apk/debug/app-debug.apk`
-- **Release:** `app/build/outputs/apk/release/app-release-unsigned.apk`
+- **Release:** `app/build/outputs/apk/release/app-release.apk`
 
 ---
 
