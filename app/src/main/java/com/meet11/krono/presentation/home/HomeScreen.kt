@@ -24,17 +24,22 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -50,9 +55,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +74,7 @@ import com.meet11.krono.core.designsystem.DailyGoalCard
 import com.meet11.krono.core.designsystem.PillChip
 import com.meet11.krono.core.designsystem.PlatformProfileCard
 import com.meet11.krono.core.designsystem.ProfileDetailSheet
+import com.meet11.krono.core.theme.FlameGold
 import com.meet11.krono.core.theme.FlameRed
 import com.meet11.krono.core.theme.PillShape
 import com.meet11.krono.core.theme.StatusSuccess
@@ -541,23 +553,34 @@ fun GoalTargetDialog(
     onDismiss: () -> Unit,
     onSelect: (Int) -> Unit
 ) {
+    var customInput by remember {
+        mutableStateOf(if (currentTarget !in listOf(1, 2, 3, 5)) currentTarget.toString() else "")
+    }
+
+    val customInt = customInput.toIntOrNull()
+    val isValid = customInt != null && customInt > 0 && customInt <= 999
+
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = Color(0xFF181D27),
+        shape = RoundedCornerShape(24.dp),
         title = {
             Text(
                 text = "Set Daily Practice Target",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     text = "Choose how many problems you aim to solve each day across all platforms.",
                     fontSize = 13.sp,
                     color = Color(0xB3FFFFFF)
                 )
 
+                // Quick Presets Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -570,7 +593,11 @@ fun GoalTargetDialog(
                                 .height(54.dp)
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(if (isSelected) Color.White else Color(0x14FFFFFF))
-                                .border(1.dp, if (isSelected) Color.White else Color(0x1FFFFFFF), RoundedCornerShape(16.dp))
+                                .border(
+                                    1.dp,
+                                    if (isSelected) Color.White else Color(0x1FFFFFFF),
+                                    RoundedCornerShape(16.dp)
+                                )
                                 .clickable { onSelect(num) },
                             contentAlignment = Alignment.Center
                         ) {
@@ -583,11 +610,168 @@ fun GoalTargetDialog(
                         }
                     }
                 }
+
+                HorizontalDivider(color = Color(0x1FFFFFFF), thickness = 1.dp)
+
+                // Custom Target Section
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Custom Target",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xB3FFFFFF)
+                        )
+                        if (currentTarget !in listOf(1, 2, 3, 5)) {
+                            Text(
+                                text = "Current: $currentTarget/day",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = FlameGold
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Stepper Decrease [-]
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0x14FFFFFF))
+                                .border(1.dp, Color(0x1FFFFFFF), RoundedCornerShape(16.dp))
+                                .clickable {
+                                    val current = customInput.toIntOrNull() ?: currentTarget
+                                    val next = (current - 1).coerceAtLeast(1)
+                                    customInput = next.toString()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Remove,
+                                contentDescription = "Decrease Target",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Number input field
+                        BasicTextField(
+                            value = customInput,
+                            onValueChange = { str ->
+                                if (str.all { it.isDigit() } && str.length <= 3) {
+                                    customInput = str
+                                }
+                            },
+                            textStyle = TextStyle(
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = FontFamily.Monospace,
+                                textAlign = TextAlign.Center
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (isValid) {
+                                        onSelect(customInt!!)
+                                    }
+                                }
+                            ),
+                            cursorBrush = SolidColor(Color.White),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier
+                                        .height(54.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color(0x14FFFFFF))
+                                        .border(
+                                            1.dp,
+                                            if (isValid && currentTarget == customInt) FlameGold else Color(0x1FFFFFFF),
+                                            RoundedCornerShape(16.dp)
+                                        )
+                                        .padding(horizontal = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (customInput.isEmpty()) {
+                                        Text(
+                                            text = "Goal",
+                                            color = Color(0x66FFFFFF),
+                                            fontSize = 14.sp,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        // Stepper Increase [+]
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0x14FFFFFF))
+                                .border(1.dp, Color(0x1FFFFFFF), RoundedCornerShape(16.dp))
+                                .clickable {
+                                    val current = customInput.toIntOrNull() ?: currentTarget
+                                    val next = (current + 1).coerceAtMost(999)
+                                    customInput = next.toString()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = "Increase Target",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Apply Button
+                        Box(
+                            modifier = Modifier
+                                .height(54.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isValid) Color.White else Color(0x14FFFFFF))
+                                .border(
+                                    1.dp,
+                                    if (isValid) Color.White else Color(0x1FFFFFFF),
+                                    RoundedCornerShape(16.dp)
+                                )
+                                .clickable(enabled = isValid) {
+                                    onSelect(customInt!!)
+                                }
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Set",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isValid) Color.Black else Color(0x4DFFFFFF)
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text("Close", color = Color(0xB3FFFFFF))
             }
         }
     )
