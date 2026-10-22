@@ -2,9 +2,11 @@ package com.meet11.krono.data.repository
 
 import com.meet11.krono.data.local.dao.ProfileDao
 import com.meet11.krono.data.local.entity.ProfileEntity
+import com.meet11.krono.data.remote.api.CodeChefApi
 import com.meet11.krono.data.remote.api.CodeforcesApi
 import com.meet11.krono.data.remote.api.LeetCodeApi
 import com.meet11.krono.data.remote.dto.GraphQLRequest
+import com.meet11.krono.data.remote.parser.CodeChefProfileParser
 import com.meet11.krono.domain.model.Platform
 import com.meet11.krono.domain.model.Profile
 import com.meet11.krono.domain.repository.ProfileRepository
@@ -20,7 +22,8 @@ import javax.inject.Singleton
 class ProfileRepositoryImpl @Inject constructor(
     private val profileDao: ProfileDao,
     private val codeforcesApi: CodeforcesApi,
-    private val leetCodeApi: LeetCodeApi
+    private val leetCodeApi: LeetCodeApi,
+    private val codeChefApi: CodeChefApi
 ) : ProfileRepository {
 
     override fun getProfiles(): Flow<List<Profile>> {
@@ -36,6 +39,7 @@ class ProfileRepositoryImpl @Inject constructor(
         val profile = when (platform) {
             Platform.CODEFORCES -> fetchCodeforcesProfile(id, trimmedHandle)
             Platform.LEETCODE -> fetchLeetCodeProfile(id, trimmedHandle)
+            Platform.CODECHEF -> fetchCodeChefProfile(id, trimmedHandle)
             else -> ProfileEntity(
                 id = id,
                 platformId = platform.id,
@@ -56,6 +60,7 @@ class ProfileRepositoryImpl @Inject constructor(
             val updated = when (platform) {
                 Platform.CODEFORCES -> runCatching { fetchCodeforcesProfile(p.id, p.username) }.getOrDefault(p)
                 Platform.LEETCODE -> runCatching { fetchLeetCodeProfile(p.id, p.username) }.getOrDefault(p)
+                Platform.CODECHEF -> runCatching { fetchCodeChefProfile(p.id, p.username) }.getOrDefault(p)
                 else -> p
             }
             profileDao.upsertProfile(updated)
@@ -179,6 +184,26 @@ class ProfileRepositoryImpl @Inject constructor(
             rank = contestRanking?.globalRanking?.let { "#$it" } ?: matchedUser.profile?.ranking?.let { "#$it" },
             problemsSolved = solvedTotal,
             totalContests = contestRanking?.attendedContestsCount ?: 0,
+            lastUpdated = System.currentTimeMillis()
+        )
+    }
+
+    private suspend fun fetchCodeChefProfile(id: String, handle: String): ProfileEntity {
+        val responseBody = codeChefApi.getUserProfilePage(handle)
+        val html = responseBody.string()
+        val parsed = CodeChefProfileParser.parse(html, handle)
+
+        return ProfileEntity(
+            id = id,
+            platformId = Platform.CODECHEF.id,
+            username = parsed.username,
+            displayName = parsed.displayName,
+            avatar = parsed.avatar,
+            rating = parsed.rating,
+            maxRating = parsed.maxRating,
+            rank = parsed.rank,
+            problemsSolved = parsed.problemsSolved,
+            totalContests = parsed.totalContests,
             lastUpdated = System.currentTimeMillis()
         )
     }

@@ -2,9 +2,11 @@ package com.meet11.krono.data.repository
 
 import com.meet11.krono.data.local.dao.RivalDao
 import com.meet11.krono.data.local.entity.RivalEntity
+import com.meet11.krono.data.remote.api.CodeChefApi
 import com.meet11.krono.data.remote.api.CodeforcesApi
 import com.meet11.krono.data.remote.api.LeetCodeApi
 import com.meet11.krono.data.remote.dto.GraphQLRequest
+import com.meet11.krono.data.remote.parser.CodeChefProfileParser
 import com.meet11.krono.domain.model.Platform
 import com.meet11.krono.domain.model.Rival
 import com.meet11.krono.domain.repository.RivalRepository
@@ -19,7 +21,8 @@ import javax.inject.Singleton
 class RivalRepositoryImpl @Inject constructor(
     private val rivalDao: RivalDao,
     private val codeforcesApi: CodeforcesApi,
-    private val leetCodeApi: LeetCodeApi
+    private val leetCodeApi: LeetCodeApi,
+    private val codeChefApi: CodeChefApi
 ) : RivalRepository {
 
     override fun getRivals(): Flow<List<Rival>> {
@@ -41,6 +44,7 @@ class RivalRepositoryImpl @Inject constructor(
         val rival = when (platform) {
             Platform.CODEFORCES -> fetchCodeforcesRival(id, trimmedHandle)
             Platform.LEETCODE -> fetchLeetCodeRival(id, trimmedHandle)
+            Platform.CODECHEF -> fetchCodeChefRival(id, trimmedHandle)
             else -> RivalEntity(
                 id = id,
                 platformId = platform.id,
@@ -138,6 +142,26 @@ class RivalRepositoryImpl @Inject constructor(
             rank = contestRanking?.globalRanking?.let { "#$it" } ?: matchedUser.profile?.ranking?.let { "#$it" },
             problemsSolved = solvedTotal,
             totalContests = contestRanking?.attendedContestsCount ?: 0,
+            lastUpdated = System.currentTimeMillis()
+        )
+    }
+
+    private suspend fun fetchCodeChefRival(id: String, handle: String): RivalEntity {
+        val responseBody = codeChefApi.getUserProfilePage(handle)
+        val html = responseBody.string()
+        val parsed = CodeChefProfileParser.parse(html, handle)
+
+        return RivalEntity(
+            id = id,
+            platformId = Platform.CODECHEF.id,
+            username = parsed.username,
+            displayName = parsed.displayName,
+            avatar = parsed.avatar,
+            rating = parsed.rating,
+            maxRating = parsed.maxRating,
+            rank = parsed.rank,
+            problemsSolved = parsed.problemsSolved,
+            totalContests = parsed.totalContests,
             lastUpdated = System.currentTimeMillis()
         )
     }
