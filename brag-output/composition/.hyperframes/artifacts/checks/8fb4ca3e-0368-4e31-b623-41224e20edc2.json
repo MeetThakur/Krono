@@ -1,0 +1,435 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 7,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "duplicate_media_discovery_risk",
+        "severity": "warning",
+        "message": "Detected 2 matching img entries with the same source/start/duration.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Avoid duplicated media nodes that can be discovered twice during compilation."
+      },
+      {
+        "code": "composition_file_too_large",
+        "severity": "warning",
+        "message": "This HTML composition file has 347 lines. Smaller sub-compositions are easier to read, iterate on, and diff.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Split coherent scenes or layers into separate .html files under compositions/, then mount them from the parent with data-composition-src so each file stays small enough to inspect, revise, and validate independently."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene1\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene1",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene1\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene2\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene2",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene2\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene3\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene3",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene3\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene4\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene4",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene4\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      },
+      {
+        "code": "nested_structure_needs_subcomposition",
+        "severity": "warning",
+        "message": "<div id=\"scene5\"> is a timeline element that contains nested <div>. The timeline shows one row per top-level element, and the root composition is built only from sub-compositions.",
+        "selector": "#scene5",
+        "dataAttributes": {},
+        "sourceFile": "/Users/mthakur/Kode/Krono/brag-output/composition/index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Move <div id=\"scene5\"> and its contents into a sub-composition file and mount it with data-composition-src."
+      }
+    ],
+    "filesScanned": 1
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 18,
+    "samples": [
+      1,
+      3,
+      5,
+      7,
+      9,
+      11,
+      13,
+      15,
+      17
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      1,
+      5,
+      9,
+      13,
+      17
+    ],
+    "checked": 37,
+    "passed": 37
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 26 text elements stay under it for 0.5 s or more, the smallest \"RIVALS LEADERBOARD\" at 15 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "RIVALS LEADERBOARD",
+        "selector": "#s4-tag",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 131.07,
+          "y": 366.8,
+          "width": 183.61,
+          "height": 20
+        },
+        "time": 11.75,
+        "times": [
+          0.75,
+          0.875,
+          1,
+          1.125,
+          3.75,
+          4.125,
+          4.125,
+          4.375,
+          4.375,
+          7.75,
+          8.125,
+          8.125,
+          8.375,
+          8.375,
+          11.75,
+          12.125,
+          12.125,
+          12.125,
+          12.375,
+          12.375,
+          15.5,
+          15.5,
+          15.5,
+          15.625,
+          15.625,
+          16
+        ],
+        "fontPx": 14.78,
+        "floorPx": 28,
+        "seconds": 3.25,
+        "elements": [
+          {
+            "selector": "#s4-tag",
+            "text": "RIVALS LEADERBOARD",
+            "fontPx": 14.78,
+            "time": 11.75,
+            "seconds": 3.25
+          },
+          {
+            "selector": "#s2-tag",
+            "text": "CONTEST RADAR",
+            "fontPx": 15,
+            "time": 3.75,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s3-tag",
+            "text": "STREAK ENGINE",
+            "fontPx": 15,
+            "time": 7.75,
+            "seconds": 3.75
+          },
+          {
+            "selector": "#s4-card1 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Side-by-side rating graphs, ranks, and solved metrics.",
+            "fontPx": 15.76,
+            "time": 12.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#s4-card2 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Auto-sorted leaderboards per arena: CF, LeetCode, CodeChef.",
+            "fontPx": 15.76,
+            "time": 12.375,
+            "seconds": 2.625
+          },
+          {
+            "selector": "#s2-card1 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Live, upcoming, and past rounds timezone-adjusted.",
+            "fontPx": 16,
+            "time": 4.125,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#s2-card2 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Configurable alert buffers (15m, 30m, 1h) so you never miss a round.",
+            "fontPx": 16,
+            "time": 4.375,
+            "seconds": 3.125
+          },
+          {
+            "selector": "#s3-card1 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Set daily targets with intuitive +/- steppers (1, 2, 3, 5, or custom).",
+            "fontPx": 16,
+            "time": 8.125,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#s3-card2 > div:nth-of-type(2) > p:nth-of-type(1)",
+            "text": "Instant daily challenge prompts across connected platforms.",
+            "fontPx": 16,
+            "time": 8.375,
+            "seconds": 3.125
+          },
+          {
+            "selector": "#s5-badges > div:nth-of-type(1)",
+            "text": "Kotlin 2.1",
+            "fontPx": 16,
+            "time": 15.5,
+            "seconds": 2.5
+          },
+          {
+            "selector": "#s5-badges > div:nth-of-type(2)",
+            "text": "Jetpack Compose",
+            "fontPx": 16,
+            "time": 15.5,
+            "seconds": 2.5
+          },
+          {
+            "selector": "#s5-badges > div:nth-of-type(3)",
+            "text": "Material 3",
+            "fontPx": 16,
+            "time": 15.5,
+            "seconds": 2.5
+          },
+          {
+            "selector": "#s5-badges > div:nth-of-type(4)",
+            "text": "Room + Hilt",
+            "fontPx": 16,
+            "time": 15.625,
+            "seconds": 2.375
+          },
+          {
+            "selector": "#s5-author",
+            "text": "Made with ❤️ by Meet",
+            "fontPx": 18,
+            "time": 16,
+            "seconds": 2
+          },
+          {
+            "selector": "#s4-card1 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Head-to-Head Comparison",
+            "fontPx": 19.7,
+            "time": 12.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#s4-card2 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Live Platform Standings",
+            "fontPx": 19.7,
+            "time": 12.375,
+            "seconds": 2.625
+          },
+          {
+            "selector": "#s1-pills > div:nth-of-type(1)",
+            "text": "Codeforces",
+            "fontPx": 19.76,
+            "time": 0.875,
+            "seconds": 2.625
+          },
+          {
+            "selector": "#s1-pills > div:nth-of-type(2)",
+            "text": "LeetCode",
+            "fontPx": 19.76,
+            "time": 1,
+            "seconds": 2.5
+          },
+          {
+            "selector": "#s1-pills > div:nth-of-type(3)",
+            "text": "CodeChef",
+            "fontPx": 19.76,
+            "time": 1.125,
+            "seconds": 2.375
+          },
+          {
+            "selector": "#s2-card1 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Consolidated Timelines",
+            "fontPx": 20,
+            "time": 4.125,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#s2-card2 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Smart Alarm Reminders",
+            "fontPx": 20,
+            "time": 4.375,
+            "seconds": 3.125
+          },
+          {
+            "selector": "#s3-card1 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Custom Goal Targets",
+            "fontPx": 20,
+            "time": 8.125,
+            "seconds": 3.375
+          },
+          {
+            "selector": "#s3-card2 > div:nth-of-type(2) > h4:nth-of-type(1)",
+            "text": "Problem of the Day",
+            "fontPx": 20,
+            "time": 8.375,
+            "seconds": 3.125
+          },
+          {
+            "selector": "#s5-cta > span:nth-of-type(1)",
+            "text": "⭐ github.com/MeetThakur/Krono",
+            "fontPx": 23.49,
+            "time": 15.625,
+            "seconds": 2.375
+          },
+          {
+            "selector": "#s4-card1 > div:nth-of-type(1)",
+            "text": "⚔️",
+            "fontPx": 23.64,
+            "time": 12.125,
+            "seconds": 2.875
+          },
+          {
+            "selector": "#s1-sub",
+            "text": "The Ultimate Competitive Programming Companion",
+            "fontPx": 23.71,
+            "time": 0.75,
+            "seconds": 2.75
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 144
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

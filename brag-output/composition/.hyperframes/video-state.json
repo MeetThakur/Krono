@@ -1,7 +1,7 @@
 {
   "version": 1,
   "historyId": "feb1aba2-4091-4d01-96df-9d91ee535678",
-  "currentRevision": "5ef8b20f-f962-49d8-a96b-176038263d71",
+  "currentRevision": "0b905a81-bd96-4535-948a-e6d3a17b5c82",
   "pendingChanges": false,
   "files": {
     "assets/images/dashboard.jpg": {
@@ -61,8 +61,8 @@
       "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
     },
     "index.html": {
-      "hash": "00b757a2a1d0368ccdfe481df70b604dd30fa1152d5a4018e63e375be0a84d7b",
-      "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/00/00b757a2a1d0368ccdfe481df70b604dd30fa1152d5a4018e63e375be0a84d7b"
+      "hash": "b910ba7cbcf0c37e3712122ad5bc12767e2e41ba574d920c37ccb116e307f4cc",
+      "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/b9/b910ba7cbcf0c37e3712122ad5bc12767e2e41ba574d920c37ccb116e307f4cc"
     },
     "meta.json": {
       "hash": "6d31e8e3d70c58fbf58b928308ee93375208ed7dc606e2343487210c3502e0d6",
@@ -75,6 +75,18 @@
     "assets/music/bgm.mp3": {
       "hash": "f9912f2c962ada1e579f5ccc5a7d854d67e5e81ee96a7dd8c885a8480ae58d09",
       "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/f9/f9912f2c962ada1e579f5ccc5a7d854d67e5e81ee96a7dd8c885a8480ae58d09"
+    },
+    "assets/images/dashboard_native.png": {
+      "hash": "a716c7f4f3ec80c30b8ee3c0005a4db698b6a03d8bbd592e0a2fa3b072747f0a",
+      "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/a7/a716c7f4f3ec80c30b8ee3c0005a4db698b6a03d8bbd592e0a2fa3b072747f0a"
+    },
+    "assets/images/rivals_native.png": {
+      "hash": "bb550410662eb20b3312fa5097501302009df0e786c941e514cec836e9ff34d9",
+      "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/bb/bb550410662eb20b3312fa5097501302009df0e786c941e514cec836e9ff34d9"
+    },
+    "assets/images/schedule_native.png": {
+      "hash": "e7ee8d4da35443ee9d4982d8f91adebf58bc6c815bb5bd2c9b8b07f3282662f1",
+      "content": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/e7/e7ee8d4da35443ee9d4982d8f91adebf58bc6c815bb5bd2c9b8b07f3282662f1"
     }
   },
   "revisions": {
@@ -137,12 +149,39 @@
           "after": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/00/00b757a2a1d0368ccdfe481df70b604dd30fa1152d5a4018e63e375be0a84d7b"
         }
       }
+    },
+    "0b905a81-bd96-4535-948a-e6d3a17b5c82": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1792740302349,
+      "endedAt": 1792740302357,
+      "files": {
+        "assets/images/dashboard_native.png": {
+          "before": null,
+          "after": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/a7/a716c7f4f3ec80c30b8ee3c0005a4db698b6a03d8bbd592e0a2fa3b072747f0a"
+        },
+        "assets/images/rivals_native.png": {
+          "before": null,
+          "after": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/bb/bb550410662eb20b3312fa5097501302009df0e786c941e514cec836e9ff34d9"
+        },
+        "assets/images/schedule_native.png": {
+          "before": null,
+          "after": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/e7/e7ee8d4da35443ee9d4982d8f91adebf58bc6c815bb5bd2c9b8b07f3282662f1"
+        },
+        "index.html": {
+          "before": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/00/00b757a2a1d0368ccdfe481df70b604dd30fa1152d5a4018e63e375be0a84d7b",
+          "after": "/Users/mthakur/.cache/hyperframes/history/feb1aba2-4091-4d01-96df-9d91ee535678/blobs/b9/b910ba7cbcf0c37e3712122ad5bc12767e2e41ba574d920c37ccb116e307f4cc"
+        }
+      }
     }
   },
   "checks": {
     "latest": {
-      "revision": "5ef8b20f-f962-49d8-a96b-176038263d71",
-      "id": "ff6f1e49-5f88-4910-81fc-7c727768a1b2"
+      "revision": "0b905a81-bd96-4535-948a-e6d3a17b5c82",
+      "id": "8fb4ca3e-0368-4e31-b623-41224e20edc2"
     },
     "revisions": {
       "40b5d4d0-bb98-4f38-81da-065d6e8322e2": [
@@ -263,6 +302,35 @@
           "inputScope": "local-project-files",
           "attribution": "recorded-revision"
         }
+      ],
+      "0b905a81-bd96-4535-948a-e6d3a17b5c82": [
+        {
+          "id": "8fb4ca3e-0368-4e31-b623-41224e20edc2",
+          "scope": "project",
+          "report": "/Users/mthakur/Kode/Krono/brag-output/composition/.hyperframes/artifacts/checks/8fb4ca3e-0368-4e31-b623-41224e20edc2.json",
+          "metadata": {
+            "ok": true,
+            "browserSkipped": false,
+            "options": {
+              "samples": 9,
+              "atTransitions": false,
+              "maxIssues": 80,
+              "collapseStatic": true,
+              "tolerance": 2,
+              "timeout": 3000,
+              "contrast": true,
+              "strict": false,
+              "snapshots": false,
+              "browserGpuMode": "auto"
+            }
+          },
+          "createdAt": 1792740308055,
+          "contentHash": "e3f1d6f7e4625425998cbf1329b7dc300b4344e579c6fa76901442e4474f5512",
+          "revision": "0b905a81-bd96-4535-948a-e6d3a17b5c82",
+          "inputFingerprint": "4efa16e86357f4b8cad3e4bf7a107f9fc186ec353f3204092d86bb1fcfd8b2bd",
+          "inputScope": "local-project-files",
+          "attribution": "recorded-revision"
+        }
       ]
     },
     "unversioned": [
@@ -302,13 +370,14 @@
   },
   "renders": {
     "latest": {
-      "id": "e952f892-5b2f-4f30-ab1f-10551ed8046b",
-      "completedAt": 1792730144213,
+      "id": "28a7444a-1c71-47d8-9315-dbb30aa53125",
+      "completedAt": 1792740339683,
       "output": "/Users/mthakur/Kode/Krono/brag-output/brag.mp4",
       "status": "completed",
-      "revision": "5ef8b20f-f962-49d8-a96b-176038263d71"
+      "revision": "0b905a81-bd96-4535-948a-e6d3a17b5c82"
     },
     "retainedRevisions": [
+      "0b905a81-bd96-4535-948a-e6d3a17b5c82",
       "5ef8b20f-f962-49d8-a96b-176038263d71"
     ]
   },

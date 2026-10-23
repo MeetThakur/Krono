@@ -251,36 +251,27 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        perspective: 1200px;
       }
       .phone-mockup {
         position: relative;
-        width: 360px;
-        height: 740px;
+        width: 338px;
+        height: 760px;
         background: #030712;
-        border-radius: 48px;
-        border: 8px solid #1f2937;
+        border-radius: 44px;
+        border: 7px solid #1e293b;
         box-shadow: 
-          0 25px 60px rgba(0,0,0,0.8),
-          0 0 40px rgba(99, 102, 241, 0.25);
+          0 25px 60px rgba(0,0,0,0.85),
+          0 0 45px rgba(99, 102, 241, 0.22);
         overflow: hidden;
-        transform: rotateY(-6deg) rotateX(4deg);
       }
       .phone-mockup img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
       }
       .phone-notch {
-        position: absolute;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120px;
-        height: 20px;
-        background: #111827;
-        border-radius: 20px;
-        z-index: 10;
+        display: none;
       }
       .floating-badge {
         position: absolute;
@@ -417,7 +408,7 @@
           <div class="phone-col">
             <div class="phone-mockup" id="s2-phone">
               <div class="phone-notch"></div>
-              <img src="assets/images/schedule.jpg" alt="Contests Screen">
+              <img src="assets/images/schedule_native.png" alt="Contests Screen">
               <div class="floating-badge badge-1" id="s2-badge" data-layout-allow-overflow data-layout-ignore>🔴 Biweekly Contest 150 · LIVE</div>
             </div>
           </div>
@@ -430,7 +421,7 @@
           <div class="phone-col">
             <div class="phone-mockup" id="s3-phone">
               <div class="phone-notch"></div>
-              <img src="assets/images/dashboard.jpg" alt="Dashboard Screen">
+              <img src="assets/images/dashboard_native.png" alt="Dashboard Screen">
               <div class="floating-badge badge-2" id="s3-badge" data-layout-allow-overflow data-layout-ignore>🔥 14-Day Streak Target!</div>
             </div>
           </div>
@@ -483,7 +474,7 @@
           <div class="phone-col">
             <div class="phone-mockup" id="s4-phone">
               <div class="phone-notch"></div>
-              <img src="assets/images/rivals.jpg" alt="Rivals Screen">
+              <img src="assets/images/rivals_native.png" alt="Rivals Screen">
               <div class="floating-badge badge-1" id="s4-badge" data-layout-allow-overflow data-layout-ignore>🏆 Rank #1 · +72 Rating</div>
             </div>
           </div>
@@ -495,7 +486,7 @@
         <div class="scene-5-content">
           <div class="app-logo-wrap" id="s5-logo">
             <div class="app-logo-glow"></div>
-            <img id="img-logo-5" class="app-logo-img" src="assets/images/logo.jpg" alt="Krono Logo">
+            <img id="img-logo-5" class="app-logo-img" src="assets/images/icon.png" alt="Krono Logo">
           </div>
           <h2 class="app-title" id="s5-title" style="font-size: 80px; margin-bottom: 12px;">KRONO</h2>
           <p class="hook-tagline" id="s5-tag" style="font-size: 32px; margin-bottom: 24px;">The Ultimate Competitive Programming Companion</p>
@@ -552,8 +543,8 @@
 
       // --- SCENE 2: Contest Radar (3.5s - 7.5s) ---
       tl.fromTo("#s2-phone", 
-        { autoAlpha: 0, x: 120, rotateY: 15 }, 
-        { autoAlpha: 1, x: 0, rotateY: -6, duration: 0.7, ease: "power3.out" }, 
+        { autoAlpha: 0, x: 80, scale: 0.95 }, 
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 
         3.5
       );
       tl.fromTo("#s2-tag", 
@@ -585,8 +576,8 @@
 
       // --- SCENE 3: Daily Streak (7.5s - 11.5s) ---
       tl.fromTo("#s3-phone", 
-        { autoAlpha: 0, x: -100, rotateY: -15 }, 
-        { autoAlpha: 1, x: 0, rotateY: 6, duration: 0.7, ease: "power3.out" }, 
+        { autoAlpha: 0, x: -80, scale: 0.95 }, 
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 
         7.5
       );
       tl.fromTo("#s3-tag", 
@@ -618,8 +609,8 @@
 
       // --- SCENE 4: Rivals Leaderboard (11.5s - 15.0s) ---
       tl.fromTo("#s4-phone", 
-        { autoAlpha: 0, x: 100, rotateY: 15 }, 
-        { autoAlpha: 1, x: 0, rotateY: -6, duration: 0.7, ease: "power3.out" }, 
+        { autoAlpha: 0, x: 80, scale: 0.95 }, 
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 
         11.5
       );
       tl.fromTo("#s4-tag", 
