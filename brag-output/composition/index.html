@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg: #07090e;
+        --surface: #101623;
+        --surface-border: #1e293b;
+        --ink: #f8fafc;
+        --ink-muted: #94a3b8;
+        --accent: #6366f1;
+        --cf-blue: #3b82f6;
+        --lc-amber: #f59e0b;
+        --cc-brown: #d97706;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+        color: var(--ink);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 30%, #151d30 0%, #07090e 70%);
+      }
+
+      /* Ambient background glowing orbs */
+      .glow-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.35;
+        pointer-events: none;
+      }
+      .glow-1 {
+        width: 600px;
+        height: 600px;
+        background: #4f46e5;
+        top: -100px;
+        left: -100px;
+      }
+      .glow-2 {
+        width: 700px;
+        height: 700px;
+        background: #0284c7;
+        bottom: -200px;
+        right: -100px;
+      }
+      .glow-3 {
+        width: 500px;
+        height: 500px;
+        background: #f59e0b;
+        top: 40%;
+        left: 45%;
+        opacity: 0.15;
+      }
+
+      /* Grid overlay */
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 60px 60px;
+        pointer-events: none;
+      }
+
+      /* Scene containers */
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 80px 120px;
+      }
+
+      /* SCENE 1: Hook */
+      .scene-1-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 1200px;
+      }
+      .app-logo-wrap {
+        position: relative;
+        margin-bottom: 32px;
+      }
+      .app-logo-glow {
+        position: absolute;
+        inset: -20px;
+        background: linear-gradient(135deg, #6366f1, #38bdf8);
+        border-radius: 48px;
+        filter: blur(28px);
+        opacity: 0.7;
+      }
+      .app-logo-img {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        border-radius: 36px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        border: 2px solid rgba(255,255,255,0.15);
+      }
+      .app-title {
+        font-size: 96px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin-bottom: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hook-tagline {
+        font-size: 44px;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin-bottom: 24px;
+        letter-spacing: -0.02em;
+      }
+      .hook-sub {
+        font-size: 24px;
+        color: var(--ink-muted);
+        font-weight: 500;
+        margin-bottom: 40px;
+      }
+      .platform-pills {
+        display: flex;
+        gap: 16px;
+      }
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 24px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 100px;
+        font-size: 20px;
+        font-weight: 600;
+        backdrop-filter: blur(12px);
+      }
+      .pill-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .dot-cf { background: #3b82f6; box-shadow: 0 0 12px #3b82f6; }
+      .dot-lc { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+      .dot-cc { background: #d97706; box-shadow: 0 0 12px #d97706; }
+
+      /* COMMON 2-COLUMN LAYOUT FOR SCENES 2, 3, 4 */
+      .layout-split {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        gap: 80px;
+      }
+      .text-col {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .feature-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+        width: fit-content;
+      }
+      .tag-radar { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+      .tag-streak { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+      .tag-rivals { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+      .feature-heading {
+        font-size: 64px;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        margin-bottom: 32px;
+        color: #ffffff;
+      }
+      .feature-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 20px 24px;
+        background: rgba(16, 22, 35, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        backdrop-filter: blur(12px);
+      }
+      .feature-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+      }
+      .feature-info h4 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 4px;
+      }
+      .feature-info p {
+        font-size: 16px;
+        color: var(--ink-muted);
+      }
+
+      /* PHONE MOCKUP */
+      .phone-col {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        perspective: 1200px;
+      }
+      .phone-mockup {
+        position: relative;
+        width: 360px;
+        height: 740px;
+        background: #030712;
+        border-radius: 48px;
+        border: 8px solid #1f2937;
+        box-shadow: 
+          0 25px 60px rgba(0,0,0,0.8),
+          0 0 40px rgba(99, 102, 241, 0.25);
+        overflow: hidden;
+        transform: rotateY(-6deg) rotateX(4deg);
+      }
+      .phone-mockup img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .phone-notch {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 20px;
+        background: #111827;
+        border-radius: 20px;
+        z-index: 10;
+      }
+      .floating-badge {
+        position: absolute;
+        padding: 14px 22px;
+        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(255,255,255,0.15);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        font-size: 18px;
+        z-index: 20;
+      }
+      .badge-1 {
+        bottom: 80px;
+        left: -40px;
+        color: #38bdf8;
+      }
+      .badge-2 {
+        top: 100px;
+        right: -30px;
+        color: #fbbf24;
+      }
+
+      /* SCENE 5: Outro */
+      .scene-5-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .tech-badges {
+        display: flex;
+        gap: 14px;
+        margin-top: 36px;
+      }
+      .tech-pill {
+        padding: 10px 20px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 16px;
+        font-weight: 600;
+        color: #e2e8f0;
+      }
+      .cta-card {
+        margin-top: 40px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 36px;
+        background: linear-gradient(135deg, #4f46e5, #0284c7);
+        border-radius: 100px;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+        box-shadow: 0 15px 35px rgba(79, 70, 229, 0.45);
+      }
+      .author-note {
+        margin-top: 28px;
+        font-size: 18px;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="18"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Audio Elements -->
+      <audio id="bg-music" data-start="0" data-duration="18" data-track-index="10" data-volume="0.32" src="assets/music/bgm.mp3"></audio>
+      <audio id="sfx-drop" data-start="0.1" data-duration="0.11" data-track-index="11" data-volume="0.65" src="assets/sfx/interface/drop_001.ogg"></audio>
+      <audio id="sfx-chime" data-start="3.5" data-duration="0.12" data-track-index="12" data-volume="0.7" src="assets/sfx/interface/bong_001.ogg"></audio>
+      <audio id="sfx-click" data-start="7.5" data-duration="0.09" data-track-index="13" data-volume="0.65" src="assets/sfx/ui/click1.ogg"></audio>
+      <audio id="sfx-bell" data-start="14.8" data-duration="1.48" data-track-index="14" data-volume="0.75" src="assets/sfx/impact/impactBell_heavy_000.ogg"></audio>
+
+      <!-- Background Ambient Orbs -->
+      <div class="glow-orb glow-1" id="orb1" data-layout-allow-overflow></div>
+      <div class="glow-orb glow-2" id="orb2" data-layout-allow-overflow></div>
+      <div class="glow-orb glow-3" id="orb3"></div>
+      <div class="bg-grid"></div>
+
+      <!-- SCENE 1: Hook & Intro (0.0s - 3.5s) -->
+      <div class="scene clip" id="scene1" data-start="0" data-duration="3.5" data-track-index="1">
+        <div class="scene-1-content">
+          <div class="app-logo-wrap" id="s1-logo">
+            <div class="app-logo-glow"></div>
+            <img id="img-logo-1" class="app-logo-img" src="assets/images/icon.png" alt="Krono Icon">
+          </div>
+          <h1 class="app-title" id="s1-title">KRONO</h1>
+          <p class="hook-tagline" id="s1-tagline">Never miss a round. Never lose a streak.</p>
+          <p class="hook-sub" id="s1-sub">The Ultimate Competitive Programming Companion</p>
+          <div class="platform-pills" id="s1-pills">
+            <div class="pill"><div class="pill-dot dot-cf"></div>Codeforces</div>
+            <div class="pill"><div class="pill-dot dot-lc"></div>LeetCode</div>
+            <div class="pill"><div class="pill-dot dot-cc"></div>CodeChef</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 2: Contest Radar (3.5s - 7.5s) -->
+      <div class="scene clip" id="scene2" data-start="3.5" data-duration="4.0" data-track-index="2">
+        <div class="layout-split">
+          <div class="text-col">
+            <div class="feature-tag tag-radar" id="s2-tag">CONTEST RADAR</div>
+            <h2 class="feature-heading" id="s2-heading">One Radar for Every Arena.</h2>
+            <div class="feature-cards">
+              <div class="feature-item" id="s2-card1">
+                <div class="feature-icon-box">📅</div>
+                <div class="feature-info">
+                  <h4>Consolidated Timelines</h4>
+                  <p>Live, upcoming, and past rounds timezone-adjusted.</p>
+                </div>
+              </div>
+              <div class="feature-item" id="s2-card2">
+                <div class="feature-icon-box">🔔</div>
+                <div class="feature-info">
+                  <h4>Smart Alarm Reminders</h4>
+                  <p>Configurable alert buffers (15m, 30m, 1h) so you never miss a round.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="phone-col">
+            <div class="phone-mockup" id="s2-phone">
+              <div class="phone-notch"></div>
+              <img src="assets/images/schedule.jpg" alt="Contests Screen">
+              <div class="floating-badge badge-1" id="s2-badge" data-layout-allow-overflow data-layout-ignore>🔴 Biweekly Contest 150 · LIVE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 3: Daily Streak Engine (7.5s - 11.5s) -->
+      <div class="scene clip" id="scene3" data-start="7.5" data-duration="4.0" data-track-index="3">
+        <div class="layout-split">
+          <div class="phone-col">
+            <div class="phone-mockup" id="s3-phone">
+              <div class="phone-notch"></div>
+              <img src="assets/images/dashboard.jpg" alt="Dashboard Screen">
+              <div class="floating-badge badge-2" id="s3-badge" data-layout-allow-overflow data-layout-ignore>🔥 14-Day Streak Target!</div>
+            </div>
+          </div>
+          <div class="text-col">
+            <div class="feature-tag tag-streak" id="s3-tag">STREAK ENGINE</div>
+            <h2 class="feature-heading" id="s3-heading">Build Unbreakable Habits.</h2>
+            <div class="feature-cards">
+              <div class="feature-item" id="s3-card1">
+                <div class="feature-icon-box">🎯</div>
+                <div class="feature-info">
+                  <h4>Custom Goal Targets</h4>
+                  <p>Set daily targets with intuitive +/- steppers (1, 2, 3, 5, or custom).</p>
+                </div>
+              </div>
+              <div class="feature-item" id="s3-card2">
+                <div class="feature-icon-box">💡</div>
+                <div class="feature-info">
+                  <h4>Problem of the Day</h4>
+                  <p>Instant daily challenge prompts across connected platforms.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 4: Rivals Leaderboard (11.5s - 15.0s) -->
+      <div class="scene clip" id="scene4" data-start="11.5" data-duration="3.5" data-track-index="4">
+        <div class="layout-split">
+          <div class="text-col">
+            <div class="feature-tag tag-rivals" id="s4-tag">RIVALS LEADERBOARD</div>
+            <h2 class="feature-heading" id="s4-heading">Outrank Your Rivals.</h2>
+            <div class="feature-cards">
+              <div class="feature-item" id="s4-card1">
+                <div class="feature-icon-box">⚔️</div>
+                <div class="feature-info">
+                  <h4>Head-to-Head Comparison</h4>
+                  <p>Side-by-side rating graphs, ranks, and solved metrics.</p>
+                </div>
+              </div>
+              <div class="feature-item" id="s4-card2">
+                <div class="feature-icon-box">🏆</div>
+                <div class="feature-info">
+                  <h4>Live Platform Standings</h4>
+                  <p>Auto-sorted leaderboards per arena: CF, LeetCode, CodeChef.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="phone-col">
+            <div class="phone-mockup" id="s4-phone">
+              <div class="phone-notch"></div>
+              <img src="assets/images/rivals.jpg" alt="Rivals Screen">
+              <div class="floating-badge badge-1" id="s4-badge" data-layout-allow-overflow data-layout-ignore>🏆 Rank #1 · +72 Rating</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCENE 5: Outro & Call to Action (15.0s - 18.0s) -->
+      <div class="scene clip" id="scene5" data-start="15.0" data-duration="3.0" data-track-index="5">
+        <div class="scene-5-content">
+          <div class="app-logo-wrap" id="s5-logo">
+            <div class="app-logo-glow"></div>
+            <img id="img-logo-5" class="app-logo-img" src="assets/images/logo.jpg" alt="Krono Logo">
+          </div>
+          <h2 class="app-title" id="s5-title" style="font-size: 80px; margin-bottom: 12px;">KRONO</h2>
+          <p class="hook-tagline" id="s5-tag" style="font-size: 32px; margin-bottom: 24px;">The Ultimate Competitive Programming Companion</p>
+          <div class="tech-badges" id="s5-badges">
+            <div class="tech-pill">Kotlin 2.1</div>
+            <div class="tech-pill">Jetpack Compose</div>
+            <div class="tech-pill">Material 3</div>
+            <div class="tech-pill">Room + Hilt</div>
+          </div>
+          <div class="cta-card" id="s5-cta">
+            <span>⭐ github.com/MeetThakur/Krono</span>
+          </div>
+          <p class="author-note" id="s5-author">Made with ❤️ by Meet</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      // Ambient orb animations
+      tl.to("#orb1", { x: 80, y: 50, duration: 18, ease: "sine.inOut" }, 0);
+      tl.to("#orb2", { x: -60, y: -40, duration: 18, ease: "sine.inOut" }, 0);
+      tl.to("#orb3", { scale: 1.2, duration: 9, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0);
+
+      // --- SCENE 1 (0.0s - 3.5s) ---
+      // Frame 0 presence
+      tl.fromTo("#s1-logo", 
+        { scale: 0.9, autoAlpha: 1, y: 10 }, 
+        { scale: 1, autoAlpha: 1, y: 0, duration: 0.5, ease: "power2.out" }, 
+        0.0
+      );
+      tl.fromTo("#s1-title", 
+        { autoAlpha: 1, y: 10 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        0.0
+      );
+      tl.fromTo("#s1-tagline", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 
+        0.3
+      );
+      tl.fromTo("#s1-sub", 
+        { autoAlpha: 0 }, 
+        { autoAlpha: 1, duration: 0.4, ease: "power2.out" }, 
+        0.6
+      );
+      tl.fromTo("#s1-pills .pill", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, stagger: 0.1, duration: 0.4, ease: "back.out(1.5)" }, 
+        0.8
+      );
+      tl.to("#scene1 .scene-1-content", { autoAlpha: 0, scale: 0.96, duration: 0.4, ease: "power2.in" }, 3.1);
+
+      // --- SCENE 2: Contest Radar (3.5s - 7.5s) ---
+      tl.fromTo("#s2-phone", 
+        { autoAlpha: 0, x: 120, rotateY: 15 }, 
+        { autoAlpha: 1, x: 0, rotateY: -6, duration: 0.7, ease: "power3.out" }, 
+        3.5
+      );
+      tl.fromTo("#s2-tag", 
+        { autoAlpha: 0, x: -30 }, 
+        { autoAlpha: 1, x: 0, duration: 0.4, ease: "power3.out" }, 
+        3.6
+      );
+      tl.fromTo("#s2-heading", 
+        { autoAlpha: 0, y: 30 }, 
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 
+        3.8
+      );
+      tl.fromTo("#s2-card1", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        4.0
+      );
+      tl.fromTo("#s2-card2", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        4.2
+      );
+      tl.fromTo("#s2-badge", 
+        { scale: 0, autoAlpha: 0 }, 
+        { scale: 1, autoAlpha: 1, duration: 0.4, ease: "back.out(1.7)" }, 
+        4.3
+      );
+      tl.to("#scene2 .layout-split", { autoAlpha: 0, x: -50, duration: 0.4, ease: "power2.in" }, 7.1);
+
+      // --- SCENE 3: Daily Streak (7.5s - 11.5s) ---
+      tl.fromTo("#s3-phone", 
+        { autoAlpha: 0, x: -100, rotateY: -15 }, 
+        { autoAlpha: 1, x: 0, rotateY: 6, duration: 0.7, ease: "power3.out" }, 
+        7.5
+      );
+      tl.fromTo("#s3-tag", 
+        { autoAlpha: 0, x: 30 }, 
+        { autoAlpha: 1, x: 0, duration: 0.4, ease: "power3.out" }, 
+        7.6
+      );
+      tl.fromTo("#s3-heading", 
+        { autoAlpha: 0, y: 30 }, 
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 
+        7.8
+      );
+      tl.fromTo("#s3-card1", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        8.0
+      );
+      tl.fromTo("#s3-card2", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        8.2
+      );
+      tl.fromTo("#s3-badge", 
+        { scale: 0, autoAlpha: 0 }, 
+        { scale: 1, autoAlpha: 1, duration: 0.4, ease: "back.out(1.7)" }, 
+        8.3
+      );
+      tl.to("#scene3 .layout-split", { autoAlpha: 0, x: 50, duration: 0.4, ease: "power2.in" }, 11.1);
+
+      // --- SCENE 4: Rivals Leaderboard (11.5s - 15.0s) ---
+      tl.fromTo("#s4-phone", 
+        { autoAlpha: 0, x: 100, rotateY: 15 }, 
+        { autoAlpha: 1, x: 0, rotateY: -6, duration: 0.7, ease: "power3.out" }, 
+        11.5
+      );
+      tl.fromTo("#s4-tag", 
+        { autoAlpha: 0, x: -30 }, 
+        { autoAlpha: 1, x: 0, duration: 0.4, ease: "power3.out" }, 
+        11.6
+      );
+      tl.fromTo("#s4-heading", 
+        { autoAlpha: 0, y: 30 }, 
+        { autoAlpha: 1, y: 0, duration: 0.5, ease: "power3.out" }, 
+        11.8
+      );
+      tl.fromTo("#s4-card1", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        12.0
+      );
+      tl.fromTo("#s4-card2", 
+        { autoAlpha: 0, y: 20 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        12.2
+      );
+      tl.fromTo("#s4-badge", 
+        { scale: 0, autoAlpha: 0 }, 
+        { scale: 1, autoAlpha: 1, duration: 0.4, ease: "back.out(1.7)" }, 
+        12.3
+      );
+      tl.to("#scene4 .layout-split", { autoAlpha: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 14.6);
+
+      // --- SCENE 5: Outro & Call to Action (15.0s - 18.0s) ---
+      tl.fromTo("#s5-logo", 
+        { scale: 0.8, autoAlpha: 0, y: 20 }, 
+        { scale: 1, autoAlpha: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" }, 
+        15.0
+      );
+      tl.fromTo("#s5-title", 
+        { autoAlpha: 0, y: 15 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        15.1
+      );
+      tl.fromTo("#s5-tag", 
+        { autoAlpha: 0, y: 15 }, 
+        { autoAlpha: 1, y: 0, duration: 0.4, ease: "power3.out" }, 
+        15.2
+      );
+      tl.fromTo("#s5-badges .tech-pill", 
+        { autoAlpha: 0, y: 12 }, 
+        { autoAlpha: 1, y: 0, stagger: 0.06, duration: 0.35, ease: "power2.out" }, 
+        15.3
+      );
+      tl.fromTo("#s5-cta", 
+        { scale: 0.9, autoAlpha: 0 }, 
+        { scale: 1, autoAlpha: 1, duration: 0.4, ease: "back.out(1.5)" }, 
+        15.5
+      );
+      tl.fromTo("#s5-author", 
+        { autoAlpha: 0 }, 
+        { autoAlpha: 1, duration: 0.4, ease: "power2.out" }, 
+        15.8
+      );
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

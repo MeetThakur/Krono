@@ -1,0 +1,1 @@
+Built Krono — a native Android competitive programming tracker in Jetpack Compose. Multi-platform contest schedules (Codeforces, LeetCode, CodeChef), daily streak habit engine, and live rival leaderboards in one clean dark UI.
