@@ -10,6 +10,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/MeetThakur/Krono/releases/latest"><img src="https://img.shields.io/github/v/release/MeetThakur/Krono?style=flat-square&color=blue&label=Release" alt="Latest Release" /></a>
+  <a href="https://github.com/MeetThakur/Krono/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/MeetThakur/Krono/ci.yml?branch=master&style=flat-square&label=CI" alt="CI status" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square" alt="License: GPLv3" /></a>
   <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white&style=flat-square" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square" alt="Compose" />
   <img src="https://img.shields.io/badge/Architecture-MVVM-green?style=flat-square" alt="MVVM" />
@@ -18,6 +21,22 @@
   <img src="https://img.shields.io/badge/Min_SDK-26-brightgreen?style=flat-square" alt="Min SDK" />
   <img src="https://img.shields.io/badge/Target_SDK-35-blue?style=flat-square" alt="Target SDK" />
 </p>
+
+---
+
+## Download
+
+<p align="center">
+  <a href="https://github.com/MeetThakur/Krono/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20APK-2ea44f?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+  </a>
+</p>
+
+- **Direct APK** — grab `app-release.apk` from [GitHub Releases](https://github.com/MeetThakur/Krono/releases/latest) and install it (Android 8.0+ / API 26+).
+- **Auto-updates with Obtainium**
+  1. Open [Obtainium](https://github.com/ImranR98/Obtainium) on your device.
+  2. Tap **Add App** and paste `https://github.com/MeetThakur/Krono`.
+  3. Obtainium tracks new releases and installs them for you.
 
 ---
 
@@ -148,6 +167,14 @@ Build directly from the command line using the Gradle wrapper:
 # Release APK (R8-minified and resource-shrunk, ~2 MB)
 ./gradlew assembleRelease
 ```
+
+Release builds are signed with the keystore given by `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`; without them Gradle falls back to the debug key (fine locally, never for published releases).
+
+### Publishing a release
+
+1. Bump `versionCode` / `versionName` in `app/build.gradle.kts` and add a `## [vX.Y.Z]` section to `CHANGELOG.md`.
+2. Push a matching tag: `git tag v2.0.0 && git push origin v2.0.0`.
+3. The **Release** workflow checks the tag matches `versionName`, builds a signed APK, verifies it isn't debug-signed, and publishes it with that CHANGELOG section as notes.
 
 Generated outputs:
 - **Debug:** `app/build/outputs/apk/debug/app-debug.apk`

@@ -1,52 +1,64 @@
-name: Krono CI/CD
+name: Krono CI
 
 on:
   push:
     branches: [master, main]
   pull_request:
     branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch/PR cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  # ─── Build & Verify Native Android ────────────────────────────────────────────
-  build-android:
-    name: Build Android APK
-    runs-on: ubuntu-latest
+  build:
+    name: Build, lint & package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Cache Gradle packages
+      - name: Set up Gradle (with cache)
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-home-cache-cleanup: true
+          cache-read-only: ${{ github.ref != 'refs/heads/master' && github.ref != 'refs/heads/main' }}
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+      # One Gradle invocation so configuration and compiled classes are shared across tasks.
+      # assembleRelease runs R8, which catches missing keep rules before a tag is ever cut.
+      - name: Build debug + release, run lint and unit tests
+        run: ./gradlew assembleDebug assembleRelease lintRelease testDebugUnitTest --stacktrace
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-
-      - name: Build release APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
-
-      - name: Upload debug APK artifact
+      - name: Upload lint report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: krono-debug-${{ github.sha }}
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          name: lint-report-${{ github.sha }}
+          path: app/build/reports/lint-results-release.html
+          if-no-files-found: ignore
           retention-days: 7
 
-      - name: Upload release APK artifact
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: krono-release-${{ github.sha }}
-          path: app/build/outputs/apk/release/app-release.apk
-          if-no-files-found: warn
+          name: krono-apks-${{ github.sha }}
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
           retention-days: 7

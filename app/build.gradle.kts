@@ -21,11 +21,28 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release signing comes from env vars (CI secrets). Without them we fall back to the debug key
+    // so local `assembleRelease` still works — but debug-signed APKs from different machines can't
+    // update each other, so published releases must use the real keystore.
+    val releaseKeystore = System.getenv("KRONO_KEYSTORE_PATH")?.let(::file)?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("KRONO_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KRONO_KEY_ALIAS")
+                keyPassword = System.getenv("KRONO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug").also {
+                logger.warn("Krono: KRONO_KEYSTORE_PATH not set — release APK is signed with the DEBUG key.")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
