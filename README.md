@@ -10,6 +10,8 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/MeetThakur/Krono/releases/latest"><img src="https://img.shields.io/github/v/release/MeetThakur/Krono?style=flat-square&color=blue&label=Release" alt="Latest Release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square" alt="License: GPLv3" /></a>
   <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white&style=flat-square" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square" alt="Compose" />
   <img src="https://img.shields.io/badge/Architecture-MVVM-green?style=flat-square" alt="MVVM" />
@@ -18,6 +20,25 @@
   <img src="https://img.shields.io/badge/Min_SDK-26-brightgreen?style=flat-square" alt="Min SDK" />
   <img src="https://img.shields.io/badge/Target_SDK-35-blue?style=flat-square" alt="Target SDK" />
 </p>
+
+---
+
+## 📥 Download & Installation
+
+Get the latest stable APK directly from GitHub Releases:
+
+<p align="center">
+  <a href="https://github.com/MeetThakur/Krono/releases/latest">
+    <img src="https://img.shields.io/badge/Download-Latest%20APK-2ea44f?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+  </a>
+</p>
+
+### Install Options:
+- **Direct APK:** Download `app-release.apk` from [GitHub Releases](https://github.com/MeetThakur/Krono/releases/latest) and install it on your device (Android 8.0+ / API 26+).
+- **Auto-Updates via Obtainium:**
+  1. Open [Obtainium](https://github.com/ImranR98/Obtainium) on your Android device.
+  2. Tap **Add App** and paste `https://github.com/MeetThakur/Krono`.
+  3. Obtainium will track updates and install new releases seamlessly.
 
 ---
 
