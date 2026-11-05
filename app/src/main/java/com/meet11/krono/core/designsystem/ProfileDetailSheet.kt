@@ -1,299 +1,174 @@
 package com.meet11.krono.core.designsystem
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.LinkOff
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.meet11.krono.core.theme.FlameRed
-import com.meet11.krono.core.theme.PillShape
+import com.meet11.krono.core.theme.Krono
+import com.meet11.krono.core.theme.Readout
 import com.meet11.krono.domain.model.Profile
+import com.meet11.krono.domain.model.RatingPoint
+import kotlinx.coroutines.launch
+import java.text.NumberFormat
+
+sealed interface RatingHistoryState {
+    data object Loading : RatingHistoryState
+    data object Unavailable : RatingHistoryState
+    data class Loaded(val points: List<RatingPoint>) : RatingHistoryState
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileDetailSheet(
-    profile: Profile?,
+    profile: Profile,
+    history: RatingHistoryState,
     onDismiss: () -> Unit,
     onDelete: (String) -> Unit
 ) {
-    if (profile == null) return
+    val c = Krono.colors
+    val context = LocalContext.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    val numbers = NumberFormat.getIntegerInstance()
+    var confirmDisconnect by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color(0xFF16181F),
-        dragHandle = null
+        containerColor = c.background,
+        dragHandle = { BottomSheetDefaults.DragHandle(color = c.lineStrong) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp)
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 12.dp)
                 .navigationBarsPadding()
         ) {
-            // Header with Close
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier
-                        .clip(PillShape)
-                        .background(profile.platform.cardBgColor.copy(alpha = 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(profile.platform.brandColor)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PlatformMark(profile.platform, size = 48.dp)
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("@${profile.username}", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary, maxLines = 1)
                     Text(
-                        text = profile.platform.displayName.uppercase(),
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
-                    )
-                }
-
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x14FFFFFF))
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "Close",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
+                        listOfNotNull(profile.platform.displayName, profile.rank?.replaceFirstChar { it.uppercase() }).joinToString(" · "),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = c.textSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
-            // Username + Rank
-            Text(
-                text = "@${profile.username}",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White
-            )
-
-            if (!profile.rank.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = profile.rank.replaceFirstChar { it.uppercase() },
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = profile.platform.brandColor
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                MetricTile("Rating", profile.rating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f), emphasized = true)
+                MetricTile("Peak", profile.maxRating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                MetricTile("Solved", numbers.format(profile.problemsSolved), Modifier.weight(1f))
+                MetricTile("Contests", numbers.format(profile.totalContests), Modifier.weight(1f))
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Rating Card
-            val cardShape = RoundedCornerShape(24.dp)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(cardShape)
-                    .background(Color(0xFF20232E))
-                    .border(1.dp, Color(0x1FFFFFFF), cardShape)
-                    .padding(20.dp)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "CURRENT RATING",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0x99FFFFFF),
-                        letterSpacing = 1.sp
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = (profile.rating ?: profile.problemsSolved).toString(),
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Black,
-                        color = profile.platform.brandColor,
-                        fontFamily = FontFamily.Monospace,
-                        lineHeight = 52.sp
-                    )
-
-                    val peak = profile.maxRating ?: profile.rating
-                    if (peak != null && peak > 0) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(PillShape)
-                                .background(profile.platform.brandColor.copy(alpha = 0.15f))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "Peak $peak",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = profile.platform.brandColor,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
+            Spacer(Modifier.height(16.dp))
+            when (history) {
+                is RatingHistoryState.Loaded ->
+                    if (history.points.size >= 2) {
+                        RatingChart(points = history.points, lineColor = profile.platform.brandColor)
+                    } else {
+                        HistoryNote("Not enough rated contests to draw a history yet.")
                     }
+                RatingHistoryState.Loading -> SkeletonBlock(Modifier.fillMaxWidth().height(214.dp))
+                RatingHistoryState.Unavailable -> HistoryNote("Rating history isn't available for ${profile.platform.displayName}.")
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                profile.platform.profileUrl(profile.username)?.let { url ->
+                    KronoButton(
+                        text = "View profile",
+                        onClick = { openUrl(context, url) },
+                        style = ButtonStyle.Secondary,
+                        trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Secondary Stats Row (Solved + Contests)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(cardShape)
-                        .background(Color(0xFF20232E))
-                        .border(1.dp, Color(0x1FFFFFFF), cardShape)
-                        .padding(16.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "SOLVED",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0x99FFFFFF)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${profile.problemsSolved}",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(cardShape)
-                        .background(Color(0xFF20232E))
-                        .border(1.dp, Color(0x1FFFFFFF), cardShape)
-                        .padding(16.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "CONTESTS",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0x99FFFFFF)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${profile.totalContests}",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White,
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Rating Chart
-            if (profile.rating != null && profile.rating > 0) {
-                Text(
-                    text = "RATING HISTORY",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color(0x99FFFFFF),
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                // Sample points ending at current rating
-                val nowMs = System.currentTimeMillis()
-                val mockPoints = listOf(
-                    RatingPoint(nowMs - 90L * 86400000L, (profile.rating * 0.85).toInt()),
-                    RatingPoint(nowMs - 60L * 86400000L, (profile.rating * 0.90).toInt()),
-                    RatingPoint(nowMs - 30L * 86400000L, (profile.rating * 0.95).toInt()),
-                    RatingPoint(nowMs, profile.rating)
-                )
-                RatingChart(
-                    points = mockPoints,
-                    lineColor = profile.platform.brandColor
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
-            // Remove Profile Button
-            Button(
-                onClick = {
-                    onDelete(profile.id)
-                    onDismiss()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = FlameRed.copy(alpha = 0.15f)),
-                shape = PillShape
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = null,
-                    tint = FlameRed,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Disconnect Profile",
-                    color = FlameRed,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
+                KronoButton(
+                    text = "Disconnect",
+                    onClick = { confirmDisconnect = true },
+                    style = ButtonStyle.Danger,
+                    leadingIcon = Icons.Rounded.LinkOff,
+                    modifier = Modifier.weight(1f)
                 )
             }
+        }
+    }
+
+    if (confirmDisconnect) {
+        AlertDialog(
+            onDismissRequest = { confirmDisconnect = false },
+            containerColor = c.surface,
+            title = { Text("Disconnect @${profile.username}?", style = MaterialTheme.typography.titleLarge) },
+            text = { Text("Krono will stop syncing this ${profile.platform.displayName} profile. You can add it again any time.", color = c.textSecondary) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDisconnect = false
+                    scope.launch { sheetState.hide() }.invokeOnCompletion { onDelete(profile.id) }
+                }) { Text("Disconnect", color = c.live) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDisconnect = false }) { Text("Cancel", color = c.textSecondary) }
+            }
+        )
+    }
+}
+
+@Composable
+private fun MetricTile(label: String, value: String, modifier: Modifier = Modifier, emphasized: Boolean = false) {
+    val c = Krono.colors
+    KronoCard(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
+        Caption(label)
+        Spacer(Modifier.height(6.dp))
+        Text(value, style = Readout.large, color = if (emphasized) c.textPrimary else c.textSecondary, maxLines = 1)
+    }
+}
+
+@Composable
+private fun HistoryNote(text: String) {
+    KronoCard(Modifier.fillMaxWidth(), color = Krono.colors.surfaceSunken) {
+        Box(Modifier.fillMaxWidth().padding(vertical = 12.dp), contentAlignment = Alignment.Center) {
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = Krono.colors.textSecondary)
         }
     }
 }

@@ -10,133 +10,95 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 
-@Immutable
-data class KronoExtraColors(
-    val codeforces: Color = PlatformCodeforces,
-    val leetcode: Color = PlatformLeetCode,
-    val codechef: Color = PlatformCodeChef,
-    val atcoder: Color = PlatformAtCoderDark,
-    val geeksforgeeks: Color = PlatformGeeksforGeeks,
-    val hackerrank: Color = PlatformHackerRank,
-    val topcoder: Color = PlatformTopCoder,
-    val codingninjas: Color = PlatformCodingNinjas,
-    val flameOrange: Color = FlameOrange,
-    val flameRed: Color = FlameRed,
-    val flameGold: Color = FlameGold,
-    val surfaceHighlight: Color = DarkSurfaceHigh,
-    val cardBorder: Color = DarkOutline
-)
+val LocalKronoColors = staticCompositionLocalOf { kronoDarkColors(ThemePaletteSeed.VOLT) }
 
-val LocalKronoColors = staticCompositionLocalOf { KronoExtraColors() }
-
-private val DefaultDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFF8FAFC),
-    onPrimary = Color(0xFF0F172A),
-    primaryContainer = Color(0xFF1E293B),
-    onPrimaryContainer = Color(0xFFF1F5F9),
-    secondary = Color(0xFF94A3B8),
-    onSecondary = Color(0xFF0F172A),
-    secondaryContainer = Color(0xFF334155),
-    onSecondaryContainer = Color(0xFFF8FAFC),
-    tertiary = Color(0xFF3B82F6),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFF1E3A8A),
-    onTertiaryContainer = Color(0xFFDBEAFE),
-    background = DarkBg,
-    onBackground = Color(0xFFF8FAFC),
-    surface = DarkSurface,
-    onSurface = Color(0xFFF8FAFC),
-    surfaceVariant = DarkSurfaceHigh,
-    onSurfaceVariant = Color(0xFF94A3B8),
-    surfaceContainerLowest = DarkSurfaceLowest,
-    surfaceContainerLow = DarkSurfaceLow,
-    surfaceContainer = DarkSurface,
-    surfaceContainerHigh = DarkSurfaceHigh,
-    surfaceContainerHighest = DarkSurfaceHighest,
-    outline = DarkOutline,
-    outlineVariant = DarkOutlineVariant
-)
-
-private val DefaultLightColorScheme = lightColorScheme(
-    primary = Slate900,
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFE2E8F0),
-    onPrimaryContainer = Slate900,
-    secondary = Color(0xFF475569),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE2E8F0),
-    onSecondaryContainer = Color(0xFF1E293B),
-    tertiary = Color(0xFF2563EB),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFDBEAFE),
-    onTertiaryContainer = Color(0xFF1E40AF),
-    background = LightBg,
-    onBackground = Slate900,
-    surface = LightSurface,
-    onSurface = Slate900,
-    surfaceVariant = LightSurfaceHigh,
-    onSurfaceVariant = Color(0xFF64748B),
-    surfaceContainerLowest = LightSurfaceLowest,
-    surfaceContainerLow = LightSurfaceLow,
-    surfaceContainer = LightSurface,
-    surfaceContainerHigh = LightSurfaceHigh,
-    surfaceContainerHighest = LightSurfaceHighest,
-    outline = LightOutline,
-    outlineVariant = LightOutlineVariant
-)
-
-fun getPaletteColorScheme(palette: ThemePaletteSeed, isDark: Boolean): ColorScheme {
-    val seed = palette.seedColor
-    return if (isDark) {
-        DefaultDarkColorScheme.copy(
-            primary = if (palette == ThemePaletteSeed.MONOCHROME) Color(0xFFF8FAFC) else seed,
-            primaryContainer = seed.copy(alpha = 0.25f),
-            onPrimaryContainer = Color.White
-        )
-    } else {
-        DefaultLightColorScheme.copy(
-            primary = if (palette == ThemePaletteSeed.MONOCHROME) Slate900 else seed,
-            primaryContainer = seed.copy(alpha = 0.15f),
-            onPrimaryContainer = seed
-        )
-    }
+/** Shorthand accessor: `Krono.colors.textPrimary`. */
+object Krono {
+    val colors: KronoColors
+        @Composable @ReadOnlyComposable get() = LocalKronoColors.current
 }
+
+private fun KronoColors.toMaterial(): ColorScheme {
+    val base = if (isDark) darkColorScheme() else lightColorScheme()
+    return base.copy(
+        primary = if (isDark) accent else textPrimary,
+        onPrimary = if (isDark) onAccent else background,
+        primaryContainer = surfaceRaised,
+        onPrimaryContainer = textPrimary,
+        secondary = textSecondary,
+        onSecondary = background,
+        secondaryContainer = surfaceRaised,
+        onSecondaryContainer = textPrimary,
+        tertiary = accentInk,
+        onTertiary = onAccent,
+        background = background,
+        onBackground = textPrimary,
+        surface = surface,
+        onSurface = textPrimary,
+        surfaceVariant = surfaceRaised,
+        onSurfaceVariant = textSecondary,
+        surfaceTint = Color.Transparent,
+        inverseSurface = inverse,
+        inverseOnSurface = onInverse,
+        surfaceContainerLowest = surfaceSunken,
+        surfaceContainerLow = surface,
+        surfaceContainer = surface,
+        surfaceContainerHigh = surfaceRaised,
+        surfaceContainerHighest = surfaceRaised,
+        outline = lineStrong,
+        outlineVariant = line,
+        error = live,
+        onError = Color.White,
+        scrim = Color.Black
+    )
+}
+
+/** Blends a Material You dynamic scheme into Krono tokens so custom components follow it too. */
+private fun KronoColors.withDynamic(scheme: ColorScheme): KronoColors = copy(
+    background = scheme.background,
+    surface = scheme.surfaceContainerLow,
+    surfaceRaised = scheme.surfaceContainerHigh,
+    surfaceSunken = scheme.surfaceContainerLowest,
+    line = scheme.outlineVariant,
+    lineStrong = scheme.outline,
+    textPrimary = scheme.onSurface,
+    textSecondary = scheme.onSurfaceVariant,
+    accent = scheme.primary,
+    onAccent = scheme.onPrimary,
+    accentInk = scheme.primary,
+    inverse = scheme.inverseSurface,
+    onInverse = scheme.inverseOnSurface
+)
 
 @Composable
 fun KronoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
-    palette: ThemePaletteSeed = ThemePaletteSeed.MONOCHROME,
+    dynamicColor: Boolean = false,
+    palette: ThemePaletteSeed = ThemePaletteSeed.VOLT,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val context = LocalContext.current
+    val useDynamic = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+
+    val (kronoColors, colorScheme) = remember(darkTheme, useDynamic, palette) {
+        val tokens = if (darkTheme) kronoDarkColors(palette) else kronoLightColors(palette)
+        if (useDynamic) {
+            val dyn = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            val merged = tokens.withDynamic(dyn)
+            merged to dyn.copy(surfaceTint = Color.Transparent)
+        } else {
+            tokens to tokens.toMaterial()
         }
-        else -> getPaletteColorScheme(palette, darkTheme)
     }
 
-    val extraColors = if (darkTheme) {
-        KronoExtraColors(
-            atcoder = PlatformAtCoderDark,
-            surfaceHighlight = DarkSurfaceHigh,
-            cardBorder = DarkOutline
-        )
-    } else {
-        KronoExtraColors(
-            atcoder = PlatformAtCoderLight,
-            surfaceHighlight = LightSurfaceHigh,
-            cardBorder = LightOutline
-        )
-    }
-
-    CompositionLocalProvider(LocalKronoColors provides extraColors) {
+    CompositionLocalProvider(LocalKronoColors provides kronoColors) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = Typography,
@@ -145,3 +107,6 @@ fun KronoTheme(
         )
     }
 }
+
+/** Readable content color (black/white) for an arbitrary fill such as a platform brand color. */
+fun contentOn(fill: Color): Color = if (fill.luminance() > 0.45f) Color(0xFF0B0B0C) else Color.White

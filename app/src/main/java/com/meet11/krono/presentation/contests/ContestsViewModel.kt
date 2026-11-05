@@ -2,32 +2,38 @@ package com.meet11.krono.presentation.contests
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.meet11.krono.core.ui.UiMessage
+import com.meet11.krono.core.ui.tickerFlow
+import com.meet11.krono.core.util.toUserMessage
 import com.meet11.krono.domain.model.Contest
-import com.meet11.krono.domain.model.ContestPhase
 import com.meet11.krono.domain.model.Platform
 import com.meet11.krono.domain.repository.ContestRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
-data class ContestSection(
-    val title: String,
-    val isLive: Boolean,
-    val contests: List<Contest>
-)
+enum class SectionKind(val title: String) { LIVE("Live now"), TODAY("Today"), TOMORROW("Tomorrow"), WEEK("This week"), LATER("Later") }
+
+data class ContestSection(val kind: SectionKind, val contests: List<Contest>)
 
 data class ContestsUiState(
+    val isLoaded: Boolean = false,
     val sections: List<ContestSection> = emptyList(),
-    val totalRoundsCount: Int = 0,
+    val totalCount: Int = 0,
+    val countsByPlatform: Map<Platform, Int> = emptyMap(),
     val selectedPlatform: Platform? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val isRefreshing: Boolean = false
 )
 
 @HiltViewModel
@@ -35,96 +41,70 @@ class ContestsViewModel @Inject constructor(
     private val contestRepository: ContestRepository
 ) : ViewModel() {
 
-    private val selectedPlatformFlow = MutableStateFlow<Platform?>(null)
-    private val isLoadingFlow = MutableStateFlow(false)
-    private val errorFlow = MutableStateFlow<String?>(null)
+    private val selectedPlatform = MutableStateFlow<Platform?>(null)
+    private val refreshing = MutableStateFlow(false)
+    private val messageChannel = Channel<UiMessage>(Channel.BUFFERED)
+    val messages = messageChannel.receiveAsFlow()
 
     val uiState: StateFlow<ContestsUiState> = combine(
         contestRepository.getContests(),
-        selectedPlatformFlow,
-        isLoadingFlow,
-        errorFlow
-    ) { contests, platform, loading, error ->
-        val nowMs = System.currentTimeMillis()
+        selectedPlatform,
+        refreshing,
+        tickerFlow()
+    ) { contests, platform, isRefreshing, now ->
+        val active = contests.filter { !it.isFinishedAt(now) }
+        val visible = active.filter { platform == null || it.platform == platform }.sortedBy { it.startTime }
 
-        // Filter out finished contests older than 1 hour, and filter by platform
-        val validContests = contests.filter { c ->
-            val end = if (c.endTime > 0L) c.endTime else (c.startTime + (c.durationSeconds ?: 0L) * 1000L)
-            end >= nowMs && (platform == null || c.platform == platform)
-        }.sortedBy { it.startTime }
-
-        val ongoing = mutableListOf<Contest>()
-        val today = mutableListOf<Contest>()
-        val tomorrow = mutableListOf<Contest>()
-        val thisWeek = mutableListOf<Contest>()
-        val later = mutableListOf<Contest>()
-
-        val nowCal = Calendar.getInstance()
-
-        validContests.forEach { c ->
-            val startMs = c.startTime
-            val endMs = if (c.endTime > 0L) c.endTime else (startMs + (c.durationSeconds ?: 0L) * 1000L)
-
-            val isRunning = c.phase == ContestPhase.CODING || c.isLive || (startMs <= nowMs && nowMs <= endMs)
-            if (isRunning) {
-                ongoing.add(c)
-                return@forEach
-            }
-
-            val cCal = Calendar.getInstance().apply { timeInMillis = startMs }
-            val sameYear = nowCal.get(Calendar.YEAR) == cCal.get(Calendar.YEAR)
-            val dayDiff = cCal.get(Calendar.DAY_OF_YEAR) - nowCal.get(Calendar.DAY_OF_YEAR)
-
-            if (sameYear && dayDiff == 0) {
-                today.add(c)
-            } else if (sameYear && dayDiff == 1) {
-                tomorrow.add(c)
-            } else if (sameYear && dayDiff in 2..7) {
-                thisWeek.add(c)
-            } else {
-                later.add(c)
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val grouped = visible.groupBy { c ->
+            if (c.isLiveAt(now)) SectionKind.LIVE
+            else when (ChronoUnit.DAYS.between(today, Instant.ofEpochMilli(c.startTime).atZone(zone).toLocalDate())) {
+                0L -> SectionKind.TODAY
+                1L -> SectionKind.TOMORROW
+                in 2L..6L -> SectionKind.WEEK
+                else -> SectionKind.LATER
             }
         }
 
-        val sections = mutableListOf<ContestSection>()
-        if (ongoing.isNotEmpty()) sections.add(ContestSection("LIVE NOW", true, ongoing))
-        if (today.isNotEmpty()) sections.add(ContestSection("TODAY", false, today))
-        if (tomorrow.isNotEmpty()) sections.add(ContestSection("TOMORROW", false, tomorrow))
-        if (thisWeek.isNotEmpty()) sections.add(ContestSection("THIS WEEK", false, thisWeek))
-        if (later.isNotEmpty()) sections.add(ContestSection("LATER", false, later))
-
         ContestsUiState(
-            sections = sections,
-            totalRoundsCount = validContests.size,
+            isLoaded = true,
+            sections = SectionKind.entries.mapNotNull { k -> grouped[k]?.let { ContestSection(k, it) } },
+            totalCount = visible.size,
+            countsByPlatform = active.groupingBy { it.platform }.eachCount(),
             selectedPlatform = platform,
-            isLoading = loading,
-            error = error
+            isRefreshing = isRefreshing
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ContestsUiState()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ContestsUiState())
 
     init {
-        syncContests()
+        refresh(userInitiated = false)
     }
 
     fun selectPlatform(platform: Platform?) {
-        selectedPlatformFlow.value = platform
+        selectedPlatform.value = platform
     }
 
-    fun toggleReminder(contestId: String, currentSet: Boolean) {
+    fun refresh(userInitiated: Boolean = true) {
+        if (refreshing.value) return
         viewModelScope.launch {
-            contestRepository.toggleReminder(contestId, !currentSet)
+            refreshing.value = userInitiated
+            val result = contestRepository.syncContests()
+            refreshing.value = false
+            result.onFailure {
+                if (userInitiated) messageChannel.send(UiMessage(it.toUserMessage("Couldn't refresh contests.")))
+            }
         }
     }
 
-    fun syncContests() {
+    fun toggleReminder(contest: Contest) {
         viewModelScope.launch {
-            isLoadingFlow.value = true
-            contestRepository.syncContests()
-            isLoadingFlow.value = false
+            val enable = !contest.reminderSet
+            val ok = contestRepository.setReminder(contest.id, enable)
+            when {
+                !ok -> messageChannel.send(UiMessage("Too close to the start to set a reminder"))
+                enable -> messageChannel.send(UiMessage("Reminder set for ${contest.name}"))
+            }
         }
     }
 }

@@ -12,6 +12,9 @@ import com.meet11.krono.core.theme.ThemePaletteSeed
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -25,8 +28,8 @@ enum class ThemeMode {
 
 data class ThemeSettings(
     val mode: ThemeMode = ThemeMode.SYSTEM,
-    val palette: ThemePaletteSeed = ThemePaletteSeed.MONOCHROME,
-    val dynamicColor: Boolean = true
+    val palette: ThemePaletteSeed = ThemePaletteSeed.VOLT,
+    val dynamicColor: Boolean = false
 )
 
 data class StreakSettings(
@@ -57,16 +60,16 @@ class PreferencesManager @Inject constructor(
         val KEY_LAST_ACTIVE_DATE = stringPreferencesKey("last_active_date")
     }
 
-    val themeSettings: Flow<ThemeSettings> = context.dataStore.data.map { prefs ->
+    val themeSettings: Flow<ThemeSettings> = context.dataStore.data.catchIo().map { prefs ->
         val modeStr = prefs[KEY_THEME_MODE] ?: ThemeMode.SYSTEM.name
         val mode = runCatching { ThemeMode.valueOf(modeStr) }.getOrDefault(ThemeMode.SYSTEM)
-        val paletteStr = prefs[KEY_THEME_PALETTE] ?: ThemePaletteSeed.MONOCHROME.name
-        val palette = runCatching { ThemePaletteSeed.valueOf(paletteStr) }.getOrDefault(ThemePaletteSeed.MONOCHROME)
-        val dynamicColor = prefs[KEY_DYNAMIC_COLOR] ?: true
+        val paletteStr = prefs[KEY_THEME_PALETTE] ?: ThemePaletteSeed.VOLT.name
+        val palette = runCatching { ThemePaletteSeed.valueOf(paletteStr) }.getOrDefault(ThemePaletteSeed.VOLT)
+        val dynamicColor = prefs[KEY_DYNAMIC_COLOR] ?: false
         ThemeSettings(mode, palette, dynamicColor)
     }
 
-    val streakSettings: Flow<StreakSettings> = context.dataStore.data.map { prefs ->
+    val streakSettings: Flow<StreakSettings> = context.dataStore.data.catchIo().map { prefs ->
         val currentStreak = prefs[KEY_CURRENT_STREAK] ?: 0
         val bestStreak = prefs[KEY_BEST_STREAK] ?: 0
         val dailyGoal = prefs[KEY_DAILY_GOAL] ?: 2
@@ -84,8 +87,13 @@ class PreferencesManager @Inject constructor(
         prefs[KEY_ONBOARDING_COMPLETED] ?: false
     }
 
-    val reminderLeadMinutes: Flow<Int> = context.dataStore.data.map { prefs ->
+    val reminderLeadMinutes: Flow<Int> = context.dataStore.data.catchIo().map { prefs ->
         prefs[KEY_REMINDER_LEAD_MINUTES] ?: 15
+    }.distinctUntilChanged()
+
+    /** A corrupted/unreadable prefs file must not crash the app — fall back to defaults. */
+    private fun Flow<Preferences>.catchIo(): Flow<Preferences> = catch { e ->
+        if (e is java.io.IOException) emit(emptyPreferences()) else throw e
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {

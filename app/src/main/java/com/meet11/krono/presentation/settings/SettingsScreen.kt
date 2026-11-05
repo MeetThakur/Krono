@@ -1,264 +1,292 @@
 package com.meet11.krono.presentation.settings
 
+import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.meet11.krono.core.designsystem.BentoCard
-import com.meet11.krono.core.designsystem.PillChip
-import com.meet11.krono.core.theme.PillShape
-import com.meet11.krono.core.theme.SleekCardShape
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.meet11.krono.BuildConfig
+import com.meet11.krono.core.designsystem.Caption
+import com.meet11.krono.core.designsystem.IconAction
+import com.meet11.krono.core.designsystem.KronoCard
+import com.meet11.krono.core.designsystem.SegmentedControl
+import com.meet11.krono.core.designsystem.Tag
+import com.meet11.krono.core.designsystem.TagTone
+import com.meet11.krono.core.designsystem.openUrl
+import com.meet11.krono.core.designsystem.pressable
+import com.meet11.krono.core.theme.Krono
+import com.meet11.krono.core.theme.Readout
 import com.meet11.krono.core.theme.ThemePaletteSeed
 import com.meet11.krono.data.preferences.ThemeMode
 
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.IconButton
+@Composable
+fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val theme = state.themeSettings
+    val c = Krono.colors
+    val context = LocalContext.current
+
+    // Re-read system permission state whenever the user comes back from system settings.
+    var resumeTick by remember { mutableIntStateOf(0) }
+    LifecycleResumeEffect(Unit) {
+        resumeTick++
+        onPauseOrDispose { }
+    }
+    val notificationsOn = remember(resumeTick) { notificationsAllowed(context) }
+    val exactAlarmsOn = remember(resumeTick) { exactAlarmsAllowed(context) }
+
+    Column(
+        modifier
+            .fillMaxSize()
+            .background(c.background)
+            .statusBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp)
+            .navigationBarsPadding()
+    ) {
+        Spacer(Modifier.height(12.dp))
+        IconAction(Icons.AutoMirrored.Rounded.ArrowBack, "Back", onClick = onBack, size = 44.dp, iconSize = 20.dp)
+        Spacer(Modifier.height(16.dp))
+        Text("Settings", style = MaterialTheme.typography.displaySmall, color = c.textPrimary)
+        Spacer(Modifier.height(28.dp))
+
+        Group("Appearance") {
+            Caption("Theme")
+            Spacer(Modifier.height(8.dp))
+            SegmentedControl(
+                options = ThemeMode.entries.toList(),
+                selected = theme.mode,
+                onSelect = viewModel::setThemeMode,
+                label = { it.name.lowercase().replaceFirstChar(Char::uppercase) }
+            )
+            Spacer(Modifier.height(20.dp))
+            Caption("Accent")
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                ThemePaletteSeed.entries.forEach { palette ->
+                    Swatch(
+                        palette = palette,
+                        selected = !theme.dynamicColor && theme.palette == palette,
+                        onClick = { viewModel.setThemePalette(palette) }
+                    )
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Spacer(Modifier.height(20.dp))
+                ToggleRow(
+                    title = "Match wallpaper",
+                    subtitle = "Use Material You colors instead of an accent",
+                    checked = theme.dynamicColor,
+                    onCheckedChange = viewModel::setDynamicColor
+                )
+            }
+        }
+
+        Group("Reminders") {
+            Caption("Notify me before a contest")
+            Spacer(Modifier.height(8.dp))
+            SegmentedControl(
+                options = listOf(5, 15, 30, 60),
+                selected = state.reminderLeadMinutes,
+                onSelect = viewModel::setReminderLeadMinutes,
+                label = { if (it == 60) "1 hour" else "$it min" }
+            )
+            Spacer(Modifier.height(16.dp))
+            StatusRow(
+                title = "Notifications",
+                ok = notificationsOn,
+                okText = "Allowed",
+                badText = "Blocked",
+                onFix = { openAppNotificationSettings(context) }
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Spacer(Modifier.height(12.dp))
+                StatusRow(
+                    title = "Exact timing",
+                    ok = exactAlarmsOn,
+                    okText = "On",
+                    badText = "Approximate",
+                    onFix = { openExactAlarmSettings(context) }
+                )
+            }
+        }
+
+        Group("About") {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Krono", style = MaterialTheme.typography.titleMedium, color = c.textPrimary)
+                    Text("Competitive programming, on the clock.", style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
+                }
+                Text("v${BuildConfig.VERSION_NAME}", style = Readout.tiny, color = c.textTertiary)
+            }
+            Spacer(Modifier.height(14.dp))
+            LinkRow("Source code") { openUrl(context, "https://github.com/MeetThakur/Krono") }
+        }
+        Spacer(Modifier.height(24.dp))
+    }
+}
 
 @Composable
-fun SettingsScreen(
-    viewModel: SettingsViewModel,
-    onBack: () -> Unit = {},
-    modifier: Modifier = Modifier
-) {
-    val uiState by viewModel.uiState.collectAsState()
-    val themeSettings = uiState.themeSettings
+private fun Group(title: String, content: @Composable () -> Unit) {
+    Text(title, style = MaterialTheme.typography.titleMedium, color = Krono.colors.textPrimary)
+    Spacer(Modifier.height(10.dp))
+    KronoCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(18.dp)) { content() }
+    Spacer(Modifier.height(28.dp))
+}
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+@Composable
+private fun Swatch(palette: ThemePaletteSeed, selected: Boolean, onClick: () -> Unit) {
+    val c = Krono.colors
+    val fill = if (!c.isDark && palette == ThemePaletteSeed.MONOCHROME) c.inverse else palette.fill
+    Column(
+        Modifier
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+            .pressable(pressedScale = 0.92f, role = androidx.compose.ui.semantics.Role.RadioButton, onClickLabel = palette.displayName, onClick = onClick)
+            .padding(horizontal = 2.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Header with back button
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+        Box(
+            Modifier
+                .size(38.dp)
+                .border(2.dp, if (selected) c.textPrimary else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
+                .padding(4.dp)
+                .background(fill, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.animation.AnimatedVisibility(
+                visible = selected,
+                enter = androidx.compose.animation.scaleIn() + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.fadeOut()
             ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    Text(
-                        text = "Personalize your experience",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Icon(Icons.Rounded.Check, contentDescription = null, tint = if (fill == c.inverse) c.onInverse else palette.onFill, modifier = Modifier.size(16.dp))
             }
         }
+        Spacer(Modifier.height(6.dp))
+        Text(palette.displayName, style = MaterialTheme.typography.labelSmall, color = if (selected) c.textPrimary else c.textTertiary)
+    }
+}
 
-        // 2. Theme Mode Card
-        item {
-            BentoCard(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                shape = SleekCardShape
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Appearance",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ThemeMode.entries.forEach { mode ->
-                            PillChip(
-                                selected = themeSettings.mode == mode,
-                                text = mode.name.lowercase().replaceFirstChar { it.uppercase() },
-                                onClick = { viewModel.setThemeMode(mode) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-
-                    // Dynamic Color Switch (Material You on Android 12+)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Dynamic Color (Material You)",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "Adapt theme colors to your wallpaper",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Switch(
-                                checked = themeSettings.dynamicColor,
-                                onCheckedChange = { viewModel.setDynamicColor(it) }
-                            )
-                        }
-                    }
-
-                    // Custom Palette Seeds
-                    if (!themeSettings.dynamicColor || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Color Accent",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            ThemePaletteSeed.entries.forEach { palette ->
-                                val isSelected = themeSettings.palette == palette
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(palette.seedColor)
-                                        .clickable { viewModel.setThemePalette(palette) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (isSelected) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Check,
-                                            contentDescription = "Selected",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+@Composable
+private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val c = Krono.colors
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = c.textSecondary)
         }
+        Spacer(Modifier.width(12.dp))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = c.accent,
+                checkedThumbColor = c.onAccent,
+                uncheckedTrackColor = c.surfaceRaised,
+                uncheckedBorderColor = c.lineStrong,
+                uncheckedThumbColor = c.textTertiary
+            )
+        )
+    }
+}
 
-        // 3. Notifications Lead Time Card
-        item {
-            BentoCard(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                shape = SleekCardShape
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Contest Reminders",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "How early should reminders fire before contest start?",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf(15 to "15 mins", 30 to "30 mins", 60 to "1 hour").forEach { (minutes, label) ->
-                            PillChip(
-                                selected = uiState.reminderLeadMinutes == minutes,
-                                text = label,
-                                onClick = { viewModel.setReminderLeadMinutes(minutes) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
+@Composable
+private fun StatusRow(title: String, ok: Boolean, okText: String, badText: String, onFix: () -> Unit) {
+    val c = Krono.colors
+    Row(
+        Modifier.fillMaxWidth().pressable(enabled = !ok, pressedScale = 0.99f, onClick = onFix),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, modifier = Modifier.weight(1f))
+        if (ok) {
+            Tag(okText, tone = TagTone.Success)
+        } else {
+            Tag(badText, tone = TagTone.Warning)
+            Spacer(Modifier.width(8.dp))
+            Text("Fix", style = MaterialTheme.typography.labelLarge, color = c.accentInk)
         }
+    }
+}
 
-        // 4. About Card
-        item {
-            BentoCard(
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = SleekCardShape
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Krono Native",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Version 1.6.5 (Build 165)\nNative Jetpack Compose with Material 3 Expressive",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
+@Composable
+private fun LinkRow(title: String, onClick: () -> Unit) {
+    val c = Krono.colors
+    Row(Modifier.fillMaxWidth().pressable(pressedScale = 0.99f, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary, modifier = Modifier.weight(1f))
+        Icon(Icons.AutoMirrored.Rounded.OpenInNew, contentDescription = null, tint = c.textTertiary, modifier = Modifier.size(16.dp))
+    }
+}
 
-        item {
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+private fun notificationsAllowed(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    ) return false
+    return androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+}
+
+private fun exactAlarmsAllowed(context: Context): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+        (context.getSystemService(Context.ALARM_SERVICE) as AlarmManager).canScheduleExactAlarms()
+
+private fun openAppNotificationSettings(context: Context) {
+    runCatching {
+        context.startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+}
+
+private fun openExactAlarmSettings(context: Context) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    runCatching {
+        context.startActivity(
+            Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${context.packageName}"))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
     }
 }

@@ -18,15 +18,17 @@ data class Contest(
     val reminderSet: Boolean = false,
     val reminderMinutesBefore: Int = 15
 ) {
-    val isLive: Boolean
-        get() {
-            val now = System.currentTimeMillis()
-            return now in startTime..endTime
-        }
+    /** End time, falling back to start + duration when the source omitted it. */
+    val effectiveEndTime: Long
+        get() = if (endTime > 0L) endTime else startTime + (durationSeconds ?: 0L) * 1000L
 
-    val isUpcoming: Boolean
-        get() = System.currentTimeMillis() < startTime
+    val durationMillis: Long
+        get() = (effectiveEndTime - startTime).coerceAtLeast(0L)
 
-    val isPast: Boolean
-        get() = System.currentTimeMillis() > endTime
+    /** Time-based only: a stored phase can be stale between syncs, so the clock is the source of truth. */
+    fun isLiveAt(now: Long): Boolean = now in startTime..effectiveEndTime
+
+    fun isUpcomingAt(now: Long): Boolean = now < startTime
+
+    fun isFinishedAt(now: Long): Boolean = now > effectiveEndTime
 }

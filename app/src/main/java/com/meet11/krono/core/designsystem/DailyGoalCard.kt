@@ -2,45 +2,41 @@ package com.meet11.krono.core.designsystem
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AddCircleOutline
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.TrackChanges
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.meet11.krono.core.theme.FlameGold
-import com.meet11.krono.core.theme.FlameOrange
-import com.meet11.krono.core.theme.PillShape
-import com.meet11.krono.core.theme.StatusSuccess
+import com.meet11.krono.core.theme.Krono
+import com.meet11.krono.core.theme.Readout
 import com.meet11.krono.domain.model.DailyGoal
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.min
+import kotlin.math.sin
 
 @Composable
 fun DailyGoalCard(
@@ -50,217 +46,139 @@ fun DailyGoalCard(
     modifier: Modifier = Modifier
 ) {
     val view = LocalView.current
-    val cardShape = RoundedCornerShape(24.dp)
-    val progressAnimated by animateFloatAsState(
-        targetValue = dailyGoal.progressRatio,
-        label = "daily_goal_progress"
-    )
+    val c = Krono.colors
 
-    val borderColor = if (dailyGoal.isCompleted) {
-        Color(0x66F59E0B)
-    } else {
-        Color(0x1FFFFFFF)
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(Color(0xFF16181F))
-            .border(1.dp, borderColor, cardShape)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Top Section (Header + Progress)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
-            ) {
-                // 1. Streak Info + Target Goal Pill
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (dailyGoal.currentStreak > 0) Color(0x33F59E0B) else Color(0x14FFFFFF)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "🔥",
-                                fontSize = 20.sp
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Column {
-                            Row(verticalAlignment = Alignment.Bottom) {
-                                Text(
-                                    text = "${dailyGoal.currentStreak} ",
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = if (dailyGoal.currentStreak > 0) FlameGold else Color.White,
-                                    fontFamily = FontFamily.Monospace
-                                )
-                                Text(
-                                    text = if (dailyGoal.currentStreak == 1) "day streak" else "days streak",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            }
-                            Text(
-                                text = "Best: ${dailyGoal.bestStreak} ${if (dailyGoal.bestStreak == 1) "day" else "days"}",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0x80FFFFFF)
-                            )
-                        }
-                    }
-
-                    // Target Pill: Goal X/day
-                    Row(
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(Color(0x14FFFFFF))
-                            .border(1.dp, Color(0x24FFFFFF), PillShape)
-                            .clickable {
-                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                onOpenTargetDialog()
-                            }
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.TrackChanges,
-                            contentDescription = "Target",
-                            tint = Color.White,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Goal ${dailyGoal.targetProblems}/day",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
+    KronoCard(modifier = modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            GoalDial(
+                solved = dailyGoal.solvedToday,
+                target = dailyGoal.targetProblems,
+                modifier = Modifier.size(104.dp)
+            )
+            Spacer(Modifier.width(18.dp))
+            Column(Modifier.weight(1f)) {
+                Caption("Streak")
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(dailyGoal.currentStreak.toString(), style = Readout.large, color = c.textPrimary)
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        if (dailyGoal.currentStreak == 1) "day" else "days",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = c.textSecondary,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 2. Solves Counter + Goal Met Badge
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Today: ",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "${dailyGoal.solvedToday}",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Black,
-                            color = if (dailyGoal.isCompleted) StatusSuccess else Color.White,
-                            fontFamily = FontFamily.Monospace
-                        )
-                        Text(
-                            text = " / ${dailyGoal.targetProblems} solved",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xB3FFFFFF)
-                        )
-                    }
-
-                    if (dailyGoal.isCompleted) {
-                        Row(
-                            modifier = Modifier
-                                .clip(PillShape)
-                                .background(StatusSuccess.copy(alpha = 0.16f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.CheckCircle,
-                                contentDescription = null,
-                                tint = StatusSuccess,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Goal Met!",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = StatusSuccess
-                            )
-                        }
-                    } else {
-                        val leftCount = (dailyGoal.targetProblems - dailyGoal.solvedToday).coerceAtLeast(0)
-                        Text(
-                            text = "$leftCount left",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0x80FFFFFF)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 3. Sleek Progress Bar
-                LinearProgressIndicator(
-                    progress = { progressAnimated },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(5.dp)
-                        .clip(PillShape),
-                    color = if (dailyGoal.isCompleted) StatusSuccess else (if (dailyGoal.currentStreak > 0) FlameOrange else Color.White),
-                    trackColor = Color(0x1AFFFFFF)
-                )
-            }
-
-            // Bottom Full-Width Action: +1 Log Practice Solve
-            HorizontalDivider(color = Color(0x14FFFFFF), thickness = 1.dp)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                        onLogSolve()
-                    }
-                    .padding(vertical = 14.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AddCircleOutline,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(Modifier.height(2.dp))
                 Text(
-                    text = "+1 Log Practice Solve",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    text = "Best ${dailyGoal.bestStreak} · Goal ${dailyGoal.targetProblems}/day",
+                    style = Readout.tiny,
+                    color = c.textTertiary
                 )
+                Spacer(Modifier.height(10.dp))
+                if (dailyGoal.isCompleted) {
+                    Tag("Goal met", tone = TagTone.Success)
+                } else {
+                    val left = (dailyGoal.targetProblems - dailyGoal.solvedToday).coerceAtLeast(0)
+                    Text(
+                        "$left more to keep the streak",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = c.textSecondary
+                    )
+                }
             }
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            KronoButton(
+                text = "Log a solve",
+                leadingIcon = Icons.Rounded.Add,
+                onClick = {
+                    view.performHapticFeedback(
+                        if (android.os.Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
+                    )
+                    onLogSolve()
+                },
+                modifier = Modifier.weight(1f),
+                height = 44.dp
+            )
+            IconAction(
+                icon = Icons.Rounded.Tune,
+                contentDescription = "Change daily goal",
+                onClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    onOpenTargetDialog()
+                },
+                size = 44.dp
+            )
         }
     }
 }
+
+/**
+ * Bezel-style progress dial: one tick per problem in the target (continuous arc for
+ * large targets), filled clockwise from 12 o'clock.
+ */
+@Composable
+private fun GoalDial(solved: Int, target: Int, modifier: Modifier = Modifier) {
+    val c = Krono.colors
+    val ratio = if (target <= 0) 0f else (solved.toFloat() / target).coerceIn(0f, 1f)
+    val animated by animateFloatAsState(ratio, tween(700), label = "dial")
+    val done = solved >= target && target > 0
+    val fill = if (done) c.success else c.accent
+    val track = if (c.isDark) c.surfaceRaised else c.line
+    val minor = c.lineStrong
+
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = 9.dp.toPx()
+            val radius = min(size.width, size.height) / 2f - stroke / 2f - 6.dp.toPx()
+            val topLeft = Offset(center.x - radius, center.y - radius)
+            val arcSize = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+
+            // Outer minute ticks — the chronograph bezel.
+            val outer = min(size.width, size.height) / 2f
+            for (i in 0 until 60) {
+                val angle = (i / 60f) * 2f * PI.toFloat() - PI.toFloat() / 2f
+                val len = if (i % 5 == 0) 4.dp.toPx() else 2.dp.toPx()
+                val start = Offset(center.x + cos(angle) * (outer - len), center.y + sin(angle) * (outer - len))
+                val end = Offset(center.x + cos(angle) * outer, center.y + sin(angle) * outer)
+                drawLine(minor, start, end, strokeWidth = 1.dp.toPx())
+            }
+
+            if (target in 1..12) {
+                val gap = 8f
+                val sweep = 360f / target
+                for (i in 0 until target) {
+                    val startAngle = -90f + i * sweep + gap / 2f
+                    drawArc(track, startAngle, sweep - gap, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
+                }
+                // Fill segments progressively so the animation sweeps across tick boundaries.
+                val filledSweep = animated * 360f
+                for (i in 0 until target) {
+                    val segStart = i * sweep
+                    val segFill = (filledSweep - segStart).coerceIn(0f, sweep)
+                    if (segFill > gap / 2f) {
+                        drawArc(
+                            fill, -90f + segStart + gap / 2f, (segFill - gap).coerceAtLeast(0.5f), false,
+                            topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round)
+                        )
+                    }
+                }
+            } else {
+                drawArc(track, -90f, 360f, false, topLeft, arcSize, style = Stroke(stroke))
+                if (animated > 0f) {
+                    drawArc(fill, -90f, animated * 360f, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
+                }
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            if (done) {
+                androidx.compose.material3.Icon(Icons.Rounded.Check, contentDescription = null, tint = c.success, modifier = Modifier.size(18.dp))
+            }
+            Text("$solved/$target", style = Readout.medium, color = c.textPrimary)
+            Text("TODAY", style = Readout.caption, color = c.textTertiary)
+        }
+    }
+}
+

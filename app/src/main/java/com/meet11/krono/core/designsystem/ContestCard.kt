@@ -4,297 +4,344 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.CalendarContract
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.EventAvailable
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsNone
-import androidx.compose.material.icons.rounded.Schedule
-import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.meet11.krono.core.theme.PillShape
+import com.meet11.krono.core.theme.Krono
+import com.meet11.krono.core.theme.Readout
+import com.meet11.krono.core.util.Remaining
+import com.meet11.krono.core.util.formatClock
+import com.meet11.krono.core.util.formatCountdownShort
+import com.meet11.krono.core.util.formatDuration
+import com.meet11.krono.core.util.rememberNow
+import com.meet11.krono.core.util.rememberTimeFormatter
 import com.meet11.krono.domain.model.Contest
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
+/** Full contest card used on the Contests tab. */
 @Composable
 fun ContestCard(
     contest: Contest,
-    onToggleReminder: (Boolean) -> Unit,
+    onToggleReminder: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val cardShape = RoundedCornerShape(24.dp)
+    val c = Krono.colors
+    val fmt = rememberTimeFormatter()
+    // Far-off contests only need a coarse tick; the last day counts down by the second.
+    val tickMs = if (contest.startTime - System.currentTimeMillis() < 86_400_000L) 1_000L else 30_000L
+    val now by rememberNow(tickMs)
+    val live = contest.isLiveAt(now)
 
-    val now = System.currentTimeMillis()
-    val end = if (contest.endTime > 0L) contest.endTime else (contest.startTime + (contest.durationSeconds ?: 0L) * 1000L)
-    val isLive = contest.phase == com.meet11.krono.domain.model.ContestPhase.CODING || contest.isLive || (contest.startTime <= now && now <= end)
-
-    val borderColor = if (isLive) Color(0x73EF4444) else Color(0x1FFFFFFF)
-
-    val dateFormat = SimpleDateFormat("MMM d, HH:mm", Locale.US)
-    val dateStr = dateFormat.format(Date(contest.startTime))
-
-    val durationSec = contest.durationSeconds ?: ((end - contest.startTime) / 1000L).coerceAtLeast(0L)
-    val hours = durationSec / 3600
-    val minutes = (durationSec % 3600) / 60
-    val durationStr = if (hours > 0 && minutes > 0) "${hours}h ${minutes}m"
-    else if (hours > 0) "${hours}h"
-    else "${minutes}m"
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .background(Color(0xFF16181F))
-            .border(1.dp, borderColor, cardShape)
-            .clickable {
-                if (!contest.url.isNullOrBlank()) {
-                    runCatching {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(contest.url)))
-                    }
-                }
-            }
-            .padding(18.dp)
+    KronoCard(
+        modifier = modifier.fillMaxWidth(),
+        onClick = { openUrl(context, contest.url) },
+        borderColor = if (live) c.live.copy(alpha = 0.45f) else c.line,
+        contentPadding = PaddingValues(16.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // 1. Top Row: Platform Badge + Date/Live Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Platform Badge: Dot + Name
-                Row(
-                    modifier = Modifier
-                        .clip(PillShape)
-                        .background(Color(0x14FFFFFF))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(contest.platform.brandColor)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = contest.platform.displayName.uppercase(),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color(0xB3FFFFFF),
-                        letterSpacing = 0.5.sp
-                    )
-                }
-
-                // Live Now or Date Chip
-                if (isLive) {
-                    Row(
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(Color(0x26EF4444))
-                            .padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEF4444))
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "LIVE NOW",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFFEF4444),
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(Color(0x14FFFFFF))
-                            .padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarMonth,
-                            contentDescription = null,
-                            tint = Color(0xB3FFFFFF),
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = dateStr,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xB3FFFFFF),
-                            fontFamily = FontFamily.Monospace
-                        )
-                    }
-                }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            PlatformMark(contest.platform, size = 34.dp)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.textSecondary)
+                Text(
+                    text = if (live) "Ends ${fmt.time(contest.effectiveEndTime)}" else fmt.dayAndTime(contest.startTime),
+                    style = Readout.tiny,
+                    color = c.textTertiary
+                )
             }
+            if (live) {
+                Tag("Live", tone = TagTone.Live, pulse = true)
+            } else {
+                Tag(formatDuration(contest.durationMillis), uppercase = false)
+            }
+        }
 
-            // 2. Contest Title
-            Text(
-                text = contest.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Black,
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                lineHeight = 22.sp
-            )
+        Spacer(Modifier.height(14.dp))
+        Text(
+            text = contest.name,
+            style = MaterialTheme.typography.titleMedium,
+            color = c.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(14.dp))
 
-            // 3. Footer Row: Duration + Calendar + Reminder + Open
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Duration Pill
-                Row(
-                    modifier = Modifier
-                        .clip(PillShape)
-                        .background(Color(0x0FFFFFFF))
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Schedule,
-                        contentDescription = null,
-                        tint = Color(0x99FFFFFF),
-                        modifier = Modifier.size(13.dp)
+        if (live) {
+            val elapsed = (now - contest.startTime).toFloat() / contest.durationMillis.coerceAtLeast(1L)
+            ProgressTrack(progress = elapsed, color = c.live)
+            Spacer(Modifier.height(14.dp))
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Caption(if (live) "Time left" else "Starts in")
+                Spacer(Modifier.height(2.dp))
+                val remaining = if (live) contest.effectiveEndTime - now else contest.startTime - now
+                Text(
+                    text = if (live || remaining < 86_400_000L) formatClock(remaining) else formatCountdownShort(remaining),
+                    style = Readout.medium,
+                    color = if (live) c.live else c.textPrimary
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (!live) {
+                    IconAction(
+                        icon = Icons.Rounded.EventAvailable,
+                        contentDescription = "Add to calendar",
+                        onClick = { exportToCalendar(context, contest) }
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = durationStr,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0x99FFFFFF)
+                    IconAction(
+                        icon = if (contest.reminderSet) Icons.Rounded.Notifications else Icons.Rounded.NotificationsNone,
+                        contentDescription = if (contest.reminderSet) "Cancel reminder" else "Set reminder",
+                        active = contest.reminderSet,
+                        onClick = onToggleReminder
                     )
                 }
-
-                // Action Buttons
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Calendar Export Icon Button
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x14FFFFFF))
-                            .border(1.dp, Color(0x1FFFFFFF), CircleShape)
-                            .clickable { exportToCalendar(context, contest) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarMonth,
-                            contentDescription = "Add to Calendar",
-                            tint = Color(0xB3FFFFFF),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    // Reminder Bell Icon Button
-                    val bellBg = if (contest.reminderSet) Color(0x2EFFFFFF) else Color(0x14FFFFFF)
-                    val bellBorder = if (contest.reminderSet) Color.White else Color(0x1FFFFFFF)
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(bellBg)
-                            .border(1.dp, bellBorder, CircleShape)
-                            .clickable { onToggleReminder(contest.reminderSet) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (contest.reminderSet) Icons.Rounded.Notifications else Icons.Rounded.NotificationsNone,
-                            contentDescription = "Toggle Reminder",
-                            tint = if (contest.reminderSet) Color.White else Color(0xB3FFFFFF),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    // Open White Button
-                    Row(
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(Color.White)
-                            .clickable {
-                                if (!contest.url.isNullOrBlank()) {
-                                    runCatching {
-                                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(contest.url)))
-                                    }
-                                }
-                            }
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Open",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.Black
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(13.dp)
-                        )
-                    }
-                }
+                IconAction(
+                    icon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    contentDescription = "Open contest page",
+                    onClick = { openUrl(context, contest.url) }
+                )
             }
         }
     }
 }
 
-private fun exportToCalendar(context: Context, contest: Contest) {
+/** Compact row used in lists on Home. */
+@Composable
+fun ContestRow(
+    contest: Contest,
+    onToggleReminder: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val c = Krono.colors
+    val fmt = rememberTimeFormatter()
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .pressable(pressedScale = 0.99f, shape = com.meet11.krono.core.theme.TileShape) { openUrl(context, contest.url) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlatformMark(contest.platform, size = 36.dp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            // Two lines: names like "Round 1133 (Div. 1)" vs "(Div. 2)" differ only at the end.
+            Text(
+                contest.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = c.textPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(fmt.dayAndTime(contest.startTime), style = Readout.tiny, color = c.textTertiary, maxLines = 1)
+        }
+        Spacer(Modifier.width(10.dp))
+        CountdownText(targetMs = contest.startTime)
+        Spacer(Modifier.width(10.dp))
+        IconAction(
+            icon = if (contest.reminderSet) Icons.Rounded.Notifications else Icons.Rounded.NotificationsNone,
+            contentDescription = if (contest.reminderSet) "Cancel reminder" else "Set reminder",
+            active = contest.reminderSet,
+            onClick = onToggleReminder,
+            size = 34.dp,
+            iconSize = 16.dp
+        )
+    }
+}
+
+/** Self-ticking short countdown. Only this Text recomposes each tick. */
+@Composable
+fun CountdownText(targetMs: Long, modifier: Modifier = Modifier) {
+    val now by rememberNow(if (targetMs - System.currentTimeMillis() < 3_600_000L) 1_000L else 30_000L)
+    Text(
+        text = formatCountdownShort(targetMs - now),
+        style = Readout.small,
+        color = Krono.colors.textSecondary,
+        modifier = modifier,
+        maxLines = 1
+    )
+}
+
+/**
+ * The signature element: a chronograph readout counting down to the next contest
+ * (or to the end of a running one).
+ */
+@Composable
+fun NextContestHero(
+    contest: Contest,
+    onToggleReminder: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val c = Krono.colors
+    val fmt = rememberTimeFormatter()
+    val now by rememberNow(1_000L)
+    val live = contest.isLiveAt(now)
+    val remaining = Remaining.of(if (live) contest.effectiveEndTime - now else contest.startTime - now)
+
+    KronoCard(
+        modifier = modifier.fillMaxWidth(),
+        onClick = { openUrl(context, contest.url) },
+        borderColor = if (live) c.live.copy(alpha = 0.45f) else c.lineStrong,
+        contentPadding = PaddingValues(20.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (live) Tag("Live now", tone = TagTone.Live, pulse = true)
+            else Tag("Next contest", tone = TagTone.Accent)
+            Spacer(Modifier.weight(1f))
+            Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.textSecondary)
+            Spacer(Modifier.width(6.dp))
+            Dot(contest.platform.brandColor, 7.dp)
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = contest.name,
+            style = MaterialTheme.typography.titleLarge,
+            color = c.textPrimary,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = if (live) "Ends ${fmt.dayAndTime(contest.effectiveEndTime)}"
+            else "${fmt.dayAndTime(contest.startTime)} · ${formatDuration(contest.durationMillis)}",
+            style = Readout.tiny,
+            color = c.textTertiary
+        )
+
+        Spacer(Modifier.height(20.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            val digitColor = if (live) c.live else c.textPrimary
+            ClockUnit(remaining.days, "days", digitColor, dim = remaining.days == 0L)
+            ClockSeparator()
+            ClockUnit(remaining.hours, "hrs", digitColor, dim = remaining.days == 0L && remaining.hours == 0L)
+            ClockSeparator()
+            ClockUnit(remaining.minutes, "min", digitColor)
+            ClockSeparator()
+            ClockUnit(remaining.seconds, "sec", c.accentInk, animate = true)
+        }
+
+        if (live) {
+            Spacer(Modifier.height(16.dp))
+            val elapsed = (now - contest.startTime).toFloat() / contest.durationMillis.coerceAtLeast(1L)
+            ProgressTrack(progress = elapsed, color = c.live)
+        }
+
+        Spacer(Modifier.height(18.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            KronoButton(
+                text = if (live) "Enter contest" else "Open",
+                onClick = { openUrl(context, contest.url) },
+                style = if (live) ButtonStyle.Inverse else ButtonStyle.Primary,
+                trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
+                modifier = Modifier.weight(1f),
+                height = 44.dp
+            )
+            if (!live) {
+                IconAction(
+                    icon = Icons.Rounded.EventAvailable,
+                    contentDescription = "Add to calendar",
+                    onClick = { exportToCalendar(context, contest) },
+                    size = 44.dp
+                )
+                IconAction(
+                    icon = if (contest.reminderSet) Icons.Rounded.Notifications else Icons.Rounded.NotificationsNone,
+                    contentDescription = if (contest.reminderSet) "Cancel reminder" else "Set reminder",
+                    active = contest.reminderSet,
+                    onClick = onToggleReminder,
+                    size = 44.dp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClockUnit(
+    value: Long,
+    label: String,
+    color: androidx.compose.ui.graphics.Color,
+    dim: Boolean = false,
+    animate: Boolean = false
+) {
+    val c = Krono.colors
+    Column(horizontalAlignment = Alignment.Start) {
+        val text = value.toString().padStart(2, '0')
+        val tint = if (dim) c.textTertiary else color
+        if (animate) {
+            AnimatedContent(
+                targetState = text,
+                transitionSpec = {
+                    (slideInVertically(tween(220)) { -it / 2 } + fadeIn(tween(220))) togetherWith
+                        (slideOutVertically(tween(220)) { it / 2 } + fadeOut(tween(160)))
+                },
+                label = "sec"
+            ) { t -> Text(t, style = Readout.hero, color = tint) }
+        } else {
+            Text(text, style = Readout.hero, color = tint)
+        }
+        Text(label.uppercase(), style = Readout.caption, color = c.textTertiary)
+    }
+}
+
+@Composable
+private fun ClockSeparator() {
+    Text(
+        ":",
+        style = Readout.hero,
+        color = Krono.colors.textTertiary,
+        modifier = Modifier.padding(horizontal = 4.dp).padding(bottom = 14.dp)
+    )
+}
+
+fun openUrl(context: Context, url: String?) {
+    if (url.isNullOrBlank()) return
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
+fun exportToCalendar(context: Context, contest: Contest) {
     runCatching {
         val intent = Intent(Intent.ACTION_INSERT).apply {
             data = CalendarContract.Events.CONTENT_URI
             putExtra(CalendarContract.Events.TITLE, contest.name)
             putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, contest.startTime)
-            val endTimeMs = if (contest.endTime > 0L) contest.endTime else (contest.startTime + (contest.durationSeconds ?: 0L) * 1000L)
-            putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTimeMs)
-            putExtra(CalendarContract.Events.DESCRIPTION, "Competitive Programming Contest on ${contest.platform.displayName}: ${contest.url ?: ""}")
+            putExtra(CalendarContract.EXTRA_EVENT_END_TIME, contest.effectiveEndTime)
+            putExtra(CalendarContract.Events.EVENT_LOCATION, contest.url ?: contest.platform.displayName)
+            putExtra(CalendarContract.Events.DESCRIPTION, "${contest.platform.displayName} contest · ${contest.url.orEmpty()}")
         }
         context.startActivity(intent)
     }

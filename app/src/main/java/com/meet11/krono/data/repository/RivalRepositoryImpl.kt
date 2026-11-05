@@ -2,186 +2,84 @@ package com.meet11.krono.data.repository
 
 import com.meet11.krono.data.local.dao.RivalDao
 import com.meet11.krono.data.local.entity.RivalEntity
-import com.meet11.krono.data.remote.api.CodeChefApi
-import com.meet11.krono.data.remote.api.CodeforcesApi
-import com.meet11.krono.data.remote.api.LeetCodeApi
-import com.meet11.krono.data.remote.dto.GraphQLRequest
-import com.meet11.krono.data.remote.parser.CodeChefProfileParser
+import com.meet11.krono.data.remote.FetchedProfile
+import com.meet11.krono.data.remote.ProfileFetcher
 import com.meet11.krono.domain.model.Platform
 import com.meet11.krono.domain.model.Rival
 import com.meet11.krono.domain.repository.RivalRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class RivalRepositoryImpl @Inject constructor(
     private val rivalDao: RivalDao,
-    private val codeforcesApi: CodeforcesApi,
-    private val leetCodeApi: LeetCodeApi,
-    private val codeChefApi: CodeChefApi
+    private val fetcher: ProfileFetcher
 ) : RivalRepository {
 
-    override fun getRivals(): Flow<List<Rival>> {
-        return rivalDao.getAllRivals().map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
+    override fun getRivals(): Flow<List<Rival>> =
+        rivalDao.getAllRivals().map { list -> list.map { it.toDomain() } }
 
-    override fun getRivalsByPlatform(platform: Platform): Flow<List<Rival>> {
-        return rivalDao.getRivalsByPlatform(platform.id).map { entities ->
-            entities.map { it.toDomain() }
-        }
-    }
+    override fun getRivalsByPlatform(platform: Platform): Flow<List<Rival>> =
+        rivalDao.getRivalsByPlatform(platform.id).map { list -> list.map { it.toDomain() } }
 
     override suspend fun addRival(platform: Platform, handle: String): Result<Rival> = runCatching {
-        val trimmedHandle = handle.trim()
-        val id = "${platform.id}-${trimmedHandle.lowercase()}"
+        val trimmed = handle.trim().removePrefix("@")
+        require(trimmed.isNotEmpty()) { "Enter a handle" }
+        val fetched = fetcher.fetch(platform, trimmed)
+        val entity = fetched.toEntity("${platform.id}-${fetched.username.lowercase()}")
+        rivalDao.upsertRival(entity)
+        entity.toDomain()
+    }
 
-        val rival = when (platform) {
-            Platform.CODEFORCES -> fetchCodeforcesRival(id, trimmedHandle)
-            Platform.LEETCODE -> fetchLeetCodeRival(id, trimmedHandle)
-            Platform.CODECHEF -> fetchCodeChefRival(id, trimmedHandle)
-            else -> RivalEntity(
-                id = id,
-                platformId = platform.id,
-                username = trimmedHandle,
-                displayName = trimmedHandle,
-                lastUpdated = System.currentTimeMillis()
-            )
+    override suspend fun deleteRival(id: String) = rivalDao.deleteRival(id)
+
+    override suspend fun refreshRivals(): Result<Unit> = runCatching {
+        val current = rivalDao.getAllRivals().first()
+        if (current.isEmpty()) return@runCatching
+        val results = supervisorScope {
+            current.map { r ->
+                async { runCatching { fetcher.fetch(Platform.fromId(r.platformId), r.username).toEntity(r.id) } }
+            }.awaitAll()
         }
-
-        rivalDao.upsertRival(rival)
-        rival.toDomain()
+        val updated = results.mapNotNull { it.getOrNull() }
+        if (updated.isNotEmpty()) rivalDao.upsertRivals(updated)
+        if (updated.isEmpty()) throw results.first().exceptionOrNull() ?: IllegalStateException("Refresh failed")
     }
 
-    override suspend fun deleteRival(id: String) {
-        rivalDao.deleteRival(id)
-    }
+    private fun FetchedProfile.toEntity(id: String) = RivalEntity(
+        id = id,
+        platformId = platform.id,
+        username = username,
+        displayName = displayName,
+        avatar = avatar,
+        rating = rating,
+        maxRating = maxRating,
+        rank = rank,
+        problemsSolved = problemsSolved,
+        totalContests = totalContests,
+        lastUpdated = System.currentTimeMillis()
+    )
 
-    private suspend fun fetchCodeforcesRival(id: String, handle: String): RivalEntity {
-        val infoResponse = codeforcesApi.getUserInfo(handle)
-        val user = infoResponse.result?.firstOrNull() ?: throw IllegalArgumentException("User not found on Codeforces")
-
-        val subsResponse = runCatching { codeforcesApi.getUserSubmissions(handle, 1, 1000) }.getOrNull()
-        val solvedCount = subsResponse?.result?.filter { it.verdict == "OK" }?.distinctBy { it.contestId }?.size ?: 0
-
-        val ratingHistory = runCatching { codeforcesApi.getUserRating(handle) }.getOrNull()
-        val contestCount = ratingHistory?.result?.size ?: 0
-
-        return RivalEntity(
-            id = id,
-            platformId = Platform.CODEFORCES.id,
-            username = user.handle,
-            displayName = listOfNotNull(user.firstName, user.lastName).joinToString(" ").ifBlank { user.handle },
-            avatar = user.titlePhoto ?: user.avatar,
-            rating = user.rating,
-            maxRating = user.maxRating,
-            rank = user.rank,
-            problemsSolved = solvedCount,
-            totalContests = contestCount,
-            lastUpdated = System.currentTimeMillis()
-        )
-    }
-
-    private suspend fun fetchLeetCodeRival(id: String, handle: String): RivalEntity {
-        val userQuery = """
-            query getUserProfile(${'$'}username: String!) {
-              matchedUser(username: ${'$'}username) {
-                username
-                profile {
-                  realName
-                  userAvatar
-                  ranking
-                }
-                submitStats {
-                  acSubmissionNum {
-                    difficulty
-                    count
-                  }
-                }
-              }
-            }
-        """.trimIndent()
-
-        val variables = buildJsonObject { put("username", handle) }
-        val userResponse = leetCodeApi.getUserProfile(GraphQLRequest(userQuery, variables))
-        val matchedUser = userResponse.data?.matchedUser ?: throw IllegalArgumentException("User not found on LeetCode")
-
-        val solvedTotal = matchedUser.submitStats?.acSubmissionNum?.firstOrNull { it.difficulty == "All" }?.count
-            ?: matchedUser.submitStats?.acSubmissionNum?.sumOf { it.count } ?: 0
-
-        val contestQuery = """
-            query userContestRankingInfo(${'$'}username: String!) {
-              userContestRanking(username: ${'$'}username) {
-                attendedContestsCount
-                rating
-                globalRanking
-              }
-            }
-        """.trimIndent()
-
-        val contestResponse = runCatching {
-            leetCodeApi.getContestData(GraphQLRequest(contestQuery, variables))
-        }.getOrNull()
-
-        val contestRanking = contestResponse?.data?.userContestRanking
-        val ratingInt = contestRanking?.rating?.toInt()
-
-        return RivalEntity(
-            id = id,
-            platformId = Platform.LEETCODE.id,
-            username = matchedUser.username,
-            displayName = matchedUser.profile?.realName?.ifBlank { matchedUser.username } ?: matchedUser.username,
-            avatar = matchedUser.profile?.userAvatar,
-            rating = ratingInt,
-            maxRating = ratingInt,
-            rank = contestRanking?.globalRanking?.let { "#$it" } ?: matchedUser.profile?.ranking?.let { "#$it" },
-            problemsSolved = solvedTotal,
-            totalContests = contestRanking?.attendedContestsCount ?: 0,
-            lastUpdated = System.currentTimeMillis()
-        )
-    }
-
-    private suspend fun fetchCodeChefRival(id: String, handle: String): RivalEntity {
-        val responseBody = codeChefApi.getUserProfilePage(handle)
-        val html = responseBody.string()
-        val parsed = CodeChefProfileParser.parse(html, handle)
-
-        return RivalEntity(
-            id = id,
-            platformId = Platform.CODECHEF.id,
-            username = parsed.username,
-            displayName = parsed.displayName,
-            avatar = parsed.avatar,
-            rating = parsed.rating,
-            maxRating = parsed.maxRating,
-            rank = parsed.rank,
-            problemsSolved = parsed.problemsSolved,
-            totalContests = parsed.totalContests,
-            lastUpdated = System.currentTimeMillis()
-        )
-    }
-
-    private fun RivalEntity.toDomain(): Rival {
-        return Rival(
-            id = id,
-            platform = Platform.fromId(platformId),
-            username = username,
-            displayName = displayName,
-            avatar = avatar,
-            rating = rating,
-            maxRating = maxRating,
-            rank = rank,
-            problemsSolved = problemsSolved,
-            totalSubmissions = totalSubmissions,
-            totalContests = totalContests,
-            badges = badges?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
-            lastUpdated = lastUpdated,
-            isStale = isStale
-        )
-    }
+    private fun RivalEntity.toDomain() = Rival(
+        id = id,
+        platform = Platform.fromId(platformId),
+        username = username,
+        displayName = displayName,
+        avatar = avatar,
+        rating = rating,
+        maxRating = maxRating,
+        rank = rank,
+        problemsSolved = problemsSolved,
+        totalSubmissions = totalSubmissions,
+        totalContests = totalContests,
+        badges = badges?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
+        lastUpdated = lastUpdated,
+        isStale = isStale
+    )
 }

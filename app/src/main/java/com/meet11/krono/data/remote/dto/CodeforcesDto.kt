@@ -38,7 +38,16 @@ data class CodeforcesSubmissionDto(
     val id: Long,
     val contestId: Int? = null,
     val creationTimeSeconds: Long,
-    val verdict: String? = null
+    val verdict: String? = null,
+    val problem: CodeforcesProblemDto? = null
+)
+
+@Serializable
+data class CodeforcesProblemDto(
+    val contestId: Int? = null,
+    val problemsetName: String? = null,
+    val index: String? = null,
+    val name: String? = null
 )
 
 @Serializable

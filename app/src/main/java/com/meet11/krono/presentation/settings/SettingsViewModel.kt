@@ -6,6 +6,7 @@ import com.meet11.krono.core.theme.ThemePaletteSeed
 import com.meet11.krono.data.preferences.PreferencesManager
 import com.meet11.krono.data.preferences.ThemeMode
 import com.meet11.krono.data.preferences.ThemeSettings
+import com.meet11.krono.domain.repository.ContestRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,41 +22,33 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val contestRepository: ContestRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = combine(
         preferencesManager.themeSettings,
         preferencesManager.reminderLeadMinutes
-    ) { theme, leadMinutes ->
-        SettingsUiState(theme, leadMinutes)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsUiState()
-    )
+    ) { theme, lead -> SettingsUiState(theme, lead) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
-    fun setThemeMode(mode: ThemeMode) {
-        viewModelScope.launch {
-            preferencesManager.setThemeMode(mode)
-        }
+    fun setThemeMode(mode: ThemeMode) = launch { preferencesManager.setThemeMode(mode) }
+
+    fun setThemePalette(palette: ThemePaletteSeed) = launch {
+        preferencesManager.setThemePalette(palette)
+        // Picking an accent implies the user wants it visible.
+        preferencesManager.setDynamicColor(false)
     }
 
-    fun setThemePalette(palette: ThemePaletteSeed) {
-        viewModelScope.launch {
-            preferencesManager.setThemePalette(palette)
-        }
+    fun setDynamicColor(enabled: Boolean) = launch { preferencesManager.setDynamicColor(enabled) }
+
+    fun setReminderLeadMinutes(minutes: Int) = launch {
+        preferencesManager.setReminderLeadMinutes(minutes)
+        // Existing reminders previously kept their old lead time forever.
+        contestRepository.updateReminderLeadTime(minutes)
     }
 
-    fun setDynamicColor(enabled: Boolean) {
-        viewModelScope.launch {
-            preferencesManager.setDynamicColor(enabled)
-        }
-    }
-
-    fun setReminderLeadMinutes(minutes: Int) {
-        viewModelScope.launch {
-            preferencesManager.setReminderLeadMinutes(minutes)
-        }
+    private fun launch(block: suspend () -> Unit) {
+        viewModelScope.launch { block() }
     }
 }

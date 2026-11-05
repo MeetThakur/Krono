@@ -12,6 +12,10 @@ import com.meet11.krono.domain.model.ContestPhase
 import com.meet11.krono.domain.model.Platform
 import com.meet11.krono.domain.repository.ContestRepository
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.first
+import com.meet11.krono.data.preferences.PreferencesManager
+import com.meet11.krono.worker.ReminderScheduler
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -28,7 +32,9 @@ class ContestRepositoryImpl @Inject constructor(
     private val codeforcesApi: CodeforcesApi,
     private val leetCodeApi: LeetCodeApi,
     private val codeChefApi: CodeChefApi,
-    private val kenkooooAtCoderApi: KenkooooAtCoderApi
+    private val kenkooooAtCoderApi: KenkooooAtCoderApi,
+    private val preferencesManager: PreferencesManager,
+    private val reminderScheduler: ReminderScheduler
 ) : ContestRepository {
 
     override fun getContests(): Flow<List<Contest>> {
@@ -38,26 +44,34 @@ class ContestRepositoryImpl @Inject constructor(
     }
 
     override suspend fun syncContests(): Result<Unit> = runCatching {
-        supervisorScope {
-            val cfDeferred = async { runCatching { fetchCodeforcesContests() }.getOrDefault(emptyList()) }
-            val lcDeferred = async { runCatching { fetchLeetCodeContests() }.getOrDefault(emptyList()) }
-            val ccDeferred = async { runCatching { fetchCodeChefContests() }.getOrDefault(emptyList()) }
-            val acDeferred = async { runCatching { fetchAtCoderContests() }.getOrDefault(emptyList()) }
-
-            val allFetched = mutableListOf<ContestEntity>()
-            allFetched.addAll(cfDeferred.await())
-            allFetched.addAll(lcDeferred.await())
-            allFetched.addAll(ccDeferred.await())
-            allFetched.addAll(acDeferred.await())
-
-            if (allFetched.isNotEmpty()) {
-                contestDao.upsertContestsPreservingReminders(allFetched)
-            }
+        val results = supervisorScope {
+            listOf(
+                async { runCatching { fetchCodeforcesContests() } },
+                async { runCatching { fetchLeetCodeContests() } },
+                async { runCatching { fetchCodeChefContests() } },
+                async { runCatching { fetchAtCoderContests() } }
+            ).awaitAll()
         }
+        if (results.all { it.isFailure }) {
+            throw results.first().exceptionOrNull() ?: IllegalStateException("Couldn't reach any contest source")
+        }
+        val fetched = results.flatMap { it.getOrDefault(emptyList()) }
+        if (fetched.isNotEmpty()) contestDao.upsertContestsPreservingReminders(fetched)
+        // Keep the table small: drop contests that ended more than a day ago.
+        contestDao.deleteOldUnstarredContests(System.currentTimeMillis() - 86_400_000L)
     }
 
-    override suspend fun toggleReminder(contestId: String, enable: Boolean, minutesBefore: Int) {
-        contestDao.updateReminder(contestId, enable, minutesBefore)
+    override suspend fun setReminder(contestId: String, enable: Boolean): Boolean {
+        val entity = contestDao.getContestById(contestId) ?: return false
+        if (!enable) {
+            contestDao.updateReminder(contestId, false, entity.reminderMinutesBefore)
+            reminderScheduler.cancel(contestId)
+            return true
+        }
+        val minutes = preferencesManager.reminderLeadMinutes.first()
+        val scheduled = reminderScheduler.schedule(entity.toDomain(), minutes)
+        if (scheduled) contestDao.updateReminder(contestId, true, minutes)
+        return scheduled
     }
 
     override suspend fun getActiveReminders(): List<Contest> {
@@ -65,11 +79,21 @@ class ContestRepositoryImpl @Inject constructor(
         return contestDao.getActiveReminders(now).map { it.toDomain() }
     }
 
+    override suspend fun updateReminderLeadTime(minutesBefore: Int) {
+        val now = System.currentTimeMillis()
+        contestDao.getActiveReminders(now).forEach { entity ->
+            contestDao.updateReminder(entity.id, true, minutesBefore)
+            reminderScheduler.cancel(entity.id)
+            reminderScheduler.schedule(entity.toDomain().copy(reminderMinutesBefore = minutesBefore), minutesBefore)
+        }
+    }
+
     private suspend fun fetchCodeforcesContests(): List<ContestEntity> {
         val response = codeforcesApi.getContestList(gym = false)
         if (response.status != "OK" || response.result == null) return emptyList()
 
-        return response.result.mapNotNull { cf ->
+        // contest.list returns every contest ever held (~2k rows); only keep live/upcoming ones.
+        return response.result.asSequence().filter { it.phase == "BEFORE" || it.phase == "CODING" }.mapNotNull { cf ->
             val startSec = cf.startTimeSeconds ?: return@mapNotNull null
             val startMs = startSec * 1000
             val durSec = cf.durationSeconds
@@ -93,7 +117,7 @@ class ContestRepositoryImpl @Inject constructor(
                 isRated = true,
                 phase = phase
             )
-        }
+        }.toList()
     }
 
     private suspend fun fetchLeetCodeContests(): List<ContestEntity> {

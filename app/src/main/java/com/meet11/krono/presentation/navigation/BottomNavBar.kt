@@ -1,6 +1,9 @@
 package com.meet11.krono.presentation.navigation
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -16,12 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,12 +28,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.meet11.krono.R
+import com.meet11.krono.core.theme.Krono
 
 @Composable
 fun KronoBottomNavBar(
@@ -42,79 +41,56 @@ fun KronoBottomNavBar(
     onNavigate: (Screen) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = Color(0xFF0F1218),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, Color(0xFF1E2330))
-    ) {
+    val c = Krono.colors
+    val view = LocalView.current
+    Column(modifier.fillMaxWidth().background(c.background)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(c.line))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Screen.bottomNavItems.forEach { screen ->
-                val isSelected = currentRoute == screen.route
-                val iconColor by animateColorAsState(
-                    targetValue = if (isSelected) Color.White else Color(0xFF64748B),
-                    label = "nav_icon_color"
-                )
-                val indicatorColor by animateColorAsState(
-                    targetValue = if (isSelected) Color(0xFF1E2536) else Color.Transparent,
-                    label = "nav_indicator_color"
-                )
+                val selected = currentRoute == screen.route
+                val fg by animateColorAsState(if (selected) c.textPrimary else c.textTertiary, tween(200), label = "navFg")
+                val pillBg by animateColorAsState(if (selected) c.accent else c.background, tween(200), label = "navBg")
+                val iconTint by animateColorAsState(if (selected) c.onAccent else c.textTertiary, tween(200), label = "navIcon")
+                val pillWidth by animateDpAsState(if (selected) 60.dp else 44.dp, spring(dampingRatio = 0.7f, stiffness = 500f), label = "navW")
 
                 Column(
                     modifier = Modifier
+                        .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { onNavigate(screen) }
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                            indication = null,
+                            role = Role.Tab
+                        ) {
+                            if (!selected) view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+                            onNavigate(screen)
+                        }
+                        .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(56.dp)
-                            .height(30.dp)
-                            .clip(RoundedCornerShape(15.dp))
-                            .background(indicatorColor),
+                            .width(pillWidth)
+                            .height(32.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(pillBg),
                         contentAlignment = Alignment.Center
                     ) {
-                        when (screen) {
-                            Screen.Home -> Icon(
-                                imageVector = Icons.Rounded.GridView,
-                                contentDescription = screen.title,
-                                tint = iconColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Screen.Contests -> Icon(
-                                imageVector = Icons.Rounded.EmojiEvents,
-                                contentDescription = screen.title,
-                                tint = iconColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Screen.Rivals -> Icon(
-                                painter = painterResource(id = R.drawable.ic_sword_cross),
-                                contentDescription = screen.title,
-                                tint = iconColor,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            else -> Unit
+                        if (screen.iconRes != null) {
+                            Icon(painterResource(screen.iconRes), contentDescription = null, tint = iconTint, modifier = Modifier.size(19.dp))
+                        } else {
+                            Icon(screen.icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = screen.title,
-                        color = iconColor,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.sp,
-                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium
-                        )
-                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(screen.title, style = MaterialTheme.typography.labelMedium, color = fg)
                 }
             }
         }

@@ -5,12 +5,13 @@ import com.meet11.krono.domain.model.DailyGoal
 import com.meet11.krono.domain.model.Profile
 import com.meet11.krono.domain.repository.StreakRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,93 +20,69 @@ class StreakRepositoryImpl @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) : StreakRepository {
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    // java.time formatters are immutable/thread-safe (SimpleDateFormat in a singleton was not).
+    private val keyFormat = DateTimeFormatter.ISO_LOCAL_DATE
+    private val writeLock = Mutex()
 
-    private fun getTodayKey(): String = dateFormat.format(Date())
-
-    private fun getYesterdayKey(): String {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.DAY_OF_YEAR, -1)
-        return dateFormat.format(cal.time)
-    }
+    private fun keyOf(date: LocalDate): String = keyFormat.format(date)
 
     override fun getDailyGoal(): Flow<DailyGoal> {
-        return preferencesManager.streakSettings.map { streakSettings ->
-            val todayKey = getTodayKey()
-            val solvedToday = streakSettings.dailyHistory[todayKey] ?: 0
-            val target = streakSettings.dailyGoal.coerceAtLeast(1)
-            val isCompleted = solvedToday >= target
-            val ratio = (solvedToday.toFloat() / target.toFloat()).coerceIn(0f, 1f)
-
+        return preferencesManager.streakSettings.map { settings ->
+            val today = LocalDate.now()
+            val solvedToday = settings.dailyHistory[keyOf(today)] ?: 0
+            val target = settings.dailyGoal.coerceAtLeast(1)
+            // Derive the streak from history on every read so a missed day breaks it
+            // immediately, instead of showing the value cached at the last solve.
+            val current = computeStreak(settings.dailyHistory, today)
             DailyGoal(
-                currentStreak = streakSettings.currentStreak,
-                bestStreak = streakSettings.bestStreak,
+                currentStreak = current,
+                bestStreak = maxOf(settings.bestStreak, current),
                 targetProblems = target,
                 solvedToday = solvedToday,
-                isCompleted = isCompleted,
-                progressRatio = ratio
+                isCompleted = solvedToday >= target,
+                progressRatio = (solvedToday.toFloat() / target).coerceIn(0f, 1f)
             )
-        }
+        }.distinctUntilChanged()
     }
 
-    override suspend fun recordManualSolve(dateKey: String?) {
-        val key = dateKey ?: getTodayKey()
-        val settings = preferencesManager.streakSettings.first()
-        val mutableHistory = settings.dailyHistory.toMutableMap()
-        val currentCount = mutableHistory[key] ?: 0
-        mutableHistory[key] = currentCount + 1
+    override suspend fun recordManualSolve(dateKey: String?) = adjustToday(dateKey, +1)
 
-        val (currentStreak, bestStreak) = computeStreak(mutableHistory, settings.bestStreak)
-        preferencesManager.updateStreak(currentStreak, bestStreak, mutableHistory, key)
+    override suspend fun undoManualSolve() = adjustToday(null, -1)
+
+    private suspend fun adjustToday(dateKey: String?, delta: Int) = writeLock.withLock {
+        val key = dateKey ?: keyOf(LocalDate.now())
+        val settings = preferencesManager.streakSettings.first()
+        val history = settings.dailyHistory.toMutableMap()
+        val next = ((history[key] ?: 0) + delta).coerceAtLeast(0)
+        if (next == 0) history.remove(key) else history[key] = next
+
+        // Prune entries older than a year so the JSON blob doesn't grow forever.
+        val cutoff = keyOf(LocalDate.now().minusDays(400))
+        history.keys.removeAll { it < cutoff }
+
+        val streak = computeStreak(history, LocalDate.now())
+        val best = if (delta > 0) maxOf(settings.bestStreak, streak) else settings.bestStreak
+        preferencesManager.updateStreak(streak, best, history, key)
     }
 
     override suspend fun setDailyGoalTarget(target: Int) {
-        preferencesManager.setDailyGoal(target)
+        preferencesManager.setDailyGoal(target.coerceIn(1, 999))
     }
 
-    override suspend fun syncStreakWithProfiles(profiles: List<Profile>) {
-        // Automatically calculate solves from profile deltas or LeetCode activity
+    override suspend fun syncStreakWithProfiles(profiles: List<Profile>) = writeLock.withLock {
         val settings = preferencesManager.streakSettings.first()
-        val (currentStreak, bestStreak) = computeStreak(settings.dailyHistory, settings.bestStreak)
-        preferencesManager.updateStreak(currentStreak, bestStreak, settings.dailyHistory, settings.lastActiveDate)
+        val streak = computeStreak(settings.dailyHistory, LocalDate.now())
+        preferencesManager.updateStreak(streak, maxOf(settings.bestStreak, streak), settings.dailyHistory, settings.lastActiveDate)
     }
 
-    private fun computeStreak(history: Map<String, Int>, prevBest: Int): Pair<Int, Int> {
-        val todayStr = getTodayKey()
-        val yesterdayStr = getYesterdayKey()
-
-        val todayCount = history[todayStr] ?: 0
-        val yesterdayCount = history[yesterdayStr] ?: 0
-
-        // If no activity today and no activity yesterday, streak is broken
-        if (todayCount == 0 && yesterdayCount == 0) {
-            return Pair(0, prevBest)
-        }
-
+    /** Consecutive active days ending today — or yesterday, as a grace window before today's solve. */
+    private fun computeStreak(history: Map<String, Int>, today: LocalDate): Int {
+        var day = if ((history[keyOf(today)] ?: 0) > 0) today else today.minusDays(1)
         var streak = 0
-        val cal = Calendar.getInstance()
-
-        // If today has activity, start checking backwards from today; otherwise start from yesterday
-        if (todayCount > 0) {
+        while ((history[keyOf(day)] ?: 0) > 0) {
             streak++
-            cal.add(Calendar.DAY_OF_YEAR, -1)
-        } else {
-            // Grace window: yesterday was active
-            cal.add(Calendar.DAY_OF_YEAR, -1)
+            day = day.minusDays(1)
         }
-
-        while (true) {
-            val key = dateFormat.format(cal.time)
-            val count = history[key] ?: 0
-            if (count > 0) {
-                streak++
-                cal.add(Calendar.DAY_OF_YEAR, -1)
-            } else {
-                break
-            }
-        }
-
-        val bestStreak = maxOf(streak, prevBest)
-        return Pair(streak, bestStreak)
+        return streak
     }
 }

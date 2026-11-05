@@ -1,17 +1,15 @@
 <p align="center">
-  <img src="assets/images/icon.png" width="128" height="128" alt="Krono Logo" style="border-radius: 28px;" />
+  <img src="assets/images/hero.png" alt="Krono — competitive programming, on the clock" width="100%" />
 </p>
 
 <h1 align="center">Krono</h1>
 
 <p align="center">
-  <strong>The ultimate competitive programming companion.</strong><br />
-  Track contests, sync profiles, compare ratings with rivals, and analyze performance across platforms in real-time.
+  <strong>Competitive programming, on the clock.</strong><br />
+  One countdown for every contest, your ratings across platforms, and a head-to-head with your rivals.
 </p>
 
 <p align="center">
-  <a href="https://github.com/MeetThakur/Krono/releases/latest"><img src="https://img.shields.io/github/v/release/MeetThakur/Krono?style=flat-square&color=blue&label=Release" alt="Latest Release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square" alt="License: GPLv3" /></a>
   <img src="https://img.shields.io/badge/Kotlin-2.1.0-7F52FF?logo=kotlin&logoColor=white&style=flat-square" alt="Kotlin" />
   <img src="https://img.shields.io/badge/Jetpack_Compose-Material_3-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square" alt="Compose" />
   <img src="https://img.shields.io/badge/Architecture-MVVM-green?style=flat-square" alt="MVVM" />
@@ -23,50 +21,51 @@
 
 ---
 
-## 📥 Download & Installation
-
-Get the latest stable APK directly from GitHub Releases:
+## Screenshots
 
 <p align="center">
-  <a href="https://github.com/MeetThakur/Krono/releases/latest">
-    <img src="https://img.shields.io/badge/Download-Latest%20APK-2ea44f?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
-  </a>
+  <img src="assets/images/screenshots/home.png" width="200" alt="Today — next-contest chronograph and profiles" />
+  <img src="assets/images/screenshots/home2.png" width="200" alt="Today — daily goal dial, stats and problem of the day" />
+  <img src="assets/images/screenshots/contests.png" width="200" alt="Contests — grouped schedule with live countdowns" />
 </p>
-
-### Install Options:
-- **Direct APK:** Download `app-release.apk` from [GitHub Releases](https://github.com/MeetThakur/Krono/releases/latest) and install it on your device (Android 8.0+ / API 26+).
-- **Auto-Updates via Obtainium:**
-  1. Open [Obtainium](https://github.com/ImranR98/Obtainium) on your Android device.
-  2. Tap **Add App** and paste `https://github.com/MeetThakur/Krono`.
-  3. Obtainium will track updates and install new releases seamlessly.
-
----
-
-## 📱 Screenshots
-
 <p align="center">
-  <img src="assets/images/dashboard.jpg" width="180" alt="Dashboard" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/schedule.jpg" width="180" alt="Contest Schedule" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/profile1.jpg" width="180" alt="Profile Overview" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/profile2.jpg" width="180" alt="Contest History" style="margin: 5px; border-radius: 12px;" />
-  <img src="assets/images/rivals.jpg" width="180" alt="Rivals Leaderboard" style="margin: 5px; border-radius: 12px;" />
+  <img src="assets/images/screenshots/rivals.png" width="200" alt="Rivals — head-to-head and standings" />
+  <img src="assets/images/screenshots/settings.png" width="200" alt="Settings — theme, accent and reminder health" />
+  <img src="assets/images/screenshots/home_light.png" width="200" alt="Today in light mode" />
 </p>
 
----
-
-## ✨ Features
-
-- **📅 Consolidated Contest Schedule** — Live, upcoming, and past contests from Codeforces, LeetCode, and CodeChef in one unified, timezone-adjusted view.
-- **🔥 Daily Practice Streak & Goal Target** — Practice daily and maintain streaks with customizable goal targets (1, 2, 3, 5, or custom number input with steppers).
-- **⚔️ Rivals & Leaderboards** — Add competitive programming rivals and track ratings side-by-side on an automatically sorted leaderboard per platform.
-- **🔄 Multi-Platform Profile Sync** — Connect Codeforces, LeetCode, and CodeChef accounts to pull live ratings, global ranks, solved problem counts, and problem-of-the-day (POTD).
-- **📊 Activity Hub & Profile Detail** — Interactive bottom sheet with detailed metrics, solved breakdown, and rating histories.
-- **🔔 Smart Contest Reminders** — Background synchronization via WorkManager and precise alarm notifications scheduled before contests (15m, 30m, 1h lead times).
-- **🎨 Modern Material 3 Design** — Dynamic Material You color theming, custom palette seeds, and full Light/Dark/System theme support.
+<sub>Screenshots use synthetic demo accounts.</sub>
 
 ---
 
-## 🛠️ Tech Stack
+## Features
+
+- **Next-contest chronograph** — The Today screen counts down to the next round (or the end of a live one) to the second, with one-tap open, calendar export and reminder.
+- **Unified contest schedule** — Codeforces, LeetCode, CodeChef and AtCoder in one timezone-aware list, grouped into Live / Today / Tomorrow / This week / Later, with per-platform filters and live progress bars for running contests.
+- **Reliable reminders** — Alarms are armed the moment you tap the bell (and cancelled when you untap it), honour your lead time (5 min – 1 hour), survive reboots, and ask for notification permission on Android 13+. Settings shows whether notifications and exact timing are actually allowed, with a one-tap fix.
+- **Profiles & real rating history** — Connect Codeforces, LeetCode and CodeChef handles to sync rating, peak, rank, solved and contest counts. Profile sheets chart your real rating history from Codeforces and LeetCode.
+- **Daily practice** — A bezel-style goal dial, streaks that break correctly when you miss a day, and an undo for accidental logs.
+- **Rivals** — Head-to-head comparison with gap-to-close, plus ranked standings per platform. Tap to compare, long-press or ✕ to remove.
+- **Your look** — Light, dark or system theme; seven accents (Volt, Ember, Ice, Iris, Rose, Mint, Mono) or Material You wallpaper colours.
+
+---
+
+## Design
+
+Krono 2.0 is built around a precision-instrument idea: flat ink surfaces, hairline borders and a single signal accent, with every number set in a tabular monospace so ratings and timers read like a readout.
+
+| Token | Choice |
+| :--- | :--- |
+| Display & UI type | Space Grotesk |
+| Numbers & timers | JetBrains Mono, tabular figures |
+| Surfaces (dark) | Ink `#09090A` → `#131315` → `#1B1B1E`, hairlines `#222226` |
+| Signal accent | Volt `#D4FF3F` (swap in Settings) |
+
+All colours come from `KronoColors` tokens (`core/theme/Color.kt`), so both themes and every accent stay consistent.
+
+---
+
+## Tech Stack
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
@@ -76,42 +75,42 @@ Get the latest stable APK directly from GitHub Releases:
 | **Dependency Injection** | Hilt (Dagger) | Compile-time dependency injection across components |
 | **Local Storage** | Room Database + DataStore | SQLite abstraction for relational data & Proto DataStore for preferences |
 | **Networking** | Retrofit + OkHttp + kotlinx.serialization | Asynchronous HTTP client with JSON serialization |
-| **Image Loading** | Coil 3 | Kotlin-first asynchronous image loading |
 | **Background Tasks** | WorkManager | Guaranteed periodic background sync for contest listings |
 | **Build System** | Gradle Kotlin DSL (KTS) | Version catalogs (`libs.versions.toml`), Android Gradle Plugin 8.8.2 |
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 app/src/main/java/com/meet11/krono/
 ├── core/
-│   ├── designsystem/          # Reusable UI components (ContestCard, DailyGoalCard, PlatformCard, ProfileSheet)
-│   └── theme/                 # KronoTheme, Material 3 color palettes, typography, shapes
+│   ├── designsystem/          # Primitives (KronoCard, Tag, chips, buttons) + ContestCard, NextContestHero, GoalDial, RatingChart
+│   ├── theme/                 # KronoColors tokens, accents, Space Grotesk / JetBrains Mono type, shapes
+│   ├── ui/                    # Snackbar messages, notification-permission gate, ticker flow
+│   └── util/                  # Locale-aware time formatting, countdowns, user-facing error messages
 ├── data/
-│   ├── api/                   # Retrofit services & response models (Codeforces, LeetCode, CodeChef)
-│   ├── database/              # Room database, entities, and DAOs
-│   ├── preferences/           # Jetpack DataStore preferences manager
-│   └── repository/            # Concrete repository implementations
-├── di/                        # Hilt DI modules (AppModule, DatabaseModule, NetworkModule)
-├── domain/
-│   ├── model/                 # Domain entity models (Contest, Profile, Rival, DailyGoal)
-│   └── repository/            # Repository abstraction interfaces
+│   ├── local/                 # Room database, entities, DAOs
+│   ├── preferences/           # DataStore preferences
+│   ├── remote/                # Retrofit APIs, DTOs, CodeChef parser, shared ProfileFetcher
+│   └── repository/            # Repository implementations
+├── di/                        # Hilt modules
+├── domain/                    # Models and repository interfaces
 ├── presentation/
-│   ├── home/                  # Home screen with daily streaks, POTD, and linked profiles
-│   ├── contests/              # Contests schedule screen (Live, Upcoming, Past)
-│   ├── rivals/                # Rivals comparison leaderboard screen
-│   ├── settings/              # Settings, appearance, sync intervals, and notification preferences
-│   └── navigation/            # Navigation host, bottom bar, and destination routes
-├── worker/                    # WorkManager sync workers, alarm receivers, and boot listeners
-├── KronoApplication.kt        # Application class with Hilt initialization
-└── MainActivity.kt            # Single Activity entry point
+│   ├── home/                  # Today: chronograph, profiles, daily goal, POTD, coming up
+│   ├── contests/              # Grouped schedule with filters
+│   ├── rivals/                # Head-to-head and standings
+│   ├── settings/              # Appearance, reminders, permission health
+│   ├── common/                # Shared bottom sheets (add handle, daily goal)
+│   └── navigation/            # NavHost with transitions, bottom bar
+├── worker/                    # Sync worker, ReminderScheduler, alarm + boot receivers
+├── KronoApplication.kt
+└── MainActivity.kt
 ```
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -138,7 +137,7 @@ You can also simply open the project in **Android Studio** and click **Run** (`C
 
 ---
 
-## 📦 Building APKs
+## Building APKs
 
 Build directly from the command line using the Gradle wrapper:
 
@@ -146,7 +145,7 @@ Build directly from the command line using the Gradle wrapper:
 # Debug APK (signed with debug keystore)
 ./gradlew assembleDebug
 
-# Release APK
+# Release APK (R8-minified and resource-shrunk, ~2 MB)
 ./gradlew assembleRelease
 ```
 
@@ -156,18 +155,19 @@ Generated outputs:
 
 ---
 
-## ⚙️ Configuration & Settings
+## Settings
 
-Customize your experience directly inside the in-app **Settings**:
-- **Theme Mode** — System Default, Light, or Dark.
-- **Palette Seed** — Choose from dynamic palette seeds or Material You dynamic colors.
-- **Daily Goal Target** — Configure your daily solved target (1, 2, 3, 5, or custom numeric value).
-- **Contest Reminders** — Configure alert timing (15m, 30m, 1 hour before start).
-- **Background Sync** — Automatic periodic background refresh for contest schedules and rival ratings.
+- **Theme** — System, Light or Dark.
+- **Accent** — Volt, Ember, Ice, Iris, Rose, Mint or Mono; or *Match wallpaper* for Material You.
+- **Reminder lead time** — 5, 15, 30 or 60 minutes before start. Changing it re-arms existing reminders.
+- **Reminder health** — Shows whether notifications and exact alarms are allowed, with a shortcut to fix each.
+- **Daily goal** — Set from the Today screen (1–99 problems per day).
+
+Contest schedules sync in the background every 6 hours and on pull-to-refresh.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **GNU General Public License v3.0** (GPLv3) — see the [LICENSE](LICENSE) file for details.
 

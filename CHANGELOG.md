@@ -4,6 +4,42 @@ All notable changes to Krono are documented in this file.
 
 ---
 
+## [v2.0.0] - 2026-11-05
+
+### Redesign
+- New visual identity: ink surfaces, hairline borders and a single signal accent (Volt by default), Space Grotesk for UI and JetBrains Mono tabular figures for every number.
+- Today screen leads with a live next-contest chronograph (counts to end-of-contest while live).
+- Goal dial with per-problem segments, hairline stats strip, compact "Coming up" rows.
+- Contests grouped Live / Today / Tomorrow / This week / Later with sticky filters, live progress bars and per-card countdowns.
+- Rivals head-to-head with gap-to-close and ranked standings.
+- Bottom sheets replace dialogs for adding handles and setting the daily goal; snackbars replace error dialogs.
+- Light theme now works everywhere (previously most screens hard-coded dark colours). Seven accents plus optional Material You.
+- Pull-to-refresh on Today, Contests and Rivals; screen transitions and press feedback throughout.
+
+### Fixes
+- Reminders are scheduled/cancelled immediately when toggled (previously only armed by the 6-hourly sync, and never cancelled).
+- Reminder lead time setting is honoured and re-applied to existing reminders.
+- Android 13+ notification permission is requested; reminder notifications use the proper monochrome icon and open the contest.
+- Streak now breaks correctly after a missed day (was cached from the last solve). Added undo for logged solves.
+- Codeforces "solved" counted distinct contests instead of distinct problems.
+- Profile rating history chart showed fabricated points; it now uses real Codeforces / LeetCode history.
+- Refreshing profiles reset their order; profile refresh never ran at all from the UI.
+- LeetCode peak rating now derived from contest history instead of equalling current rating.
+- Contest schedule wasn't synced from Today on first launch; finished contests were never pruned.
+- "Reorder" button did nothing (removed); contest filters for platforms with no data removed.
+- Startup crash risk in navigation item initialisation; theme flash on cold start (now held behind the splash).
+- Clear messages for offline / not-found / rate-limited errors.
+
+### Performance
+- R8 minification + resource shrinking for release (APK ~20 MB debug → ~2 MB release).
+- Codeforces contest list filtered to live/upcoming before writing (was upserting ~2,000 rows every sync).
+- Parallel per-profile/per-rival refresh and parallel Codeforces/LeetCode requests.
+- Countdowns recompose only their own text; far-off contests tick every 30 s instead of every second.
+- HTTP cache, and network logging disabled in release builds.
+- Removed `USE_EXACT_ALARM` (Play policy risk); exact-alarm permission state is surfaced in Settings instead.
+
+---
+
 ## [v1.6.5] - 2026-10-02
 
 ### Streak & Daily Goals (Feature 5)
