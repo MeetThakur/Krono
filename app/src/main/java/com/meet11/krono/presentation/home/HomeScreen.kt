@@ -88,9 +88,10 @@ fun HomeScreen(
     val c = Krono.colors
     val fmt = rememberTimeFormatter()
 
+    val haptics = com.meet11.krono.core.designsystem.rememberHaptics()
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.refresh() },
+        onRefresh = { haptics.toggle(); viewModel.refresh() },
         modifier = modifier.fillMaxSize()
     ) {
         LazyColumn(

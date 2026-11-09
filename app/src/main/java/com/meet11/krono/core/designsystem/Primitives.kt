@@ -67,6 +67,27 @@ import com.meet11.krono.core.theme.Readout
 import com.meet11.krono.core.theme.TileShape
 import com.meet11.krono.domain.model.Platform
 
+/** Small wrapper so every control can give consistent haptic feedback. */
+class Haptics(private val view: android.view.View) {
+    /** Light tick for taps and selection changes. */
+    fun tick() { view.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK) }
+    /** Firmer click for toggles. */
+    fun toggle() { view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY) }
+    /** Success confirmation (falls back to a key tap before Android 11). */
+    fun success() {
+        view.performHapticFeedback(
+            if (android.os.Build.VERSION.SDK_INT >= 30) android.view.HapticFeedbackConstants.CONFIRM
+            else android.view.HapticFeedbackConstants.VIRTUAL_KEY
+        )
+    }
+}
+
+@Composable
+fun rememberHaptics(): Haptics {
+    val view = androidx.compose.ui.platform.LocalView.current
+    return remember(view) { Haptics(view) }
+}
+
 /**
  * Clickable with a subtle spring press-scale. Scale runs in the draw phase via
  * graphicsLayer so presses never trigger recomposition of the content.
@@ -78,8 +99,10 @@ fun Modifier.pressable(
     shape: Shape? = null,
     role: Role = Role.Button,
     onClickLabel: String? = null,
+    haptic: Boolean = true,
     onClick: () -> Unit
 ): Modifier {
+    val haptics = rememberHaptics()
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -97,7 +120,7 @@ fun Modifier.pressable(
             enabled = enabled,
             role = role,
             onClickLabel = onClickLabel,
-            onClick = onClick
+            onClick = { if (haptic) haptics.tick(); onClick() }
         )
 }
 
@@ -109,6 +132,7 @@ fun KronoCard(
     shape: Shape = CardShape,
     color: Color = Krono.colors.surface,
     borderColor: Color = Krono.colors.edge,
+    shadowColor: Color = Krono.colors.shadow,
     contentPadding: PaddingValues = PaddingValues(18.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -116,7 +140,7 @@ fun KronoCard(
     val clickModifier = if (onClick != null) Modifier.pressable(pressedScale = 0.985f, shape = shape, onClick = onClick) else Modifier.clip(shape)
     Column(
         modifier = modifier
-            .pebbleShadow(shape, c.shadow)
+            .pebbleShadow(shape, shadowColor)
             .then(clickModifier)
             .background(color)
             .border(OutlineWidth, borderColor, shape)
@@ -126,7 +150,7 @@ fun KronoCard(
 }
 
 /** Hard, un-blurred shadow offset downward — the "sticker" lift. */
-fun Modifier.pebbleShadow(shape: Shape, color: Color, offset: Dp = ShadowOffset): Modifier =
+fun Modifier.pebbleShadow(shape: Shape, color: Color, offset: Dp = ShadowOffset + 1.dp): Modifier =
     this.drawBehind {
         val o = offset.toPx()
         val outline = shape.createOutline(size, layoutDirection, this)
@@ -267,6 +291,7 @@ fun KronoChip(
     leadingDot: Color? = null
 ) {
     val c = Krono.colors
+    val haptics = rememberHaptics()
     val bg by animateColorAsState(if (selected) c.inverse else c.surface, tween(180), label = "chipBg")
     val fg by animateColorAsState(if (selected) c.onInverse else c.textPrimary, tween(180), label = "chipFg")
     val border = if (selected) c.inverse else c.line
@@ -275,7 +300,7 @@ fun KronoChip(
             .clip(PillShape)
             .background(bg)
             .border(2.dp, border, PillShape)
-            .clickable(role = Role.Tab, onClick = onClick)
+            .clickable(role = Role.Tab, onClick = { haptics.tick(); onClick() })
             .heightIn(min = 36.dp)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -298,6 +323,7 @@ fun <T> SegmentedControl(
     modifier: Modifier = Modifier
 ) {
     val c = Krono.colors
+    val haptics = rememberHaptics()
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -315,7 +341,7 @@ fun <T> SegmentedControl(
                     .weight(1f)
                     .clip(PillShape)
                     .background(bg)
-                    .clickable(role = Role.RadioButton) { onSelect(option) }
+                    .clickable(role = Role.RadioButton) { if (!isSelected) haptics.tick(); onSelect(option) }
                     .heightIn(min = 38.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -334,7 +360,8 @@ fun IconAction(
     modifier: Modifier = Modifier,
     active: Boolean = false,
     size: Dp = 40.dp,
-    iconSize: Dp = 18.dp
+    iconSize: Dp = 18.dp,
+    haptic: Boolean = true
 ) {
     val c = Krono.colors
     val bg by animateColorAsState(if (active) c.accent else c.surface, tween(200), label = "iaBg")
@@ -343,7 +370,7 @@ fun IconAction(
         modifier = modifier
             .size(size)
             .pebbleShadow(CircleShape, c.shadow, 3.dp)
-            .pressable(pressedScale = 0.9f, shape = CircleShape, onClick = onClick)
+            .pressable(pressedScale = 0.9f, shape = CircleShape, haptic = haptic, onClick = onClick)
             .background(bg)
             .border(OutlineWidth, if (active && c.isDark) c.accent else c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center
@@ -364,7 +391,8 @@ fun KronoButton(
     loading: Boolean = false,
     leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
-    height: Dp = 48.dp
+    height: Dp = 48.dp,
+    haptic: Boolean = true
 ) {
     val c = Krono.colors
     val (bg, fg, border) = when (style) {
@@ -379,7 +407,7 @@ fun KronoButton(
             .heightIn(min = height)
             .graphicsLayer { this.alpha = alpha }
             .pebbleShadow(PillShape, c.shadow, 3.dp)
-            .pressable(enabled = enabled && !loading, shape = PillShape, onClick = onClick)
+            .pressable(enabled = enabled && !loading, shape = PillShape, haptic = haptic, onClick = onClick)
             .background(bg)
             .border(OutlineWidth, border, PillShape)
             .padding(horizontal = 20.dp),
@@ -575,6 +603,11 @@ fun tintFill(pastel: Color): Color {
     val c = Krono.colors
     return if (c.isDark) androidx.compose.ui.graphics.lerp(pastel, c.background, 0.80f) else pastel
 }
+
+/** Hard shadow for a tinted card: ink in light, a deep shade of the pastel in dark so the card still lifts. */
+@Composable
+fun tintShadow(pastel: Color): Color =
+    if (Krono.colors.isDark) androidx.compose.ui.graphics.lerp(pastel, Color.Black, 0.55f) else Krono.colors.shadow
 
 /** Outline for a tinted card: the pastel itself in dark, the ink outline in light. */
 @Composable

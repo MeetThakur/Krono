@@ -50,9 +50,10 @@ fun ContestsScreen(viewModel: ContestsViewModel, modifier: Modifier = Modifier) 
     val gate = rememberNotificationGate()
     val c = Krono.colors
 
+    val haptics = com.meet11.krono.core.designsystem.rememberHaptics()
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
-        onRefresh = { viewModel.refresh() },
+        onRefresh = { haptics.toggle(); viewModel.refresh() },
         modifier = modifier.fillMaxSize()
     ) {
         LazyColumn(

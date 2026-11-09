@@ -53,6 +53,7 @@ import com.meet11.krono.core.designsystem.IconAction
 import com.meet11.krono.core.designsystem.KronoButton
 import com.meet11.krono.core.designsystem.KronoCard
 import com.meet11.krono.core.designsystem.tintEdge
+import com.meet11.krono.core.designsystem.tintShadow
 import com.meet11.krono.core.designsystem.tintFill
 import com.meet11.krono.core.designsystem.ProgressTrack
 import com.meet11.krono.core.designsystem.ScreenTitle
@@ -80,9 +81,10 @@ fun RivalsScreen(viewModel: RivalsViewModel, modifier: Modifier = Modifier) {
     var pendingDelete by remember { mutableStateOf<LeaderboardEntry?>(null) }
     val c = Krono.colors
 
+    val haptics = com.meet11.krono.core.designsystem.rememberHaptics()
     PullToRefreshBox(
         isRefreshing = state.isRefreshing,
-        onRefresh = viewModel::refresh,
+        onRefresh = { haptics.toggle(); viewModel.refresh() },
         modifier = modifier.fillMaxSize()
     ) {
         LazyColumn(
@@ -320,6 +322,11 @@ private fun StandingRow(
         isOpponent -> tintEdge(c.sky)
         else -> c.edge
     }
+    val shadow = when {
+        entry.isMe -> tintShadow(c.butter)
+        isOpponent -> tintShadow(c.sky)
+        else -> c.shadow
+    }
     val onFill = if (entry.isMe || isOpponent) c.onTint else c.textPrimary
     val onFillSoft = if (entry.isMe || isOpponent) c.onTint.copy(alpha = 0.7f) else c.textTertiary
     KronoCard(
@@ -329,6 +336,7 @@ private fun StandingRow(
             .combinedClickable(onClick = onClick, onLongClick = { if (!entry.isMe) onRemove() }),
         color = fill,
         borderColor = edge,
+        shadowColor = shadow,
         contentPadding = PaddingValues(start = 14.dp, end = 6.dp, top = 12.dp, bottom = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

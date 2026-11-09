@@ -160,6 +160,7 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     val c = Krono.colors
+    val haptics = com.meet11.krono.core.designsystem.rememberHaptics()
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleSmall, color = c.textPrimary)
@@ -168,7 +169,7 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheck
         Spacer(Modifier.width(12.dp))
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = { haptics.toggle(); onCheckedChange(it) },
             colors = SwitchDefaults.colors(
                 checkedTrackColor = c.mint,
                 checkedThumbColor = c.ink,

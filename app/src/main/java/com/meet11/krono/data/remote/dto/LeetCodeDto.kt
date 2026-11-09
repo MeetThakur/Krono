@@ -60,7 +60,8 @@ data class LeetCodeCalendarDto(
 data class LeetCodeContestData(
     val userContestRanking: LeetCodeContestRankingDto? = null,
     val userContestRankingHistory: List<LeetCodeContestHistoryDto>? = null,
-    val topTwoContests: List<LeetCodeUpcomingContestDto>? = null
+    val topTwoContests: List<LeetCodeUpcomingContestDto>? = null,
+    val pastContests: LeetCodePastContestsDto? = null
 )
 
 @Serializable
@@ -109,4 +110,9 @@ data class LeetCodeDailyQuestionDto(
 data class LeetCodeQuestionDetailDto(
     val title: String? = null,
     val difficulty: String? = null
+)
+
+@Serializable
+data class LeetCodePastContestsDto(
+    val data: List<LeetCodeUpcomingContestDto>? = null
 )

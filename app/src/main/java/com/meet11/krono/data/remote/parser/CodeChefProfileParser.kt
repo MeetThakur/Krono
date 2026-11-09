@@ -69,4 +69,52 @@ object CodeChefProfileParser {
             totalContests = contests
         )
     }
+
+    private val historyJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+
+    /**
+     * The profile page embeds the rating graph as `"date_versus_rating":{"all":[{...}, ...]}`
+     * (the 1.x app read the same structure). Returns an empty list when it isn't there.
+     */
+    fun parseRatingHistory(html: String): List<CodeChefRatingEntry> {
+        val key = html.indexOf("\"date_versus_rating\"")
+        if (key < 0) return emptyList()
+        val all = html.indexOf("\"all\"", key)
+        if (all < 0) return emptyList()
+        val start = html.indexOf('[', all)
+        if (start < 0) return emptyList()
+        var depth = 0
+        var inString = false
+        var i = start
+        while (i < html.length) {
+            val ch = html[i]
+            if (inString) {
+                if (ch == '\\') i++ else if (ch == '"') inString = false
+            } else when (ch) {
+                '"' -> inString = true
+                '[' -> depth++
+                ']' -> { depth--; if (depth == 0) break }
+            }
+            i++
+        }
+        if (depth != 0) return emptyList()
+        val array = runCatching { historyJson.parseToJsonElement(html.substring(start, i + 1)) }.getOrNull()
+            as? kotlinx.serialization.json.JsonArray ?: return emptyList()
+        val zone = java.time.ZoneId.of("Asia/Kolkata")
+        val fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        return array.mapNotNull { el ->
+            val o = el as? kotlinx.serialization.json.JsonObject ?: return@mapNotNull null
+            fun str(k: String) = (o[k] as? kotlinx.serialization.json.JsonPrimitive)?.content
+            val rating = str("rating")?.toIntOrNull() ?: return@mapNotNull null
+            val millis = str("end_date")?.let { runCatching { java.time.LocalDateTime.parse(it, fmt).atZone(zone).toInstant().toEpochMilli() }.getOrNull() }
+                ?: runCatching {
+                    java.time.LocalDate.of(str("getyear")!!.toInt(), str("getmonth")!!.toInt(), str("getday")!!.toInt())
+                        .atStartOfDay(zone).toInstant().toEpochMilli()
+                }.getOrNull()
+                ?: return@mapNotNull null
+            CodeChefRatingEntry(millis, rating, str("name").orEmpty())
+        }.sortedBy { it.timestampMillis }
+    }
 }
+
+data class CodeChefRatingEntry(val timestampMillis: Long, val rating: Int, val contestName: String)

@@ -2,6 +2,7 @@ package com.meet11.krono.data.remote
 
 import com.meet11.krono.data.remote.api.CodeChefApi
 import com.meet11.krono.data.remote.api.CodeforcesApi
+import com.meet11.krono.data.remote.api.KenkooooAtCoderApi
 import com.meet11.krono.data.remote.api.LeetCodeApi
 import com.meet11.krono.data.remote.dto.GraphQLRequest
 import com.meet11.krono.data.remote.parser.CodeChefProfileParser
@@ -38,12 +39,14 @@ class UserNotFoundException(platform: Platform, handle: String) :
 class ProfileFetcher @Inject constructor(
     private val codeforcesApi: CodeforcesApi,
     private val leetCodeApi: LeetCodeApi,
-    private val codeChefApi: CodeChefApi
+    private val codeChefApi: CodeChefApi,
+    private val atCoderApi: KenkooooAtCoderApi
 ) {
     suspend fun fetch(platform: Platform, handle: String): FetchedProfile = when (platform) {
         Platform.CODEFORCES -> fetchCodeforces(handle)
         Platform.LEETCODE -> fetchLeetCode(handle)
         Platform.CODECHEF -> fetchCodeChef(handle)
+        Platform.ATCODER -> fetchAtCoder(handle)
         else -> throw UnsupportedOperationException("${platform.displayName} profiles aren't supported yet")
     }
 
@@ -69,7 +72,56 @@ class ProfileFetcher @Inject constructor(
                 .filter { it.attended && it.rating != null && it.contest != null }
                 .map { RatingPoint(it.contest!!.startTime * 1000L, it.rating!!.toInt(), it.contest.title) }
         }
+        Platform.CODECHEF -> {
+            val html = codeChefApi.getUserProfilePage(handle).use { it.string() }
+            CodeChefProfileParser.parseRatingHistory(html).map { RatingPoint(it.timestampMillis, it.rating, it.contestName) }
+        }
+        Platform.ATCODER -> atCoderRatedHistory(handle).map {
+            RatingPoint(parseAtCoderTime(it.endTime), it.newRating, it.contestName)
+        }
         else -> null
+    }
+
+    private suspend fun atCoderRatedHistory(handle: String) =
+        atCoderApi.getHistory("https://atcoder.jp/users/$handle/history/json").filter { it.isRated }
+
+    private fun parseAtCoderTime(iso: String): Long =
+        runCatching { java.time.OffsetDateTime.parse(iso).toInstant().toEpochMilli() }.getOrDefault(0L)
+
+    /** AtCoder's published colour bands, used as the rank label. */
+    private fun atCoderRank(rating: Int): String = when {
+        rating >= 2800 -> "Red"
+        rating >= 2400 -> "Orange"
+        rating >= 2000 -> "Yellow"
+        rating >= 1600 -> "Blue"
+        rating >= 1200 -> "Cyan"
+        rating >= 800 -> "Green"
+        rating >= 400 -> "Brown"
+        else -> "Gray"
+    }
+
+    private suspend fun fetchAtCoder(handle: String): FetchedProfile = coroutineScope {
+        val history = async {
+            try {
+                atCoderRatedHistory(handle)
+            } catch (e: retrofit2.HttpException) {
+                throw UserNotFoundException(Platform.ATCODER, handle)
+            }
+        }
+        val solved = async { runCatching { atCoderApi.getAcRank(handle).count }.getOrDefault(0) }
+        val rated = history.await()
+        val current = rated.lastOrNull()?.newRating
+        FetchedProfile(
+            platform = Platform.ATCODER,
+            username = handle,
+            displayName = handle,
+            avatar = null,
+            rating = current,
+            maxRating = rated.maxOfOrNull { it.newRating },
+            rank = current?.let(::atCoderRank),
+            problemsSolved = solved.await(),
+            totalContests = rated.size
+        )
     }
 
     private suspend fun fetchCodeforces(handle: String): FetchedProfile = coroutineScope {

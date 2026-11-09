@@ -28,7 +28,7 @@ enum class ThemeMode {
 }
 
 data class ThemeSettings(
-    val mode: ThemeMode = ThemeMode.SYSTEM,
+    val mode: ThemeMode = ThemeMode.LIGHT,
     val palette: ThemePaletteSeed = ThemePaletteSeed.VOLT,
     val dynamicColor: Boolean = false
 )
@@ -64,8 +64,8 @@ class PreferencesManager @Inject constructor(
     }
 
     val themeSettings: Flow<ThemeSettings> = context.dataStore.data.catchIo().map { prefs ->
-        val modeStr = prefs[KEY_THEME_MODE] ?: ThemeMode.SYSTEM.name
-        val mode = runCatching { ThemeMode.valueOf(modeStr) }.getOrDefault(ThemeMode.SYSTEM)
+        val modeStr = prefs[KEY_THEME_MODE] ?: ThemeMode.LIGHT.name
+        val mode = runCatching { ThemeMode.valueOf(modeStr) }.getOrDefault(ThemeMode.LIGHT)
         val paletteStr = prefs[KEY_THEME_PALETTE] ?: ThemePaletteSeed.VOLT.name
         val palette = runCatching { ThemePaletteSeed.valueOf(paletteStr) }.getOrDefault(ThemePaletteSeed.VOLT)
         val dynamicColor = prefs[KEY_DYNAMIC_COLOR] ?: false

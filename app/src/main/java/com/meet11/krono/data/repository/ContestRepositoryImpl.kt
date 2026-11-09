@@ -5,6 +5,8 @@ import com.meet11.krono.data.local.entity.ContestEntity
 import com.meet11.krono.data.remote.api.CodeChefApi
 import com.meet11.krono.data.remote.api.CodeforcesApi
 import com.meet11.krono.data.remote.api.KenkooooAtCoderApi
+import com.meet11.krono.data.remote.parser.AtCoderContestsParser
+import com.meet11.krono.data.remote.parser.AtCoderPageContest
 import com.meet11.krono.data.remote.api.LeetCodeApi
 import com.meet11.krono.data.remote.dto.GraphQLRequest
 import com.meet11.krono.domain.model.Contest
@@ -57,8 +59,8 @@ class ContestRepositoryImpl @Inject constructor(
         }
         val fetched = results.flatMap { it.getOrDefault(emptyList()) }
         if (fetched.isNotEmpty()) contestDao.upsertContestsPreservingReminders(fetched)
-        // Keep the table small: drop contests that ended more than a day ago.
-        contestDao.deleteOldUnstarredContests(System.currentTimeMillis() - 86_400_000L)
+        // Keep the table small: recent past contests stay visible, anything older than the window goes.
+        contestDao.deleteOldUnstarredContests(System.currentTimeMillis() - PAST_WINDOW_MS)
     }
 
     override suspend fun setReminder(contestId: String, enable: Boolean): Boolean {
@@ -88,12 +90,21 @@ class ContestRepositoryImpl @Inject constructor(
         }
     }
 
+    private companion object {
+        /** How far back finished contests are kept and shown. */
+        const val PAST_WINDOW_MS = 14L * 24 * 60 * 60 * 1000
+    }
+
     private suspend fun fetchCodeforcesContests(): List<ContestEntity> {
         val response = codeforcesApi.getContestList(gym = false)
         if (response.status != "OK" || response.result == null) return emptyList()
 
-        // contest.list returns every contest ever held (~2k rows); only keep live/upcoming ones.
-        return response.result.asSequence().filter { it.phase == "BEFORE" || it.phase == "CODING" }.mapNotNull { cf ->
+        // contest.list returns every contest ever held (~2k rows); keep live/upcoming plus the recent past.
+        val pastCutoff = System.currentTimeMillis() - PAST_WINDOW_MS
+        return response.result.asSequence().filter {
+            it.phase == "BEFORE" || it.phase == "CODING" ||
+                (it.phase == "FINISHED" && (it.startTimeSeconds ?: 0L) * 1000 > pastCutoff)
+        }.mapNotNull { cf ->
             val startSec = cf.startTimeSeconds ?: return@mapNotNull null
             val startMs = startSec * 1000
             val durSec = cf.durationSeconds
@@ -133,7 +144,20 @@ class ContestRepositoryImpl @Inject constructor(
         """.trimIndent()
 
         val response = leetCodeApi.getContestData(GraphQLRequest(query))
-        val contests = response.data?.topTwoContests ?: return emptyList()
+        val pastQuery = """
+            query {
+              pastContests(pageNo: 1, numPerPage: 8) {
+                data { title titleSlug startTime duration }
+              }
+            }
+        """.trimIndent()
+        val past = runCatching {
+            leetCodeApi.getContestData(GraphQLRequest(pastQuery)).data?.pastContests?.data.orEmpty()
+        }.getOrDefault(emptyList())
+        val pastCutoff = System.currentTimeMillis() - PAST_WINDOW_MS
+        val contests = (response.data?.topTwoContests.orEmpty() + past.filter { it.startTime * 1000 > pastCutoff })
+            .distinctBy { it.titleSlug }
+        if (contests.isEmpty()) return emptyList()
 
         return contests.map { lc ->
             val startMs = lc.startTime * 1000
@@ -163,12 +187,14 @@ class ContestRepositoryImpl @Inject constructor(
 
     private suspend fun fetchCodeChefContests(): List<ContestEntity> {
         val response = codeChefApi.getContests()
-        val allCc = (response.presentContests ?: emptyList()) + (response.futureContests ?: emptyList())
+        val pastCutoff = System.currentTimeMillis() - PAST_WINDOW_MS
+        val allCc = (response.presentContests ?: emptyList()) + (response.futureContests ?: emptyList()) +
+            (response.pastContests ?: emptyList()).take(15)
         val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
 
-        return allCc.mapNotNull { cc ->
+        return allCc.distinctBy { it.contestCode }.mapNotNull { cc ->
             val startMs = runCatching {
                 cc.contestStartDateIso?.let { isoFormat.parse(it)?.time }
             }.getOrNull() ?: return@mapNotNull null
@@ -177,6 +203,7 @@ class ContestRepositoryImpl @Inject constructor(
                 cc.contestEndDateIso?.let { isoFormat.parse(it)?.time }
             }.getOrNull() ?: (startMs + 7200000) // Default 2h
 
+            if (endMs < pastCutoff) return@mapNotNull null
             val now = System.currentTimeMillis()
             val phase = when {
                 now < startMs -> "BEFORE"
@@ -200,32 +227,48 @@ class ContestRepositoryImpl @Inject constructor(
     }
 
     private suspend fun fetchAtCoderContests(): List<ContestEntity> {
-        val response = kenkooooAtCoderApi.getContests()
         val now = System.currentTimeMillis()
-
-        return response.filter { (it.startEpochSecond * 1000) + (it.durationSecond * 1000) > now - 86400000 }
+        // Recent and running contests come from the community API...
+        val recent = runCatching { kenkooooAtCoderApi.getContests() }.getOrDefault(emptyList())
+            .filter { (it.startEpochSecond * 1000) + (it.durationSecond * 1000) > now - PAST_WINDOW_MS }
             .map { ac ->
-                val startMs = ac.startEpochSecond * 1000
-                val endMs = startMs + (ac.durationSecond * 1000)
-                val phase = when {
-                    now < startMs -> "BEFORE"
-                    now in startMs..endMs -> "CODING"
-                    else -> "FINISHED"
-                }
-
-                ContestEntity(
-                    id = "ac_${ac.id}",
-                    externalId = ac.id,
-                    platformId = Platform.ATCODER.id,
-                    name = ac.title,
-                    startTime = startMs,
-                    endTime = endMs,
+                AtCoderPageContest(
+                    id = ac.id,
+                    title = ac.title,
+                    startMillis = ac.startEpochSecond * 1000,
                     durationSeconds = ac.durationSecond,
-                    url = "https://atcoder.jp/contests/${ac.id}",
-                    isRated = !ac.rateChange.isNullOrBlank() && ac.rateChange != "-",
-                    phase = phase
+                    isRated = !ac.rateChange.isNullOrBlank() && ac.rateChange != "-"
                 )
             }
+        // ...and upcoming ones from atcoder.jp itself (the community list only knows contests that have started).
+        val upcoming = runCatching {
+            AtCoderContestsParser.parse(
+                kenkooooAtCoderApi.getContestsPage("https://atcoder.jp/contests/").use { it.string() }
+            )
+        }.getOrDefault(emptyList())
+        if (recent.isEmpty() && upcoming.isEmpty()) throw IllegalStateException("Couldn't reach AtCoder")
+
+        return (upcoming + recent).distinctBy { it.id }.map { ac ->
+            val startMs = ac.startMillis
+            val endMs = startMs + ac.durationSeconds * 1000
+            val phase = when {
+                now < startMs -> "BEFORE"
+                now in startMs..endMs -> "CODING"
+                else -> "FINISHED"
+            }
+            ContestEntity(
+                id = "ac_${ac.id}",
+                externalId = ac.id,
+                platformId = Platform.ATCODER.id,
+                name = ac.title,
+                startTime = startMs,
+                endTime = endMs,
+                durationSeconds = ac.durationSeconds,
+                url = "https://atcoder.jp/contests/${ac.id}",
+                isRated = ac.isRated,
+                phase = phase
+            )
+        }
     }
 
     private fun ContestEntity.toDomain(): Contest {

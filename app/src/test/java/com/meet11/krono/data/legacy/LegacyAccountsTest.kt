@@ -33,7 +33,7 @@ class LegacyAccountsTest {
 
     @Test
     fun dropsUnsupportedPlatformsAndMissingHandles() {
-        assertNull(LegacyAccounts.fromRow(row(platform = "atcoder")))
+        assertNull(LegacyAccounts.fromRow(row(platform = "geeksforgeeks")))
         assertNull(LegacyAccounts.fromRow(row(platform = "nonsense")))
         assertNull(LegacyAccounts.fromRow(row(platform = null)))
         assertNull(LegacyAccounts.fromRow(row(username = "   ")))

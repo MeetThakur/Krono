@@ -162,6 +162,7 @@ private fun MetricTile(label: String, value: String, modifier: Modifier = Modifi
         modifier = modifier,
         color = tintFill(pastel),
         borderColor = tintEdge(pastel),
+        shadowColor = tintShadow(pastel),
         contentPadding = PaddingValues(16.dp)
     ) {
         Caption(label, color = c.onTint.copy(alpha = 0.7f))

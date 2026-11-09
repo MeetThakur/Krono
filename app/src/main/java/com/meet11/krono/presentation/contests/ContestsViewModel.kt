@@ -23,7 +23,7 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
-enum class SectionKind(val title: String) { LIVE("Live now"), TODAY("Today"), TOMORROW("Tomorrow"), WEEK("This week"), LATER("Later") }
+enum class SectionKind(val title: String) { LIVE("Live now"), TODAY("Today"), TOMORROW("Tomorrow"), WEEK("This week"), LATER("Later"), PAST("Past") }
 
 data class ContestSection(val kind: SectionKind, val contests: List<Contest>)
 
@@ -67,9 +67,17 @@ class ContestsViewModel @Inject constructor(
             }
         }
 
+        val past = contests
+            .filter { it.isFinishedAt(now) && (platform == null || it.platform == platform) }
+            .sortedByDescending { it.startTime }
+            .take(30)
+
         ContestsUiState(
             isLoaded = true,
-            sections = SectionKind.entries.mapNotNull { k -> grouped[k]?.let { ContestSection(k, it) } },
+            sections = SectionKind.entries.mapNotNull { k ->
+                if (k == SectionKind.PAST) past.takeIf { it.isNotEmpty() }?.let { ContestSection(k, it) }
+                else grouped[k]?.let { ContestSection(k, it) }
+            },
             totalCount = visible.size,
             countsByPlatform = active.groupingBy { it.platform }.eachCount(),
             selectedPlatform = platform,

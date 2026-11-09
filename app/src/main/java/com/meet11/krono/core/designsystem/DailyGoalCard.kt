@@ -48,7 +48,8 @@ fun DailyGoalCard(
     val view = LocalView.current
     val c = Krono.colors
 
-    KronoCard(modifier = modifier.fillMaxWidth(), color = tintFill(c.mint), borderColor = tintEdge(c.mint)) {
+    KronoCard(modifier = modifier.fillMaxWidth(), color = tintFill(c.mint), borderColor = tintEdge(c.mint),
+        shadowColor = tintShadow(c.mint)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             GoalDial(
                 solved = dailyGoal.solvedToday,
@@ -100,7 +101,8 @@ fun DailyGoalCard(
                     onLogSolve()
                 },
                 modifier = Modifier.weight(1f),
-                height = 44.dp
+                height = 44.dp,
+                haptic = false
             )
             IconAction(
                 icon = Icons.Rounded.Tune,
@@ -109,7 +111,8 @@ fun DailyGoalCard(
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     onOpenTargetDialog()
                 },
-                size = 44.dp
+                size = 44.dp,
+                haptic = false
             )
         }
     }

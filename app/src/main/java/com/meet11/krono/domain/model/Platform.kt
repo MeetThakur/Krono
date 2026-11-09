@@ -30,7 +30,7 @@ enum class Platform(
 
     companion object {
         /** Platforms whose user profiles Krono can fetch. */
-        val trackable = listOf(CODEFORCES, LEETCODE, CODECHEF)
+        val trackable = listOf(CODEFORCES, LEETCODE, CODECHEF, ATCODER)
 
         /** Platforms Krono pulls contest schedules from. */
         val contestSources = listOf(CODEFORCES, LEETCODE, CODECHEF, ATCODER)

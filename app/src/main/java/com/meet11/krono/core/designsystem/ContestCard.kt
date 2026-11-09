@@ -55,15 +55,21 @@ fun ContestCard(
     val c = Krono.colors
     val fmt = rememberTimeFormatter()
     // Far-off contests only need a coarse tick; the last day counts down by the second.
-    val tickMs = if (contest.startTime - System.currentTimeMillis() < 86_400_000L) 1_000L else 30_000L
+    val tickMs = when {
+        contest.isFinishedAt(System.currentTimeMillis()) -> 60_000L
+        contest.startTime - System.currentTimeMillis() < 86_400_000L -> 1_000L
+        else -> 30_000L
+    }
     val now by rememberNow(tickMs)
     val live = contest.isLiveAt(now)
+    val finished = contest.isFinishedAt(now)
 
     KronoCard(
         modifier = modifier.fillMaxWidth(),
         color = if (live) tintFill(c.coral) else platformTint(contest.platform),
         onClick = { openUrl(context, contest.url) },
         borderColor = tintEdge(if (live) c.coral else platformPastel(contest.platform)),
+        shadowColor = tintShadow(if (live) c.coral else platformPastel(contest.platform)),
         contentPadding = PaddingValues(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -79,6 +85,8 @@ fun ContestCard(
             }
             if (live) {
                 Tag("Live", tone = TagTone.Accent, pulse = true)
+            } else if (finished) {
+                Tag("Ended")
             } else {
                 Tag(formatDuration(contest.durationMillis), uppercase = false)
             }
@@ -100,6 +108,22 @@ fun ContestCard(
             Spacer(Modifier.height(14.dp))
         }
 
+        if (finished) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Ended ${fmt.dayAndTime(contest.effectiveEndTime)}",
+                    style = Readout.small,
+                    color = c.onTint.copy(alpha = 0.75f),
+                    modifier = Modifier.weight(1f)
+                )
+                IconAction(
+                    icon = Icons.AutoMirrored.Rounded.OpenInNew,
+                    contentDescription = "Open contest page",
+                    onClick = { openUrl(context, contest.url) }
+                )
+            }
+            return@KronoCard
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Caption(if (live) "Time left" else "Starts in", color = c.onTint.copy(alpha = 0.65f))
@@ -216,6 +240,7 @@ fun NextContestHero(
         color = tintFill(if (live) c.coral else c.butter),
         onClick = { openUrl(context, contest.url) },
         borderColor = tintEdge(if (live) c.coral else c.butter),
+        shadowColor = tintShadow(if (live) c.coral else c.butter),
         contentPadding = PaddingValues(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

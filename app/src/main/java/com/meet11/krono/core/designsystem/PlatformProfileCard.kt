@@ -47,6 +47,7 @@ fun PlatformProfileCard(
         onClick = onClick,
         color = platformTint(profile.platform),
         borderColor = tintEdge(platformPastel(profile.platform)),
+        shadowColor = tintShadow(platformPastel(profile.platform)),
         contentPadding = PaddingValues(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -108,7 +108,7 @@ fun kronoDarkColors(palette: ThemePaletteSeed = ThemePaletteSeed.VOLT) = KronoCo
     sky = Color(0xFF8EC5F0),
     mint = Color(0xFF7FD6A8),
     coral = Color(0xFFFF8F73),
-    shadow = Color(0x66000000),
+    shadow = Color(0xFF05080F),
     edge = Color(0xFF34406A),
     onTint = Color(0xFFF4EEDC),
     live = Color(0xFFFF8F73)

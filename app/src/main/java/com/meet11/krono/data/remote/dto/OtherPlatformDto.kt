@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class CodeChefContestListResponse(
     val status: String? = null,
     @SerialName("present_contests") val presentContests: List<CodeChefContestDto>? = null,
-    @SerialName("future_contests") val futureContests: List<CodeChefContestDto>? = null
+    @SerialName("future_contests") val futureContests: List<CodeChefContestDto>? = null,
+    @SerialName("past_contests") val pastContests: List<CodeChefContestDto>? = null
 )
 
 @Serializable
@@ -28,4 +29,18 @@ data class AtCoderContestDto(
     @SerialName("duration_second") val durationSecond: Long,
     val title: String,
     @SerialName("rate_change") val rateChange: String? = null
+)
+
+@Serializable
+data class AtCoderHistoryDto(
+    @SerialName("IsRated") val isRated: Boolean = false,
+    @SerialName("NewRating") val newRating: Int = 0,
+    @SerialName("ContestName") val contestName: String = "",
+    @SerialName("EndTime") val endTime: String = ""
+)
+
+@Serializable
+data class AtCoderAcRankDto(
+    val count: Int = 0,
+    val rank: Int? = null
 )
