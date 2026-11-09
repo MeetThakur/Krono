@@ -1,7 +1,6 @@
 package com.meet11.krono.data.legacy
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import com.meet11.krono.data.preferences.PreferencesManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +21,7 @@ data class LegacyStreak(
 /**
  * Krono 1.x persisted its streak with zustand's `persist` middleware on top of AsyncStorage under the
  * key `krono-streak-storage`. AsyncStorage's Android backend is a SQLite file `RKStorage` with a
- * `catalystLocalStorage(key, value)` table, and zustand wraps the state as `{"state":{…},"version":N}`.
+ * `catalystLocalStorage(key, value)` table (see [LegacyAsyncStorage]), and zustand wraps the state as `{"state":{…},"version":N}`.
  *
  * That file only exists if 2.0 was installed *over* 1.x (same package and signing key). On a fresh
  * install it's absent and this is a no-op.
@@ -82,19 +81,12 @@ class LegacyStreakImporter @Inject constructor(
     }
 
     private fun readLegacy(): Read {
-        val file = context.getDatabasePath(LEGACY_DB)
-        if (!file.exists()) return Read.NothingToImport
-        SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
-            db.rawQuery("SELECT value FROM catalystLocalStorage WHERE key = ?", arrayOf(STREAK_KEY)).use { c ->
-                if (!c.moveToFirst()) return Read.NothingToImport
-                val parsed = LegacyStreakParser.parse(c.getString(0)) ?: return Read.NothingToImport
-                return Read.Found(parsed)
-            }
-        }
+        val raw = LegacyAsyncStorage.get(context, STREAK_KEY) ?: return Read.NothingToImport
+        val parsed = LegacyStreakParser.parse(raw) ?: return Read.NothingToImport
+        return Read.Found(parsed)
     }
 
     private companion object {
-        const val LEGACY_DB = "RKStorage"
         const val STREAK_KEY = "krono-streak-storage"
     }
 }

@@ -60,6 +60,7 @@ class PreferencesManager @Inject constructor(
         val KEY_DAILY_HISTORY = stringPreferencesKey("daily_history_json")
         val KEY_LAST_ACTIVE_DATE = stringPreferencesKey("last_active_date")
         val KEY_LEGACY_IMPORTED = booleanPreferencesKey("legacy_1x_import_done")
+        val KEY_LEGACY_ACCOUNTS_IMPORTED = booleanPreferencesKey("legacy_1x_accounts_import_done")
     }
 
     val themeSettings: Flow<ThemeSettings> = context.dataStore.data.catchIo().map { prefs ->
@@ -132,6 +133,13 @@ class PreferencesManager @Inject constructor(
                 prefs[KEY_LAST_ACTIVE_DATE] = lastActiveDate
             }
         }
+    }
+
+    suspend fun isLegacyAccountsImportDone(): Boolean =
+        context.dataStore.data.catchIo().first()[KEY_LEGACY_ACCOUNTS_IMPORTED] ?: false
+
+    suspend fun markLegacyAccountsImported() {
+        context.dataStore.edit { it[KEY_LEGACY_ACCOUNTS_IMPORTED] = true }
     }
 
     suspend fun isLegacyImportDone(): Boolean =

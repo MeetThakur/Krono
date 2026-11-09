@@ -1,8 +1,8 @@
 <resources>
-  <!-- Launch theme: system splash stays up until the saved theme has loaded (see MainActivity). -->
+  <!-- Launch theme: the splash stays up until the saved theme has loaded (see MainActivity). -->
   <style name="Theme.Krono.Starting" parent="Theme.SplashScreen">
     <item name="windowSplashScreenBackground">@color/window_background</item>
-    <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_krono</item>
     <item name="postSplashScreenTheme">@style/Theme.Krono</item>
   </style>
 </resources>

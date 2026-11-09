@@ -145,7 +145,10 @@ fun HomeScreen(
                         modifier = Modifier.padding(horizontal = Gutter)
                     )
                     Spacer(Modifier.height(10.dp))
-                    if (state.profiles.isEmpty()) {
+                    if (!state.isLoaded) {
+                        // Don't flash "connect your first profile" before the saved profiles have loaded.
+                        SkeletonBlock(Modifier.padding(horizontal = Gutter).fillMaxWidth().height(164.dp))
+                    } else if (state.profiles.isEmpty()) {
                         EmptyState(
                             icon = Icons.Rounded.PersonAddAlt,
                             title = "Connect your first profile",
@@ -180,11 +183,15 @@ fun HomeScreen(
                 Column(Modifier.padding(horizontal = Gutter)) {
                     SectionHeader("Daily practice")
                     Spacer(Modifier.height(10.dp))
-                    DailyGoalCard(
-                        dailyGoal = state.dailyGoal,
-                        onLogSolve = viewModel::recordManualSolve,
-                        onOpenTargetDialog = { showGoalSheet = true }
-                    )
+                    if (state.isLoaded) {
+                        DailyGoalCard(
+                            dailyGoal = state.dailyGoal,
+                            onLogSolve = viewModel::recordManualSolve,
+                            onOpenTargetDialog = { showGoalSheet = true }
+                        )
+                    } else {
+                        SkeletonBlock(Modifier.fillMaxWidth().height(206.dp))
+                    }
                     if (state.profiles.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
                         StatsStrip(

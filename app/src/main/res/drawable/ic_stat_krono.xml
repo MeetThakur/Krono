@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Monochrome status-bar glyph (notification small icons must be alpha-only). -->
+<!-- Monochrome status-bar glyph (notification small icons must be alpha-only): the app-icon "K". -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <path android:fillColor="#FFFFFFFF" android:pathData="M6,4h3v16h-3z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M9,12.4L15.6,4H19.2L11.4,13.9Z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M10.9,12.3L19.2,20H15.3L9,14.3Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5.10,3.47 L8.40,3.47 L8.40,11.47 L15.76,3.47 L18.90,3.47 L18.90,6.26 L12.14,11.95 L18.90,17.71 L18.90,20.53 L15.76,20.53 L9.52,14.13 L8.40,15.09 L8.40,20.53 L5.10,20.53 Z" />
 </vector>

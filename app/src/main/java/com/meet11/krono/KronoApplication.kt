@@ -11,6 +11,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.meet11.krono.data.legacy.LegacyAccountsImporter
 import com.meet11.krono.data.legacy.LegacyStreakImporter
 import com.meet11.krono.worker.ContestSyncWorker
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,9 @@ class KronoApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var legacyStreakImporter: LegacyStreakImporter
 
+    @Inject
+    lateinit var legacyAccountsImporter: LegacyAccountsImporter
+
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override val workManagerConfiguration: Configuration
@@ -41,8 +45,11 @@ class KronoApplication : Application(), Configuration.Provider {
         super.onCreate()
         createNotificationChannels()
         schedulePeriodicContestSync()
-        // One-time: carry streak history over from Krono 1.x when 2.0 is installed as an update.
-        appScope.launch { runCatching { legacyStreakImporter.importIfNeeded() } }
+        // One-time: carry streak history, profiles and rivals over from Krono 1.x when 2.0 is installed as an update.
+        appScope.launch {
+            runCatching { legacyStreakImporter.importIfNeeded() }
+            runCatching { legacyAccountsImporter.importIfNeeded() }
+        }
     }
 
     private fun schedulePeriodicContestSync() {

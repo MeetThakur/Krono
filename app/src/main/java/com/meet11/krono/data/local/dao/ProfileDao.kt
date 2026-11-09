@@ -27,4 +27,8 @@ interface ProfileDao {
 
     @Update
     suspend fun updateProfiles(profiles: List<ProfileEntity>)
+
+    /** Adds rows that don't exist yet and leaves existing ones untouched (used for the 1.x import). */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(profiles: List<ProfileEntity>)
 }

@@ -8,7 +8,7 @@ All notable changes to Krono are documented in this file.
 
 ### Upgrading from 1.x
 - 2.0 installs **over** 1.x as an update (same package name, same signing certificate), so no uninstall is needed.
-- Your streak history, best streak and daily goal are carried over automatically on first launch. Connected profiles and rivals are not migrated yet; re-add them from the Today and Rivals screens.
+- Your streak history, best streak and daily goal, your connected profiles (in their saved order) and your rivals are carried over automatically on first launch, then refreshed from the platforms. Only Codeforces, LeetCode and CodeChef accounts are kept; anything else 2.0 can't track is skipped. This runs once, so profiles you remove later don't come back.
 - 1.x scheduled **two** notifications per contest (60 and 15 minutes before). 2.0 sends **one**, at the lead time you choose in Settings, and never repeats a reminder for the same contest start.
 
 ### Redesign
@@ -33,6 +33,7 @@ All notable changes to Krono are documented in this file.
 - Contest schedule wasn't synced from Today on first launch; finished contests were never pruned.
 - "Reorder" button did nothing (removed); contest filters for platforms with no data removed.
 - Startup crash risk in navigation item initialisation; theme flash on cold start (now held behind the splash).
+- Launch splash no longer clips the "K" (it follows light/dark); Today no longer flashes "Connect your first profile" while saved profiles load.
 - Clear messages for offline / not-found / rate-limited errors.
 
 ### Performance

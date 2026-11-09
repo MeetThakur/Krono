@@ -26,4 +26,8 @@ interface RivalDao {
 
     @Query("DELETE FROM rivals WHERE id = :id")
     suspend fun deleteRival(id: String)
+
+    /** Adds rows that don't exist yet and leaves existing ones untouched (used for the 1.x import). */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(rivals: List<RivalEntity>)
 }
