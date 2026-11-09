@@ -12,13 +12,13 @@ All notable changes to Krono are documented in this file.
 - 1.x scheduled **two** notifications per contest (60 and 15 minutes before). 2.0 sends **one**, at the lead time you choose in Settings, and never repeats a reminder for the same contest start.
 
 ### Redesign
-- New visual identity: ink surfaces, hairline borders and a single signal accent (Volt by default), Space Grotesk for UI and JetBrains Mono tabular figures for every number.
+- New "pebble" visual identity: cream/navy canvas, chunky outlined cards with a hard shadow, butter/sky/mint/coral fills, platform logos, Fredoka and Nunito type, and a new adaptive launcher icon.
 - Today screen leads with a live next-contest chronograph (counts to end-of-contest while live).
 - Goal dial with per-problem segments, hairline stats strip, compact "Coming up" rows.
 - Contests grouped Live / Today / Tomorrow / This week / Later with sticky filters, live progress bars and per-card countdowns.
 - Rivals head-to-head with gap-to-close and ranked standings.
 - Bottom sheets replace dialogs for adding handles and setting the daily goal; snackbars replace error dialogs.
-- Light theme now works everywhere (previously most screens hard-coded dark colours). Seven accents plus optional Material You.
+- Light theme now works everywhere (previously most screens hard-coded dark colours). The accent picker and Material You option were removed in favour of the fixed palette.
 - Pull-to-refresh on Today, Contests and Rivals; screen transitions and press feedback throughout.
 
 ### Fixes

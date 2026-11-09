@@ -2,6 +2,11 @@
   <img src="assets/images/hero.png" alt="Krono — competitive programming, on the clock" width="100%" />
 </p>
 
+<p align="center">
+  <a href="assets/video/krono-trailer.mp4"><img src="assets/images/trailer.jpg" alt="Watch the Krono trailer (18s)" width="70%" /></a><br />
+  <sub>▶ Watch the 18-second trailer</sub>
+</p>
+
 <h1 align="center">Krono</h1>
 
 <p align="center">
@@ -49,8 +54,9 @@
 </p>
 <p align="center">
   <img src="assets/images/screenshots/rivals.png" width="200" alt="Rivals — head-to-head and standings" />
-  <img src="assets/images/screenshots/settings.png" width="200" alt="Settings — theme, accent and reminder health" />
+  <img src="assets/images/screenshots/settings.png" width="200" alt="Settings — theme and reminder health" />
   <img src="assets/images/screenshots/home_light.png" width="200" alt="Today in light mode" />
+  <img src="assets/images/screenshots/contests_light.png" width="200" alt="Contests in light mode" />
 </p>
 
 <sub>Screenshots use synthetic demo accounts.</sub>
@@ -65,16 +71,25 @@
 - **Profiles & real rating history** — Connect Codeforces, LeetCode and CodeChef handles to sync rating, peak, rank, solved and contest counts. Profile sheets chart your real rating history from Codeforces and LeetCode.
 - **Daily practice** — A bezel-style goal dial, streaks that break correctly when you miss a day, and an undo for accidental logs.
 - **Rivals** — Head-to-head comparison with gap-to-close, plus ranked standings per platform. Tap to compare, long-press or ✕ to remove.
-- **Your look** — Light, dark or system theme; seven accents (Volt, Ember, Ice, Iris, Rose, Mint, Mono) or Material You wallpaper colours.
+- **Your look** — Light, dark or system theme in the pebble identity: cream and navy, chunky outlines, and butter, sky, mint and coral fills.
 
 ---
 
 ## Design
 
-Krono 2.0 is built around a precision-instrument idea: flat ink surfaces, hairline borders and a single signal accent, with every number set in a tabular monospace so ratings and timers read like a readout.
+Krono 2.0 has its own "pebble" identity: a warm cream (or deep navy) canvas, chunky outlines with a hard offset shadow, uneven rounded corners, and four pastel fills (butter, sky, mint, coral). Each platform gets its own tint and logo mark.
 
 | Token | Choice |
 | :--- | :--- |
+| Display, UI and numbers | Fredoka |
+| Body | Nunito |
+| Canvas | Cream `#FFF8E7` (light), navy `#101624` (dark) |
+| Ink | `#1D2233` |
+| Fills | Butter `#FFD66B`, sky `#BFE3FA`, mint `#C9F0DA`, coral `#FFB3A0` (deepened in dark) |
+
+All colours come from `KronoColors` tokens (`core/theme/Color.kt`), so both themes stay consistent.
+
+--- | :--- |
 | Display & UI type | Space Grotesk |
 | Numbers & timers | JetBrains Mono, tabular figures |
 | Surfaces (dark) | Ink `#09090A` → `#131315` → `#1B1B1E`, hairlines `#222226` |
@@ -105,7 +120,7 @@ All colours come from `KronoColors` tokens (`core/theme/Color.kt`), so both them
 app/src/main/java/com/meet11/krono/
 ├── core/
 │   ├── designsystem/          # Primitives (KronoCard, Tag, chips, buttons) + ContestCard, NextContestHero, GoalDial, RatingChart
-│   ├── theme/                 # KronoColors tokens, accents, Space Grotesk / JetBrains Mono type, shapes
+│   ├── theme/                 # KronoColors tokens, Fredoka / Nunito type, pebble shapes
 │   ├── ui/                    # Snackbar messages, notification-permission gate, ticker flow
 │   └── util/                  # Locale-aware time formatting, countdowns, user-facing error messages
 ├── data/
@@ -187,7 +202,6 @@ Generated outputs:
 ## Settings
 
 - **Theme** — System, Light or Dark.
-- **Accent** — Volt, Ember, Ice, Iris, Rose, Mint or Mono; or *Match wallpaper* for Material You.
 - **Reminder lead time** — 5, 15, 30 or 60 minutes before start. Changing it re-arms existing reminders.
 - **Reminder health** — Shows whether notifications and exact alarms are allowed, with a shortcut to fix each.
 - **Daily goal** — Set from the Today screen (1–99 problems per day).

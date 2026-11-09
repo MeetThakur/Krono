@@ -1,0 +1,1 @@
+Krono 2.0: every contest on one clock, your ratings across platforms, and a head-to-head with your rivals. Open source Android, built with Jetpack Compose.
