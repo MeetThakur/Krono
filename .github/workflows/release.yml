@@ -76,7 +76,8 @@ jobs:
         run: |
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | tee signature.txt
-          actual=$(sed -nE 's/^Signer #1 certificate SHA-256 digest: ([0-9a-f]+)$/\1/p' signature.txt)
+          # Newer apksigner prints "V2 Signer: certificate SHA-256 digest: ...", older ones "Signer #1 certificate ...".
+          actual=$(grep -m1 'certificate SHA-256 digest:' signature.txt | awk '{print $NF}')
           if [ "$actual" != "$EXPECTED_CERT_SHA256" ]; then
             echo "::error::Signing certificate $actual does not match the Krono 1.x certificate $EXPECTED_CERT_SHA256 (this APK could not update existing installs)."
             exit 1
