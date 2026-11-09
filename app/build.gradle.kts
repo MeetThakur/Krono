@@ -21,9 +21,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // Release signing comes from env vars (CI secrets). Without them we fall back to the debug key
-    // so local `assembleRelease` still works — but debug-signed APKs from different machines can't
-    // update each other, so published releases must use the real keystore.
+    // Release signing comes from env vars (CI secrets). Published releases must be signed with the same
+    // certificate as Krono 1.x (the debug.keystore committed at tag v1.6.5), or Android won't install
+    // them as an update. Without the env vars we fall back to this machine's debug key so local
+    // `assembleRelease` still works; such APKs can't update a published release.
     val releaseKeystore = System.getenv("KRONO_KEYSTORE_PATH")?.let(::file)?.takeIf { it.exists() }
     signingConfigs {
         if (releaseKeystore != null) {

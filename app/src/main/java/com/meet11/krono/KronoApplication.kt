@@ -11,7 +11,12 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.meet11.krono.data.legacy.LegacyStreakImporter
 import com.meet11.krono.worker.ContestSyncWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -22,6 +27,11 @@ class KronoApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var legacyStreakImporter: LegacyStreakImporter
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -31,6 +41,8 @@ class KronoApplication : Application(), Configuration.Provider {
         super.onCreate()
         createNotificationChannels()
         schedulePeriodicContestSync()
+        // One-time: carry streak history over from Krono 1.x when 2.0 is installed as an update.
+        appScope.launch { runCatching { legacyStreakImporter.importIfNeeded() } }
     }
 
     private fun schedulePeriodicContestSync() {

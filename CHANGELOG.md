@@ -6,6 +6,11 @@ All notable changes to Krono are documented in this file.
 
 ## [v2.0.0] - 2026-11-05
 
+### Upgrading from 1.x
+- 2.0 installs **over** 1.x as an update (same package name, same signing certificate), so no uninstall is needed.
+- Your streak history, best streak and daily goal are carried over automatically on first launch. Connected profiles and rivals are not migrated yet; re-add them from the Today and Rivals screens.
+- 1.x scheduled **two** notifications per contest (60 and 15 minutes before). 2.0 sends **one**, at the lead time you choose in Settings, and never repeats a reminder for the same contest start.
+
 ### Redesign
 - New visual identity: ink surfaces, hairline borders and a single signal accent (Volt by default), Space Grotesk for UI and JetBrains Mono tabular figures for every number.
 - Today screen leads with a live next-contest chronograph (counts to end-of-contest while live).

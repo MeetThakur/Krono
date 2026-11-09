@@ -36,8 +36,11 @@ class ReminderScheduler @Inject constructor(
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pending)
         }.isSuccess
         if (!exact) {
-            // Without exact-alarm access the OS may defer by up to an hour, which could land after
-            // the contest starts. A bounded window that *ends* at the reminder time is never late.
+            // Without exact-alarm access the OS is free to defer, by up to an hour for a plain inexact
+            // alarm. A window that ends at the reminder time keeps it close to on time when set well in
+            // advance. Android enforces a 10-minute minimum window, so a reminder set less than 10
+            // minutes before its trigger can arrive up to ~10 minutes late (verified on Android 16).
+            // Exact alarms (Settings > Reminders > Exact timing) remove this uncertainty.
             val windowStart = (triggerAt - INEXACT_WINDOW_MS).coerceAtLeast(System.currentTimeMillis())
             am.setWindow(AlarmManager.RTC_WAKEUP, windowStart, triggerAt - windowStart, pending)
         }

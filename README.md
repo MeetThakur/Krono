@@ -168,13 +168,15 @@ Build directly from the command line using the Gradle wrapper:
 ./gradlew assembleRelease
 ```
 
-Release builds are signed with the keystore given by `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`; without them Gradle falls back to the debug key (fine locally, never for published releases).
+Release builds are signed with the keystore given by `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`. Published releases must use the **same certificate as Krono 1.x** (the `debug.keystore` committed at tag `v1.6.5`), otherwise Android will not install them as an update and users would lose their data. Without those variables Gradle falls back to your local debug key, which is fine for development but can never update a published release.
 
 ### Publishing a release
 
 1. Bump `versionCode` / `versionName` in `app/build.gradle.kts` and add a `## [vX.Y.Z]` section to `CHANGELOG.md`.
 2. Push a matching tag: `git tag v2.0.0 && git push origin v2.0.0`.
-3. The **Release** workflow checks the tag matches `versionName`, builds a signed APK, verifies it isn't debug-signed, and publishes it with that CHANGELOG section as notes.
+3. The **Release** workflow checks the tag matches `versionName`, builds a signed APK, verifies its certificate fingerprint matches Krono 1.x, and publishes it with that CHANGELOG section as notes.
+
+Repository secrets used by the workflow: `KRONO_KEYSTORE_BASE64`, `KRONO_KEYSTORE_PASSWORD` (`android`), `KRONO_KEY_ALIAS` (`androiddebugkey`), `KRONO_KEY_PASSWORD` (`android`).
 
 Generated outputs:
 - **Debug:** `app/build/outputs/apk/debug/app-debug.apk`

@@ -13,6 +13,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.datastore.preferences.core.emptyPreferences
 import kotlinx.serialization.encodeToString
@@ -58,6 +59,7 @@ class PreferencesManager @Inject constructor(
         val KEY_BEST_STREAK = intPreferencesKey("best_streak")
         val KEY_DAILY_HISTORY = stringPreferencesKey("daily_history_json")
         val KEY_LAST_ACTIVE_DATE = stringPreferencesKey("last_active_date")
+        val KEY_LEGACY_IMPORTED = booleanPreferencesKey("legacy_1x_import_done")
     }
 
     val themeSettings: Flow<ThemeSettings> = context.dataStore.data.catchIo().map { prefs ->
@@ -129,6 +131,34 @@ class PreferencesManager @Inject constructor(
             if (lastActiveDate != null) {
                 prefs[KEY_LAST_ACTIVE_DATE] = lastActiveDate
             }
+        }
+    }
+
+    suspend fun isLegacyImportDone(): Boolean =
+        context.dataStore.data.catchIo().first()[KEY_LEGACY_IMPORTED] ?: false
+
+    /**
+     * Merges streak data recovered from Krono 1.x and flags the import as done, atomically.
+     * Never lowers anything: per-day counts and best streak take the larger value, and the goal is
+     * only taken from 1.x if the user hasn't set one yet. [legacy] == null just sets the flag.
+     * The current streak is derived from history on read, so it isn't stored here.
+     */
+    suspend fun importLegacyStreak(legacy: com.meet11.krono.data.legacy.LegacyStreak?) {
+        context.dataStore.edit { prefs ->
+            if (legacy != null) {
+                val existing: Map<String, Int> = prefs[KEY_DAILY_HISTORY]
+                    ?.let { runCatching { json.decodeFromString<Map<String, Int>>(it) }.getOrNull() }
+                    .orEmpty()
+                val merged = (existing.keys + legacy.history.keys).associateWith { day ->
+                    maxOf(existing[day] ?: 0, legacy.history[day] ?: 0)
+                }
+                prefs[KEY_DAILY_HISTORY] = json.encodeToString(merged)
+                prefs[KEY_BEST_STREAK] = maxOf(prefs[KEY_BEST_STREAK] ?: 0, legacy.bestStreak)
+                if (KEY_DAILY_GOAL !in prefs && legacy.dailyGoal != null) {
+                    prefs[KEY_DAILY_GOAL] = legacy.dailyGoal
+                }
+            }
+            prefs[KEY_LEGACY_IMPORTED] = true
         }
     }
 }

@@ -43,14 +43,19 @@ jobs:
             exit 1
           fi
 
-      # The keystore must be the same for every release, otherwise installed apps can't update.
-      # Required repo secrets: KRONO_KEYSTORE_BASE64, KRONO_KEYSTORE_PASSWORD, KRONO_KEY_ALIAS, KRONO_KEY_PASSWORD.
+      # Releases must keep the signing certificate of Krono 1.x (React Native), otherwise Android refuses
+      # to install them as an update and users lose their local data. That key is the debug.keystore
+      # committed at tag v1.6.5 (alias androiddebugkey, password "android"). Repo secrets:
+      #   KRONO_KEYSTORE_BASE64    base64 of that keystore
+      #   KRONO_KEYSTORE_PASSWORD  android
+      #   KRONO_KEY_ALIAS          androiddebugkey
+      #   KRONO_KEY_PASSWORD       android
       - name: Restore release keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KRONO_KEYSTORE_BASE64 }}
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
-            echo "::error::KRONO_KEYSTORE_BASE64 secret is missing — refusing to publish a debug-signed release."
+            echo "::error::KRONO_KEYSTORE_BASE64 secret is missing; refusing to publish an APK signed with a different key."
             exit 1
           fi
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/krono-release.jks"
@@ -63,12 +68,17 @@ jobs:
           KRONO_KEY_PASSWORD: ${{ secrets.KRONO_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Verify APK signature
+      # Fails the release if the APK isn't signed with the same certificate as v1.6.5.
+      # To rotate keys later, use an APK signing lineage (apksigner rotate) and update this value.
+      - name: Verify signing certificate
+        env:
+          EXPECTED_CERT_SHA256: fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c
         run: |
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
           "$apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk | tee signature.txt
-          if grep -q "CN=Android Debug" signature.txt; then
-            echo "::error::Release APK is signed with the debug key."
+          actual=$(sed -nE 's/^Signer #1 certificate SHA-256 digest: ([0-9a-f]+)$/\1/p' signature.txt)
+          if [ "$actual" != "$EXPECTED_CERT_SHA256" ]; then
+            echo "::error::Signing certificate $actual does not match the Krono 1.x certificate $EXPECTED_CERT_SHA256 (this APK could not update existing installs)."
             exit 1
           fi
 
