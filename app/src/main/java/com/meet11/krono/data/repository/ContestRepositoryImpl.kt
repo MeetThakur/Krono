@@ -6,6 +6,7 @@ import com.meet11.krono.data.remote.api.CodeChefApi
 import com.meet11.krono.data.remote.api.CodeforcesApi
 import com.meet11.krono.data.remote.api.KenkooooAtCoderApi
 import com.meet11.krono.data.remote.parser.AtCoderContestsParser
+import com.meet11.krono.data.remote.parser.CodeChefTime
 import com.meet11.krono.data.remote.parser.AtCoderPageContest
 import com.meet11.krono.data.remote.api.LeetCodeApi
 import com.meet11.krono.data.remote.dto.GraphQLRequest
@@ -190,18 +191,9 @@ class ContestRepositoryImpl @Inject constructor(
         val pastCutoff = System.currentTimeMillis() - PAST_WINDOW_MS
         val allCc = (response.presentContests ?: emptyList()) + (response.futureContests ?: emptyList()) +
             (response.pastContests ?: emptyList()).take(15)
-        val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
-            timeZone = TimeZone.getTimeZone("UTC")
-        }
-
         return allCc.distinctBy { it.contestCode }.mapNotNull { cc ->
-            val startMs = runCatching {
-                cc.contestStartDateIso?.let { isoFormat.parse(it)?.time }
-            }.getOrNull() ?: return@mapNotNull null
-
-            val endMs = runCatching {
-                cc.contestEndDateIso?.let { isoFormat.parse(it)?.time }
-            }.getOrNull() ?: (startMs + 7200000) // Default 2h
+            val startMs = CodeChefTime.parseMillis(cc.contestStartDateIso) ?: return@mapNotNull null
+            val endMs = CodeChefTime.parseMillis(cc.contestEndDateIso) ?: (startMs + 7200000) // Default 2h
 
             if (endMs < pastCutoff) return@mapNotNull null
             val now = System.currentTimeMillis()
