@@ -4,7 +4,15 @@ All notable changes to Krono are documented in this file.
 
 ---
 
-## [v2.0.0] - 2026-11-05
+## [v2.0.0] - 2026-11-09
+
+Krono 2.0 is a ground-up redesign with its own look, plus a long list of reliability fixes. Every contest on one clock, your ratings across platforms, and a head-to-head with your rivals.
+
+### Highlights
+- A new "pebble" identity in light and dark, with platform logos and a new app icon.
+- One reminder per contest at the lead time you choose, armed the moment you tap the bell.
+- Your streak, profiles and rivals from 1.x carry over automatically.
+- A much smaller, faster release build.
 
 ### Upgrading from 1.x
 - 2.0 installs **over** 1.x as an update (same package name, same signing certificate), so no uninstall is needed.
@@ -14,7 +22,7 @@ All notable changes to Krono are documented in this file.
 ### Redesign
 - New "pebble" visual identity: cream/navy canvas, chunky outlined cards with a hard shadow, butter/sky/mint/coral fills, platform logos, Fredoka and Nunito type, and a new adaptive launcher icon.
 - Today screen leads with a live next-contest chronograph (counts to end-of-contest while live).
-- Goal dial with per-problem segments, hairline stats strip, compact "Coming up" rows.
+- Goal dial with per-problem segments, stats strip, compact "Coming up" rows.
 - Contests grouped Live / Today / Tomorrow / This week / Later with sticky filters, live progress bars and per-card countdowns.
 - Rivals head-to-head with gap-to-close and ranked standings.
 - Bottom sheets replace dialogs for adding handles and setting the daily goal; snackbars replace error dialogs.

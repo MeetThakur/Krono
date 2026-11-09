@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="assets/video/krono-trailer.mp4"><img src="assets/images/trailer.jpg" alt="Watch the Krono trailer (18s)" width="70%" /></a><br />
-  <sub>▶ Watch the 18-second trailer</sub>
+  <a href="assets/video/krono-trailer.mp4"><img src="assets/video/krono-trailer.gif" alt="Krono trailer" width="70%" /></a><br />
+  <sub>Click for the full-quality video</sub>
 </p>
 
 <h1 align="center">Krono</h1>
