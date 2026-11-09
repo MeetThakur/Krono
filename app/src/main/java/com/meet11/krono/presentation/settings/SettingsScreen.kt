@@ -103,27 +103,6 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, modifier: M
                 onSelect = viewModel::setThemeMode,
                 label = { it.name.lowercase().replaceFirstChar(Char::uppercase) }
             )
-            Spacer(Modifier.height(20.dp))
-            Caption("Accent")
-            Spacer(Modifier.height(10.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                ThemePaletteSeed.entries.forEach { palette ->
-                    Swatch(
-                        palette = palette,
-                        selected = !theme.dynamicColor && theme.palette == palette,
-                        onClick = { viewModel.setThemePalette(palette) }
-                    )
-                }
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Spacer(Modifier.height(20.dp))
-                ToggleRow(
-                    title = "Match wallpaper",
-                    subtitle = "Use Material You colors instead of an accent",
-                    checked = theme.dynamicColor,
-                    onCheckedChange = viewModel::setDynamicColor
-                )
-            }
         }
 
         Group("Reminders") {
@@ -179,38 +158,6 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Swatch(palette: ThemePaletteSeed, selected: Boolean, onClick: () -> Unit) {
-    val c = Krono.colors
-    val fill = if (!c.isDark && palette == ThemePaletteSeed.MONOCHROME) c.inverse else palette.fill
-    Column(
-        Modifier
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-            .pressable(pressedScale = 0.92f, role = androidx.compose.ui.semantics.Role.RadioButton, onClickLabel = palette.displayName, onClick = onClick)
-            .padding(horizontal = 2.dp, vertical = 4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            Modifier
-                .size(38.dp)
-                .border(2.dp, if (selected) c.textPrimary else androidx.compose.ui.graphics.Color.Transparent, CircleShape)
-                .padding(4.dp)
-                .background(fill, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            androidx.compose.animation.AnimatedVisibility(
-                visible = selected,
-                enter = androidx.compose.animation.scaleIn() + androidx.compose.animation.fadeIn(),
-                exit = androidx.compose.animation.fadeOut()
-            ) {
-                Icon(Icons.Rounded.Check, contentDescription = null, tint = if (fill == c.inverse) c.onInverse else palette.onFill, modifier = Modifier.size(16.dp))
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(palette.displayName, style = MaterialTheme.typography.labelSmall, color = if (selected) c.textPrimary else c.textTertiary)
-    }
-}
-
-@Composable
 private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     val c = Krono.colors
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -223,11 +170,12 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheck
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedTrackColor = c.accent,
-                checkedThumbColor = c.onAccent,
-                uncheckedTrackColor = c.surfaceRaised,
+                checkedTrackColor = c.mint,
+                checkedThumbColor = c.ink,
+                checkedBorderColor = c.lineStrong,
+                uncheckedTrackColor = c.surfaceSunken,
                 uncheckedBorderColor = c.lineStrong,
-                uncheckedThumbColor = c.textTertiary
+                uncheckedThumbColor = c.lineStrong
             )
         )
     }

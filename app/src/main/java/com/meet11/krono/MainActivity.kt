@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
             }
 
             SystemBars(isDark)
-            KronoTheme(darkTheme = isDark, dynamicColor = current.dynamicColor, palette = current.palette) {
+            KronoTheme(darkTheme = isDark) {
                 if (settings == null) {
                     Box(Modifier.fillMaxSize().background(Krono.colors.background))
                 } else {

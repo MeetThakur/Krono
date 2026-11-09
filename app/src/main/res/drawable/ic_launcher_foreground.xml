@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Krono "K" on the butter pebble: ink glyph with a soft offset shadow. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <group android:translateX="0" android:translateY="1.6">
+        <path
+            android:fillColor="#33000000"
+            android:strokeColor="#33000000"
+            android:strokeWidth="2.4"
+            android:strokeLineJoin="round"
+            android:pathData="M15.38,13.34 L19.50,13.34 L19.50,23.34 L28.70,13.34 L32.62,13.34 L32.62,16.82 L24.18,23.94 L32.62,31.14 L32.62,34.66 L28.70,34.66 L20.90,26.66 L19.50,27.86 L19.50,34.66 L15.38,34.66 Z" />
+    </group>
+    <path
+        android:fillColor="#1D2233"
+        android:strokeColor="#1D2233"
+        android:strokeWidth="2.4"
+        android:strokeLineJoin="round"
+        android:pathData="M15.38,13.34 L19.50,13.34 L19.50,23.34 L28.70,13.34 L32.62,13.34 L32.62,16.82 L24.18,23.94 L32.62,31.14 L32.62,34.66 L28.70,34.66 L20.90,26.66 L19.50,27.86 L19.50,34.66 L15.38,34.66 Z" />
+</vector>

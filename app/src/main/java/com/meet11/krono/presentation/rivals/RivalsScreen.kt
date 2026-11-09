@@ -2,6 +2,7 @@ package com.meet11.krono.presentation.rivals
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -50,6 +52,8 @@ import com.meet11.krono.core.designsystem.HandleAvatar
 import com.meet11.krono.core.designsystem.IconAction
 import com.meet11.krono.core.designsystem.KronoButton
 import com.meet11.krono.core.designsystem.KronoCard
+import com.meet11.krono.core.designsystem.tintEdge
+import com.meet11.krono.core.designsystem.tintFill
 import com.meet11.krono.core.designsystem.ProgressTrack
 import com.meet11.krono.core.designsystem.ScreenTitle
 import com.meet11.krono.core.designsystem.SectionHeader
@@ -206,44 +210,61 @@ private fun HeadToHead(me: LeaderboardEntry, opponent: LeaderboardEntry, modifie
     val diff = mine - theirs
     val total = (mine + theirs).coerceAtLeast(1)
 
-    KronoCard(modifier = modifier.fillMaxWidth(), borderColor = c.lineStrong, contentPadding = PaddingValues(20.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Caption("$metric · you vs @${opponent.username}")
-            Spacer(Modifier.weight(1f))
-            Tag(
-                text = when {
-                    diff > 0 -> "Ahead +$diff"
-                    diff < 0 -> "Behind ${diff}"
-                    else -> "Tied"
-                },
-                tone = when {
-                    diff > 0 -> TagTone.Success
-                    diff < 0 -> TagTone.Live
-                    else -> TagTone.Neutral
-                }
-            )
+    KronoCard(modifier = modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+        Box {
+            Row(Modifier.fillMaxWidth()) {
+                Side(
+                    label = "You", handle = me.username, value = mine, fill = c.butter,
+                    modifier = Modifier.weight(1f)
+                )
+                Side(
+                    label = "Rival", handle = opponent.username, value = theirs, fill = c.sky,
+                    alignEnd = true, modifier = Modifier.weight(1f)
+                )
+            }
+            Box(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 48.dp)
+                    .size(40.dp)
+                    .background(c.inverse, androidx.compose.foundation.shape.CircleShape)
+                    .border(3.dp, c.edge, androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = Alignment.Center
+            ) { Text("VS", style = MaterialTheme.typography.labelMedium, color = c.onInverse) }
         }
-        Spacer(Modifier.height(18.dp))
-        Row(verticalAlignment = Alignment.Bottom) {
-            Side(label = "You", handle = me.username, value = mine, highlighted = true, modifier = Modifier.weight(1f))
-            Text("vs", style = Readout.small, color = c.textTertiary, modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp))
-            Side(label = "Rival", handle = opponent.username, value = theirs, highlighted = false, alignEnd = true, modifier = Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(16.dp))
-        // Tug-of-war bar: your share of the combined score.
-        Row(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))) {
-            val share = mine.toFloat() / total
-            Box(Modifier.weight(share.coerceIn(0.02f, 0.98f)).fillMaxHeight().background(c.accent))
-            Spacer(Modifier.width(3.dp))
-            Box(Modifier.weight((1f - share).coerceIn(0.02f, 0.98f)).fillMaxHeight().background(c.lineStrong))
-        }
-        if (bothRated) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            // Tug-of-war bar: your share of the combined score.
+            Row(Modifier.fillMaxWidth().height(8.dp)) {
+                val share = mine.toFloat() / total
+                Box(Modifier.weight(share.coerceIn(0.02f, 0.98f)).fillMaxHeight().background(c.butter, RoundedCornerShape(4.dp)))
+                Spacer(Modifier.width(3.dp))
+                Box(Modifier.weight((1f - share).coerceIn(0.02f, 0.98f)).fillMaxHeight().background(c.sky, RoundedCornerShape(4.dp)))
+            }
             Spacer(Modifier.height(10.dp))
-            Text(
-                text = if (diff >= 0) "You're ${abs(diff)} points clear." else "${abs(diff)} points to close the gap.",
-                style = MaterialTheme.typography.bodySmall,
-                color = c.textSecondary
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = when {
+                        !bothRated -> "Compared by problems solved"
+                        diff >= 0 -> "You're ${abs(diff)} points clear"
+                        else -> "${abs(diff)} points to catch up"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = c.textSecondary,
+                    modifier = Modifier.weight(1f)
+                )
+                Tag(
+                    text = when {
+                        diff > 0 -> "Ahead +$diff"
+                        diff < 0 -> "Behind ${abs(diff)}"
+                        else -> "Tied"
+                    },
+                    tone = when {
+                        diff > 0 -> TagTone.Success
+                        diff < 0 -> TagTone.Live
+                        else -> TagTone.Neutral
+                    }
+                )
+            }
         }
     }
 }
@@ -253,24 +274,27 @@ private fun Side(
     label: String,
     handle: String,
     value: Int,
-    highlighted: Boolean,
+    fill: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
     alignEnd: Boolean = false
 ) {
     val c = Krono.colors
-    Column(modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
+    Column(
+        modifier.background(tintFill(fill)).padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (!alignEnd) HandleAvatar(handle, size = 28.dp, highlighted = highlighted)
+            if (!alignEnd) HandleAvatar(handle, size = 32.dp, highlighted = true)
             if (!alignEnd) Spacer(Modifier.width(8.dp))
             Column(horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
-                Caption(label)
-                Text("@$handle", style = MaterialTheme.typography.labelMedium, color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = c.onTint.copy(alpha = 0.7f))
+                Text("@$handle", style = MaterialTheme.typography.labelMedium, color = c.onTint, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (alignEnd) Spacer(Modifier.width(8.dp))
-            if (alignEnd) HandleAvatar(handle, size = 28.dp)
+            if (alignEnd) HandleAvatar(handle, size = 32.dp, highlighted = true)
         }
         Spacer(Modifier.height(10.dp))
-        Text(value.toString(), style = Readout.large, color = if (highlighted) c.textPrimary else c.textSecondary, maxLines = 1)
+        Text(value.toString(), style = Readout.hero, color = c.onTint, maxLines = 1)
     }
 }
 
@@ -286,34 +310,42 @@ private fun StandingRow(
     modifier: Modifier = Modifier
 ) {
     val c = Krono.colors
-    val border = when {
-        entry.isMe -> c.accent.copy(alpha = if (c.isDark) 0.55f else 1f)
-        isOpponent -> c.lineStrong
-        else -> c.line
+    val fill = when {
+        entry.isMe -> tintFill(c.butter)
+        isOpponent -> tintFill(c.sky)
+        else -> c.surface
     }
+    val edge = when {
+        entry.isMe -> tintEdge(c.butter)
+        isOpponent -> tintEdge(c.sky)
+        else -> c.edge
+    }
+    val onFill = if (entry.isMe || isOpponent) c.onTint else c.textPrimary
+    val onFillSoft = if (entry.isMe || isOpponent) c.onTint.copy(alpha = 0.7f) else c.textTertiary
     KronoCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(com.meet11.krono.core.theme.CardShape)
             .combinedClickable(onClick = onClick, onLongClick = { if (!entry.isMe) onRemove() }),
-        borderColor = border,
+        color = fill,
+        borderColor = edge,
         contentPadding = PaddingValues(start = 14.dp, end = 6.dp, top = 12.dp, bottom = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 position.toString().padStart(2, '0'),
-                style = Readout.small,
-                color = if (position == 1) c.accentInk else c.textTertiary,
+                style = Readout.medium,
+                color = onFill,
                 modifier = Modifier.width(26.dp)
             )
-            HandleAvatar(entry.username, size = 36.dp, highlighted = entry.isMe)
+            HandleAvatar(entry.username, size = 40.dp, highlighted = false)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "@${entry.username}",
                         style = MaterialTheme.typography.titleSmall,
-                        color = c.textPrimary,
+                        color = onFill,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
@@ -327,22 +359,23 @@ private fun StandingRow(
                 Text(
                     listOfNotNull(entry.rank?.replaceFirstChar { it.uppercase() }, "${entry.problemsSolved} solved").joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
-                    color = c.textTertiary,
+                    color = onFillSoft,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.height(8.dp))
                 ProgressTrack(
                     progress = entry.score.toFloat() / maxScore,
-                    color = if (entry.isMe) c.accent else c.textTertiary,
-                    height = 3.dp
+                    color = if (entry.isMe || isOpponent) c.onTint else c.textPrimary,
+                    trackColor = if (entry.isMe || isOpponent) c.onTint.copy(alpha = 0.18f) else c.surfaceSunken,
+                    height = 5.dp
                 )
             }
             Spacer(Modifier.width(12.dp))
-            Text(entry.score.toString(), style = Readout.medium, color = c.textPrimary)
+            Text(entry.score.toString(), style = Readout.medium, color = onFill)
             if (!entry.isMe) {
                 IconButton(onClick = onRemove) {
-                    Icon(Icons.Rounded.Close, contentDescription = "Remove @${entry.username}", tint = c.textTertiary, modifier = Modifier.width(16.dp))
+                    Icon(Icons.Rounded.Close, contentDescription = "Remove @${entry.username}", tint = onFillSoft, modifier = Modifier.width(16.dp))
                 }
             } else {
                 Spacer(Modifier.width(48.dp))

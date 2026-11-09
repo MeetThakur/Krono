@@ -66,7 +66,8 @@ fun ProfileDetailSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = c.background,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = c.lineStrong) }
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        dragHandle = { BottomSheetDefaults.DragHandle(width = 48.dp, height = 5.dp, color = c.edge) }
     ) {
         Column(
             modifier = Modifier
@@ -92,13 +93,13 @@ fun ProfileDetailSheet(
             Spacer(Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MetricTile("Rating", profile.rating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f), emphasized = true)
-                MetricTile("Peak", profile.maxRating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f))
+                MetricTile("Rating", profile.rating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f), pastel = c.butter)
+                MetricTile("Peak", profile.maxRating?.takeIf { it > 0 }?.toString() ?: "—", Modifier.weight(1f), pastel = c.sky)
             }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                MetricTile("Solved", numbers.format(profile.problemsSolved), Modifier.weight(1f))
-                MetricTile("Contests", numbers.format(profile.totalContests), Modifier.weight(1f))
+                MetricTile("Solved", numbers.format(profile.problemsSolved), Modifier.weight(1f), pastel = c.mint)
+                MetricTile("Contests", numbers.format(profile.totalContests), Modifier.weight(1f), pastel = c.coral)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -155,12 +156,17 @@ fun ProfileDetailSheet(
 }
 
 @Composable
-private fun MetricTile(label: String, value: String, modifier: Modifier = Modifier, emphasized: Boolean = false) {
+private fun MetricTile(label: String, value: String, modifier: Modifier = Modifier, pastel: androidx.compose.ui.graphics.Color) {
     val c = Krono.colors
-    KronoCard(modifier = modifier, contentPadding = PaddingValues(16.dp)) {
-        Caption(label)
+    KronoCard(
+        modifier = modifier,
+        color = tintFill(pastel),
+        borderColor = tintEdge(pastel),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        Caption(label, color = c.onTint.copy(alpha = 0.7f))
         Spacer(Modifier.height(6.dp))
-        Text(value, style = Readout.large, color = if (emphasized) c.textPrimary else c.textSecondary, maxLines = 1)
+        Text(value, style = Readout.large, color = c.onTint, maxLines = 1)
     }
 }
 

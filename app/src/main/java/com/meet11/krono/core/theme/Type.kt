@@ -18,23 +18,23 @@ private fun variable(res: Int, weight: Int) = Font(
     variationSettings = FontVariation.Settings(FontVariation.weight(weight))
 )
 
-/** Geometric grotesk with a technical edge — used for display, titles and labels. */
+/** Rounded display face — titles, buttons, labels and every number. */
 val Grotesk = FontFamily(
-    variable(R.font.space_grotesk, 400),
-    variable(R.font.space_grotesk, 500),
-    variable(R.font.space_grotesk, 600),
-    variable(R.font.space_grotesk, 700)
+    variable(R.font.fredoka, 400),
+    variable(R.font.fredoka, 500),
+    variable(R.font.fredoka, 600),
+    variable(R.font.fredoka, 700)
 )
 
-/** Monospace for every number, timer and rating — the "instrument readout" voice. */
-val Mono = FontFamily(
-    variable(R.font.jetbrains_mono, 400),
-    variable(R.font.jetbrains_mono, 500),
-    variable(R.font.jetbrains_mono, 600),
-    variable(R.font.jetbrains_mono, 700)
-)
+/** Numbers, timers and ratings share the display face. */
+val Mono = Grotesk
 
-private val Body = FontFamily.Default
+private val Body = FontFamily(
+    variable(R.font.nunito, 500),
+    variable(R.font.nunito, 600),
+    variable(R.font.nunito, 700),
+    variable(R.font.nunito, 800)
+)
 
 val Typography = Typography(
     displayLarge = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Bold, fontSize = 52.sp, lineHeight = 56.sp, letterSpacing = (-0.03).em),
@@ -46,9 +46,9 @@ val Typography = Typography(
     titleLarge = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 26.sp, letterSpacing = (-0.01).em),
     titleMedium = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, lineHeight = 22.sp, letterSpacing = (-0.005).em),
     titleSmall = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
-    bodyLarge = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp),
-    bodySmall = TextStyle(fontFamily = Body, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 16.sp),
+    bodyLarge = TextStyle(fontFamily = Body, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontFamily = Body, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+    bodySmall = TextStyle(fontFamily = Body, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 16.sp),
     labelLarge = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, lineHeight = 20.sp),
     labelMedium = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 16.sp),
     labelSmall = TextStyle(fontFamily = Grotesk, fontWeight = FontWeight.Medium, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 0.02.em)
@@ -57,7 +57,7 @@ val Typography = Typography(
 /** Monospaced readout styles. Tabular figures keep ticking timers from jittering. */
 @Immutable
 object Readout {
-    private val base = TextStyle(fontFamily = Mono, fontFeatureSettings = "tnum, zero")
+    private val base = TextStyle(fontFamily = Mono, fontFeatureSettings = "tnum")
     val hero = base.copy(fontWeight = FontWeight.SemiBold, fontSize = 40.sp, lineHeight = 44.sp, letterSpacing = (-0.04).em)
     val large = base.copy(fontWeight = FontWeight.SemiBold, fontSize = 30.sp, lineHeight = 34.sp, letterSpacing = (-0.03).em)
     val medium = base.copy(fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 24.sp, letterSpacing = (-0.02).em)

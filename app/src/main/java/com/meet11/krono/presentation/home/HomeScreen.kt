@@ -1,6 +1,9 @@
 package com.meet11.krono.presentation.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -100,6 +103,21 @@ fun HomeScreen(
                     Modifier.fillMaxWidth().padding(horizontal = Gutter).padding(top = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    androidx.compose.foundation.layout.Box(
+                        Modifier
+                            .size(52.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(topStart = 18.dp, topEnd = 14.dp, bottomEnd = 18.dp, bottomStart = 12.dp))
+                            .background(c.butter)
+                            .border(3.dp, if (c.isDark) c.butter else c.lineStrong, androidx.compose.foundation.shape.RoundedCornerShape(topStart = 18.dp, topEnd = 14.dp, bottomEnd = 18.dp, bottomStart = 12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.foundation.Image(
+                            painter = androidx.compose.ui.res.painterResource(com.meet11.krono.R.drawable.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(60.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Caption(fmt.header())
                         Spacer(Modifier.height(4.dp))

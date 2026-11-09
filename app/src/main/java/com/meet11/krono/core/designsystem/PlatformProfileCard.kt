@@ -45,6 +45,8 @@ fun PlatformProfileCard(
             .width(CardWidth)
             .height(CardHeight),
         onClick = onClick,
+        color = platformTint(profile.platform),
+        borderColor = tintEdge(platformPastel(profile.platform)),
         contentPadding = PaddingValues(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -54,14 +56,14 @@ fun PlatformProfileCard(
                 Text(
                     "@${profile.username}",
                     style = MaterialTheme.typography.titleSmall,
-                    color = c.textPrimary,
+                    color = c.onTint,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     profile.rank?.replaceFirstChar { it.uppercase() } ?: profile.platform.displayName,
                     style = MaterialTheme.typography.labelSmall,
-                    color = c.textTertiary,
+                    color = c.onTint.copy(alpha = 0.65f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -70,12 +72,12 @@ fun PlatformProfileCard(
 
         Spacer(Modifier.weight(1f))
 
-        Caption(if (hasRating) "Rating" else "Solved")
+        Caption(if (hasRating) "Rating" else "Solved", color = c.onTint.copy(alpha = 0.65f))
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = if (hasRating) profile.rating.toString() else numbers.format(profile.problemsSolved),
                 style = Readout.large,
-                color = c.textPrimary,
+                color = c.onTint,
                 maxLines = 1
             )
             val peak = profile.maxRating
@@ -84,7 +86,7 @@ fun PlatformProfileCard(
                 Text(
                     "peak $peak",
                     style = Readout.tiny,
-                    color = c.textTertiary,
+                    color = c.onTint.copy(alpha = 0.65f),
                     modifier = Modifier.padding(bottom = 5.dp)
                 )
             }
@@ -92,10 +94,10 @@ fun PlatformProfileCard(
         Spacer(Modifier.height(10.dp))
         Box(
             Modifier
-                .width(28.dp)
-                .height(3.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(profile.platform.brandColor)
+                .width(36.dp)
+                .height(5.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(c.onTint)
         )
     }
 }
@@ -112,8 +114,8 @@ fun AddProfileTile(onClick: () -> Unit, modifier: Modifier = Modifier, compact: 
         color = c.surfaceSunken,
         contentPadding = PaddingValues(16.dp)
     ) {
-        Box(Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)).background(c.surfaceRaised), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.Add, contentDescription = null, tint = c.textPrimary, modifier = Modifier.size(18.dp))
+        Box(Modifier.size(30.dp).clip(RoundedCornerShape(10.dp)).background(c.accent), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.Add, contentDescription = null, tint = c.onAccent, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.weight(1f))
         Text("Add\nprofile", style = MaterialTheme.typography.titleSmall, color = c.textSecondary)

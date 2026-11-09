@@ -54,8 +54,13 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.drawscope.translate
 import com.meet11.krono.core.theme.CardShape
+import com.meet11.krono.core.theme.OutlineWidth
+import com.meet11.krono.core.theme.ShadowOffset
+import com.meet11.krono.core.theme.contentOn
 import com.meet11.krono.core.theme.Krono
 import com.meet11.krono.core.theme.PillShape
 import com.meet11.krono.core.theme.Readout
@@ -96,27 +101,45 @@ fun Modifier.pressable(
         )
 }
 
-/** Flat surface with a hairline border. The base container of the whole app. */
+/** Pebble card: uneven corners, bold outline and a hard offset shadow. */
 @Composable
 fun KronoCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     shape: Shape = CardShape,
     color: Color = Krono.colors.surface,
-    borderColor: Color = Krono.colors.line,
+    borderColor: Color = Krono.colors.edge,
     contentPadding: PaddingValues = PaddingValues(18.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val c = Krono.colors
     val clickModifier = if (onClick != null) Modifier.pressable(pressedScale = 0.985f, shape = shape, onClick = onClick) else Modifier.clip(shape)
     Column(
         modifier = modifier
+            .pebbleShadow(shape, c.shadow)
             .then(clickModifier)
             .background(color)
-            .border(1.dp, borderColor, shape)
+            .border(OutlineWidth, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
 }
+
+/** Hard, un-blurred shadow offset downward — the "sticker" lift. */
+fun Modifier.pebbleShadow(shape: Shape, color: Color, offset: Dp = ShadowOffset): Modifier =
+    this.drawBehind {
+        val o = offset.toPx()
+        val outline = shape.createOutline(size, layoutDirection, this)
+        translate(0f, o) {
+            when (outline) {
+                is androidx.compose.ui.graphics.Outline.Rounded -> drawPath(
+                    androidx.compose.ui.graphics.Path().apply { addRoundRect(outline.roundRect) }, color
+                )
+                is androidx.compose.ui.graphics.Outline.Generic -> drawPath(outline.path, color)
+                is androidx.compose.ui.graphics.Outline.Rectangle -> drawRect(color, size = size)
+            }
+        }
+    }
 
 @Composable
 fun SectionHeader(
@@ -167,7 +190,7 @@ fun SectionHeader(
 /** Small mono caption, e.g. "NEXT CONTEST". */
 @Composable
 fun Caption(text: String, modifier: Modifier = Modifier, color: Color = Krono.colors.textTertiary) {
-    Text(text = text.uppercase(), style = Readout.caption, color = color, modifier = modifier, maxLines = 1)
+    Text(text = text.uppercase(), style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.08.em, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), color = color, modifier = modifier, maxLines = 1)
 }
 
 enum class TagTone { Neutral, Live, Success, Accent, Warning }
@@ -183,17 +206,17 @@ fun Tag(
 ) {
     val c = Krono.colors
     val (bg, fg) = when (tone) {
-        TagTone.Neutral -> c.surfaceRaised to c.textSecondary
-        TagTone.Live -> c.live.copy(alpha = if (c.isDark) 0.16f else 0.10f) to c.live
-        TagTone.Success -> c.success.copy(alpha = if (c.isDark) 0.16f else 0.12f) to c.success
-        TagTone.Warning -> c.warning.copy(alpha = if (c.isDark) 0.16f else 0.14f) to (if (c.isDark) c.warning else Color(0xFF9A5B00))
-        TagTone.Accent -> c.accent to c.onAccent
+        TagTone.Neutral -> c.surfaceSunken to c.textSecondary
+        TagTone.Live -> c.coral to c.ink
+        TagTone.Success -> c.mint to c.ink
+        TagTone.Warning -> c.butter to c.ink
+        TagTone.Accent -> c.inverse to c.onInverse
     }
     Row(
         modifier = modifier
             .clip(PillShape)
             .background(bg)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 10.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val dot = dotColor ?: if (tone == TagTone.Live) c.live else null
@@ -202,8 +225,8 @@ fun Tag(
             Spacer(Modifier.width(5.dp))
         }
         Text(
-            text = if (uppercase) text.uppercase() else text,
-            style = if (uppercase) Readout.caption else Readout.tiny,
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
             color = fg,
             maxLines = 1
         )
@@ -251,7 +274,7 @@ fun KronoChip(
         modifier = modifier
             .clip(PillShape)
             .background(bg)
-            .border(1.dp, border, PillShape)
+            .border(2.dp, border, PillShape)
             .clickable(role = Role.Tab, onClick = onClick)
             .heightIn(min = 36.dp)
             .padding(horizontal = 14.dp),
@@ -278,22 +301,20 @@ fun <T> SegmentedControl(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TileShape)
+            .clip(RoundedCornerShape(24.dp))
             .background(c.surfaceSunken)
-            .border(1.dp, c.line, TileShape)
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         options.forEach { option ->
             val isSelected = option == selected
-            val bg by animateColorAsState(if (isSelected) c.surfaceRaised else Color.Transparent, tween(180), label = "segBg")
-            val fg by animateColorAsState(if (isSelected) c.textPrimary else c.textSecondary, tween(180), label = "segFg")
+            val bg by animateColorAsState(if (isSelected) c.inverse else Color.Transparent, tween(180), label = "segBg")
+            val fg by animateColorAsState(if (isSelected) c.onInverse else c.textSecondary, tween(180), label = "segFg")
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(11.dp))
+                    .clip(PillShape)
                     .background(bg)
-                    .then(if (isSelected) Modifier.border(1.dp, c.line, RoundedCornerShape(11.dp)) else Modifier)
                     .clickable(role = Role.RadioButton) { onSelect(option) }
                     .heightIn(min = 38.dp),
                 contentAlignment = Alignment.Center
@@ -316,14 +337,15 @@ fun IconAction(
     iconSize: Dp = 18.dp
 ) {
     val c = Krono.colors
-    val bg by animateColorAsState(if (active) c.accent else c.surfaceRaised, tween(200), label = "iaBg")
+    val bg by animateColorAsState(if (active) c.accent else c.surface, tween(200), label = "iaBg")
     val fg by animateColorAsState(if (active) c.onAccent else c.textPrimary, tween(200), label = "iaFg")
     Box(
         modifier = modifier
             .size(size)
+            .pebbleShadow(CircleShape, c.shadow, 3.dp)
             .pressable(pressedScale = 0.9f, shape = CircleShape, onClick = onClick)
             .background(bg)
-            .border(1.dp, if (active) c.accent else c.line, CircleShape),
+            .border(OutlineWidth, if (active && c.isDark) c.accent else c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = contentDescription, tint = fg, modifier = Modifier.size(iconSize))
@@ -346,19 +368,20 @@ fun KronoButton(
 ) {
     val c = Krono.colors
     val (bg, fg, border) = when (style) {
-        ButtonStyle.Primary -> Triple(c.accent, c.onAccent, c.accent)
-        ButtonStyle.Inverse -> Triple(c.inverse, c.onInverse, c.inverse)
-        ButtonStyle.Secondary -> Triple(c.surfaceRaised, c.textPrimary, c.line)
-        ButtonStyle.Danger -> Triple(c.live.copy(alpha = 0.12f), c.live, c.live.copy(alpha = 0.25f))
+        ButtonStyle.Primary -> Triple(c.accent, c.onAccent, if (c.isDark) c.accent else c.lineStrong)
+        ButtonStyle.Inverse -> Triple(c.inverse, c.onInverse, if (c.isDark) c.inverse else c.lineStrong)
+        ButtonStyle.Secondary -> Triple(c.surface, c.textPrimary, c.lineStrong)
+        ButtonStyle.Danger -> Triple(c.coral, c.ink, if (c.isDark) c.coral else c.lineStrong)
     }
     val alpha = if (enabled) 1f else 0.4f
     Row(
         modifier = modifier
             .heightIn(min = height)
             .graphicsLayer { this.alpha = alpha }
+            .pebbleShadow(PillShape, c.shadow, 3.dp)
             .pressable(enabled = enabled && !loading, shape = PillShape, onClick = onClick)
             .background(bg)
-            .border(1.dp, border, PillShape)
+            .border(OutlineWidth, border, PillShape)
             .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -381,25 +404,37 @@ fun KronoButton(
     }
 }
 
-/** Monogram tile for a platform — gives each source a recognisable mark without logos. */
+/** Logo tile for a platform; judges without a drawn mark fall back to a coloured monogram. */
 @Composable
 fun PlatformMark(platform: Platform, modifier: Modifier = Modifier, size: Dp = 36.dp) {
     val c = Krono.colors
-    val tint = platform.brandColor
-    Box(
-        modifier = modifier
-            .size(size)
-            .clip(RoundedCornerShape(size * 0.3f))
-            .background(tint.copy(alpha = if (c.isDark) 0.16f else 0.12f))
-            .border(1.dp, tint.copy(alpha = 0.28f), RoundedCornerShape(size * 0.3f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = platform.shortCode,
-            style = Readout.tiny.copy(fontSize = (size.value * 0.3f).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
-            color = if (c.isDark) tint else tint.darken(),
-            maxLines = 1
-        )
+    val shape = RoundedCornerShape(size * 0.34f)
+    if (platform.hasLogo()) {
+        Box(
+            modifier = modifier
+                .size(size)
+                .clip(shape)
+                .background(Color(0xFFFFF8E7))
+                .border(2.dp, c.ink, shape),
+            contentAlignment = Alignment.Center
+        ) { PlatformLogo(platform, size * 0.72f) }
+    } else {
+        val tint = platform.brandColor
+        Box(
+            modifier = modifier
+                .size(size)
+                .clip(shape)
+                .background(tint)
+                .border(2.dp, c.ink, shape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = platform.shortCode,
+                style = Readout.tiny.copy(fontSize = (size.value * 0.3f).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold),
+                color = contentOn(tint),
+                maxLines = 1
+            )
+        }
     }
 }
 
@@ -407,13 +442,13 @@ fun PlatformMark(platform: Platform, modifier: Modifier = Modifier, size: Dp = 3
 @Composable
 fun HandleAvatar(handle: String, modifier: Modifier = Modifier, size: Dp = 40.dp, highlighted: Boolean = false) {
     val c = Krono.colors
-    val bg = if (highlighted) c.accent else c.surfaceRaised
+    val bg = if (highlighted) c.accent else c.surfaceSunken
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
             .background(bg)
-            .border(1.dp, if (highlighted) c.accent else c.line, CircleShape),
+            .border(2.dp, c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -430,8 +465,8 @@ fun ProgressTrack(
     progress: Float,
     modifier: Modifier = Modifier,
     color: Color = Krono.colors.accent,
-    trackColor: Color = Krono.colors.line,
-    height: Dp = 4.dp
+    trackColor: Color = Krono.colors.surfaceSunken,
+    height: Dp = 8.dp
 ) {
     val animated by animateFloatAsState(progress.coerceIn(0f, 1f), tween(600), label = "track")
     Box(
@@ -464,12 +499,13 @@ fun EmptyState(
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 Modifier
-                    .size(48.dp)
+                    .size(56.dp)
                     .clip(CircleShape)
-                    .background(c.surfaceRaised),
+                    .background(c.butter)
+                    .border(3.dp, c.lineStrong, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = c.textSecondary, modifier = Modifier.size(22.dp))
+                Icon(icon, contentDescription = null, tint = c.ink, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.height(14.dp))
             Text(title, style = MaterialTheme.typography.titleMedium, color = c.textPrimary)
@@ -517,7 +553,7 @@ fun ScreenTitle(
 /** Shimmer-free skeleton block (static tint keeps it cheap). */
 @Composable
 fun SkeletonBlock(modifier: Modifier = Modifier, shape: Shape = CardShape) {
-    Box(modifier.clip(shape).background(Krono.colors.surface).border(1.dp, Krono.colors.line, shape))
+    Box(modifier.clip(shape).background(Krono.colors.surfaceSunken))
 }
 
 @Composable
@@ -532,3 +568,32 @@ fun VerticalHairline(modifier: Modifier = Modifier) {
 
 internal fun Color.darken(factor: Float = 0.62f) = Color(red * factor, green * factor, blue * factor, alpha)
 
+
+/** A pastel as a card fill: untouched in light, sunk into the navy in dark so cards glow instead of shout. */
+@Composable
+fun tintFill(pastel: Color): Color {
+    val c = Krono.colors
+    return if (c.isDark) androidx.compose.ui.graphics.lerp(pastel, c.background, 0.80f) else pastel
+}
+
+/** Outline for a tinted card: the pastel itself in dark, the ink outline in light. */
+@Composable
+fun tintEdge(pastel: Color): Color = if (Krono.colors.isDark) pastel else Krono.colors.lineStrong
+
+/** Pastel card fill for a platform: its brand hue washed toward white, always read with dark ink. */
+@Composable
+fun platformTint(platform: Platform): Color {
+    val c = Krono.colors
+    return tintFill(platformPastel(platform))
+}
+
+@Composable
+fun platformPastel(platform: Platform): Color {
+    val c = Krono.colors
+    return when (platform) {
+        Platform.CODEFORCES -> c.sky
+        Platform.LEETCODE -> c.butter
+        Platform.CODECHEF -> if (c.isDark) Color(0xFFFFB98A) else Color(0xFFFFD2B0)
+        else -> androidx.compose.ui.graphics.lerp(platform.brandColor, Color.White, if (c.isDark) 0.45f else 0.72f)
+    }
+}

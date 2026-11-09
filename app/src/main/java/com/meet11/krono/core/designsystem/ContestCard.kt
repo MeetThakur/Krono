@@ -61,23 +61,24 @@ fun ContestCard(
 
     KronoCard(
         modifier = modifier.fillMaxWidth(),
+        color = if (live) tintFill(c.coral) else platformTint(contest.platform),
         onClick = { openUrl(context, contest.url) },
-        borderColor = if (live) c.live.copy(alpha = 0.45f) else c.line,
+        borderColor = tintEdge(if (live) c.coral else platformPastel(contest.platform)),
         contentPadding = PaddingValues(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             PlatformMark(contest.platform, size = 34.dp)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.textSecondary)
+                Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.onTint.copy(alpha = 0.75f))
                 Text(
                     text = if (live) "Ends ${fmt.time(contest.effectiveEndTime)}" else fmt.dayAndTime(contest.startTime),
                     style = Readout.tiny,
-                    color = c.textTertiary
+                    color = c.onTint.copy(alpha = 0.65f)
                 )
             }
             if (live) {
-                Tag("Live", tone = TagTone.Live, pulse = true)
+                Tag("Live", tone = TagTone.Accent, pulse = true)
             } else {
                 Tag(formatDuration(contest.durationMillis), uppercase = false)
             }
@@ -87,7 +88,7 @@ fun ContestCard(
         Text(
             text = contest.name,
             style = MaterialTheme.typography.titleMedium,
-            color = c.textPrimary,
+            color = c.onTint,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -95,19 +96,19 @@ fun ContestCard(
 
         if (live) {
             val elapsed = (now - contest.startTime).toFloat() / contest.durationMillis.coerceAtLeast(1L)
-            ProgressTrack(progress = elapsed, color = c.live)
+            ProgressTrack(progress = elapsed, color = c.onTint)
             Spacer(Modifier.height(14.dp))
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Caption(if (live) "Time left" else "Starts in")
+                Caption(if (live) "Time left" else "Starts in", color = c.onTint.copy(alpha = 0.65f))
                 Spacer(Modifier.height(2.dp))
                 val remaining = if (live) contest.effectiveEndTime - now else contest.startTime - now
                 Text(
                     text = if (live || remaining < 86_400_000L) formatClock(remaining) else formatCountdownShort(remaining),
                     style = Readout.medium,
-                    color = if (live) c.live else c.textPrimary
+                    color = c.onTint
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -212,15 +213,16 @@ fun NextContestHero(
 
     KronoCard(
         modifier = modifier.fillMaxWidth(),
+        color = tintFill(if (live) c.coral else c.butter),
         onClick = { openUrl(context, contest.url) },
-        borderColor = if (live) c.live.copy(alpha = 0.45f) else c.lineStrong,
+        borderColor = tintEdge(if (live) c.coral else c.butter),
         contentPadding = PaddingValues(20.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (live) Tag("Live now", tone = TagTone.Live, pulse = true)
+            if (live) Tag("Live now", tone = TagTone.Accent, pulse = true)
             else Tag("Next contest", tone = TagTone.Accent)
             Spacer(Modifier.weight(1f))
-            Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.textSecondary)
+            Text(contest.platform.displayName, style = MaterialTheme.typography.labelMedium, color = c.onTint.copy(alpha = 0.75f))
             Spacer(Modifier.width(6.dp))
             Dot(contest.platform.brandColor, 7.dp)
         }
@@ -229,7 +231,7 @@ fun NextContestHero(
         Text(
             text = contest.name,
             style = MaterialTheme.typography.titleLarge,
-            color = c.textPrimary,
+            color = c.onTint,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -238,25 +240,25 @@ fun NextContestHero(
             text = if (live) "Ends ${fmt.dayAndTime(contest.effectiveEndTime)}"
             else "${fmt.dayAndTime(contest.startTime)} · ${formatDuration(contest.durationMillis)}",
             style = Readout.tiny,
-            color = c.textTertiary
+            color = c.onTint.copy(alpha = 0.65f)
         )
 
         Spacer(Modifier.height(20.dp))
         Row(verticalAlignment = Alignment.Bottom) {
-            val digitColor = if (live) c.live else c.textPrimary
+            val digitColor = c.onTint
             ClockUnit(remaining.days, "days", digitColor, dim = remaining.days == 0L)
             ClockSeparator()
             ClockUnit(remaining.hours, "hrs", digitColor, dim = remaining.days == 0L && remaining.hours == 0L)
             ClockSeparator()
             ClockUnit(remaining.minutes, "min", digitColor)
             ClockSeparator()
-            ClockUnit(remaining.seconds, "sec", c.accentInk, animate = true)
+            ClockUnit(remaining.seconds, "sec", c.onTint, animate = true)
         }
 
         if (live) {
             Spacer(Modifier.height(16.dp))
             val elapsed = (now - contest.startTime).toFloat() / contest.durationMillis.coerceAtLeast(1L)
-            ProgressTrack(progress = elapsed, color = c.live)
+            ProgressTrack(progress = elapsed, color = c.onTint)
         }
 
         Spacer(Modifier.height(18.dp))
@@ -264,7 +266,7 @@ fun NextContestHero(
             KronoButton(
                 text = if (live) "Enter contest" else "Open",
                 onClick = { openUrl(context, contest.url) },
-                style = if (live) ButtonStyle.Inverse else ButtonStyle.Primary,
+                style = if (live) ButtonStyle.Inverse else ButtonStyle.Inverse,
                 trailingIcon = Icons.AutoMirrored.Rounded.OpenInNew,
                 modifier = Modifier.weight(1f),
                 height = 44.dp
@@ -299,7 +301,7 @@ private fun ClockUnit(
     val c = Krono.colors
     Column(horizontalAlignment = Alignment.Start) {
         val text = value.toString().padStart(2, '0')
-        val tint = if (dim) c.textTertiary else color
+        val tint = if (dim) c.onTint.copy(alpha = 0.4f) else color
         if (animate) {
             AnimatedContent(
                 targetState = text,
@@ -312,7 +314,7 @@ private fun ClockUnit(
         } else {
             Text(text, style = Readout.hero, color = tint)
         }
-        Text(label.uppercase(), style = Readout.caption, color = c.textTertiary)
+        Text(label.uppercase(), style = Readout.caption, color = c.onTint.copy(alpha = 0.65f))
     }
 }
 
@@ -321,7 +323,7 @@ private fun ClockSeparator() {
     Text(
         ":",
         style = Readout.hero,
-        color = Krono.colors.textTertiary,
+        color = Krono.colors.ink.copy(alpha = 0.5f),
         modifier = Modifier.padding(horizontal = 4.dp).padding(bottom = 14.dp)
     )
 }

@@ -1,5 +1,6 @@
 <resources>
-  <color name="window_background">#F5F5F2</color>
-  <!-- Glyph on the launch screen: dark on the light window, light on the dark one (values-night). -->
-  <color name="splash_glyph">#0B0B0C</color>
+  <color name="window_background">#FFF8E7</color>
+  <!-- Glyph on the launch screen: ink on the cream window, butter on the navy one (values-night). -->
+  <color name="splash_glyph">#1D2233</color>
+  <color name="ic_launcher_background">#FFD66B</color>
 </resources>

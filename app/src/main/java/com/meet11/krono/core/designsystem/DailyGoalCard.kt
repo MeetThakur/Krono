@@ -48,7 +48,7 @@ fun DailyGoalCard(
     val view = LocalView.current
     val c = Krono.colors
 
-    KronoCard(modifier = modifier.fillMaxWidth()) {
+    KronoCard(modifier = modifier.fillMaxWidth(), color = tintFill(c.mint), borderColor = tintEdge(c.mint)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             GoalDial(
                 solved = dailyGoal.solvedToday,
@@ -59,12 +59,12 @@ fun DailyGoalCard(
             Column(Modifier.weight(1f)) {
                 Caption("Streak")
                 Row(verticalAlignment = Alignment.Bottom) {
-                    Text(dailyGoal.currentStreak.toString(), style = Readout.large, color = c.textPrimary)
+                    Text(dailyGoal.currentStreak.toString(), style = Readout.large, color = c.onTint)
                     Spacer(Modifier.width(6.dp))
                     Text(
                         if (dailyGoal.currentStreak == 1) "day" else "days",
                         style = MaterialTheme.typography.titleSmall,
-                        color = c.textSecondary,
+                        color = c.onTint.copy(alpha = 0.75f),
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -72,17 +72,17 @@ fun DailyGoalCard(
                 Text(
                     text = "Best ${dailyGoal.bestStreak} · Goal ${dailyGoal.targetProblems}/day",
                     style = Readout.tiny,
-                    color = c.textTertiary
+                    color = c.onTint.copy(alpha = 0.65f)
                 )
                 Spacer(Modifier.height(10.dp))
                 if (dailyGoal.isCompleted) {
-                    Tag("Goal met", tone = TagTone.Success)
+                    Tag("Goal met", tone = TagTone.Accent)
                 } else {
                     val left = (dailyGoal.targetProblems - dailyGoal.solvedToday).coerceAtLeast(0)
                     Text(
                         "$left more to keep the streak",
                         style = MaterialTheme.typography.bodySmall,
-                        color = c.textSecondary
+                        color = c.onTint.copy(alpha = 0.75f)
                     )
                 }
             }
@@ -125,8 +125,8 @@ private fun GoalDial(solved: Int, target: Int, modifier: Modifier = Modifier) {
     val ratio = if (target <= 0) 0f else (solved.toFloat() / target).coerceIn(0f, 1f)
     val animated by animateFloatAsState(ratio, tween(700), label = "dial")
     val done = solved >= target && target > 0
-    val fill = if (done) c.success else c.accent
-    val track = if (c.isDark) c.surfaceRaised else c.line
+    val fill = c.onTint
+    val track = if (c.isDark) c.mint.copy(alpha = 0.22f) else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.55f)
     val minor = c.lineStrong
 
     Box(modifier, contentAlignment = Alignment.Center) {
@@ -138,7 +138,7 @@ private fun GoalDial(solved: Int, target: Int, modifier: Modifier = Modifier) {
 
             // Outer minute ticks — the chronograph bezel.
             val outer = min(size.width, size.height) / 2f
-            for (i in 0 until 60) {
+            for (i in 0 until 0) {
                 val angle = (i / 60f) * 2f * PI.toFloat() - PI.toFloat() / 2f
                 val len = if (i % 5 == 0) 4.dp.toPx() else 2.dp.toPx()
                 val start = Offset(center.x + cos(angle) * (outer - len), center.y + sin(angle) * (outer - len))
@@ -174,10 +174,10 @@ private fun GoalDial(solved: Int, target: Int, modifier: Modifier = Modifier) {
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (done) {
-                androidx.compose.material3.Icon(Icons.Rounded.Check, contentDescription = null, tint = c.success, modifier = Modifier.size(18.dp))
+                androidx.compose.material3.Icon(Icons.Rounded.Check, contentDescription = null, tint = c.onTint, modifier = Modifier.size(18.dp))
             }
-            Text("$solved/$target", style = Readout.medium, color = c.textPrimary)
-            Text("TODAY", style = Readout.caption, color = c.textTertiary)
+            Text("$solved/$target", style = Readout.medium, color = c.onTint)
+            Text("TODAY", style = Readout.caption, color = c.onTint.copy(alpha = 0.65f))
         }
     }
 }

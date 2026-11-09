@@ -41,7 +41,7 @@ fun RatingChart(
     val range = (maxRating - minRating).coerceAtLeast(1)
     val reveal = remember(points) { Animatable(0f) }
     LaunchedEffect(points) { reveal.animateTo(1f, tween(900)) }
-    val guideColor = c.lineStrong
+    val guideColor = c.edge
     val surface = c.surface
 
     KronoCard(modifier = modifier.fillMaxWidth()) {

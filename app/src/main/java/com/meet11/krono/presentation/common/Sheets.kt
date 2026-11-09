@@ -63,7 +63,8 @@ fun KronoSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Uni
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = c.background,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = c.lineStrong) }
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        dragHandle = { BottomSheetDefaults.DragHandle(width = 48.dp, height = 5.dp, color = c.edge) }
     ) {
         Column(
             Modifier
@@ -103,7 +104,7 @@ fun AddHandleSheet(
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 
     KronoSheet(onDismiss) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
+        Text(title, style = MaterialTheme.typography.headlineMedium, color = c.textPrimary)
         Spacer(Modifier.height(4.dp))
         Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
         Spacer(Modifier.height(20.dp))
@@ -141,7 +142,7 @@ fun AddHandleSheet(
                         .heightIn(min = 56.dp)
                         .clip(TileShape)
                         .background(c.surface)
-                        .border(1.dp, if (handle.isNotEmpty()) c.lineStrong else c.line, TileShape)
+                        .border(3.dp, if (handle.isNotEmpty()) c.lineStrong else c.edge, TileShape)
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -176,7 +177,7 @@ fun GoalTargetSheet(
     var value by rememberSaveable { mutableIntStateOf(currentTarget.coerceIn(1, 99)) }
 
     KronoSheet(onDismiss) {
-        Text("Daily goal", style = MaterialTheme.typography.headlineSmall, color = c.textPrimary)
+        Text("Daily goal", style = MaterialTheme.typography.headlineMedium, color = c.textPrimary)
         Spacer(Modifier.height(4.dp))
         Text("How many problems do you want to solve each day?", style = MaterialTheme.typography.bodyMedium, color = c.textSecondary)
         Spacer(Modifier.height(24.dp))
@@ -198,12 +199,12 @@ fun GoalTargetSheet(
                     Modifier
                         .weight(1f)
                         .height(44.dp)
-                        .pressable(shape = TileShape) { value = preset }
-                        .background(if (selected) c.inverse else c.surface)
-                        .border(1.dp, if (selected) c.inverse else c.line, TileShape),
+                        .pressable(shape = androidx.compose.foundation.shape.CircleShape) { value = preset }
+                        .background(if (selected) c.accent else c.surface)
+                        .border(3.dp, if (selected) c.lineStrong else c.edge, androidx.compose.foundation.shape.CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(preset.toString(), style = Readout.small, color = if (selected) c.onInverse else c.textPrimary)
+                    Text(preset.toString(), style = Readout.small, color = if (selected) c.onAccent else c.textPrimary)
                 }
             }
         }

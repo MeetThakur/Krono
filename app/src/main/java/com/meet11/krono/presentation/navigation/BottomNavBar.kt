@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -43,22 +45,28 @@ fun KronoBottomNavBar(
 ) {
     val c = Krono.colors
     val view = LocalView.current
-    Column(modifier.fillMaxWidth().background(c.background)) {
-        Box(Modifier.fillMaxWidth().height(1.dp).background(c.line))
+    val barShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    Column(
+        modifier
+            .fillMaxWidth()
+            .clip(barShape)
+            .background(c.surface)
+            .border(2.dp, c.line, barShape)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Screen.bottomNavItems.forEach { screen ->
                 val selected = currentRoute == screen.route
                 val fg by animateColorAsState(if (selected) c.textPrimary else c.textTertiary, tween(200), label = "navFg")
-                val pillBg by animateColorAsState(if (selected) c.accent else c.background, tween(200), label = "navBg")
+                val pillBg by animateColorAsState(if (selected) c.accent else Color.Transparent, tween(200), label = "navBg")
                 val iconTint by animateColorAsState(if (selected) c.onAccent else c.textTertiary, tween(200), label = "navIcon")
-                val pillWidth by animateDpAsState(if (selected) 60.dp else 44.dp, spring(dampingRatio = 0.7f, stiffness = 500f), label = "navW")
+                val pillWidth by animateDpAsState(if (selected) 68.dp else 56.dp, spring(dampingRatio = 0.7f, stiffness = 500f), label = "navW")
 
                 Column(
                     modifier = Modifier
@@ -78,8 +86,8 @@ fun KronoBottomNavBar(
                     Box(
                         modifier = Modifier
                             .width(pillWidth)
-                            .height(32.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .height(34.dp)
+                            .clip(RoundedCornerShape(17.dp))
                             .background(pillBg),
                         contentAlignment = Alignment.Center
                     ) {

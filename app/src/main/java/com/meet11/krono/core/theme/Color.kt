@@ -14,7 +14,7 @@ val PlatformTopCoder = Color(0xFF29A8DF)
 val PlatformCodingNinjas = Color(0xFFE3602B)
 
 // ── Semantic signal colors (shared by both themes) ──────────────────────
-val SignalLive = Color(0xFFFF4D4F)
+val SignalLive = Color(0xFFFF6B4A)
 val SignalSuccess = Color(0xFF34C77B)
 val SignalWarning = Color(0xFFFFB224)
 
@@ -41,8 +41,8 @@ enum class ThemePaletteSeed(
 }
 
 /**
- * Krono's own token set. Screens read from here instead of hardcoding hex values,
- * so both light and dark themes render correctly.
+ * Krono's own token set ("pebble" identity): cream/navy canvas, a bold outline on every
+ * card, and four pastel fills (butter, sky, mint, coral) that always carry dark ink.
  */
 @Immutable
 data class KronoColors(
@@ -51,57 +51,91 @@ data class KronoColors(
     val surface: Color,
     val surfaceRaised: Color,
     val surfaceSunken: Color,
+    /** Soft divider / hairline. */
     val line: Color,
+    /** The bold 3dp outline drawn around cards, chips and buttons. */
     val lineStrong: Color,
     val textPrimary: Color,
     val textSecondary: Color,
     val textTertiary: Color,
-    /** Solid accent fill (buttons, ring, active indicator). */
+    /** Solid accent fill (butter). */
     val accent: Color,
-    /** Content color on top of [accent]. */
+    /** Content color on top of [accent] and every pastel. */
     val onAccent: Color,
-    /** Accent hue tuned for text/icons on the current background. */
     val accentInk: Color,
-    /** Inverse fill for selected chips / high-emphasis neutral elements. */
     val inverse: Color,
     val onInverse: Color,
+    val butter: Color,
+    val sky: Color,
+    val mint: Color,
+    val coral: Color,
+    /** Hard offset shadow under outlined cards. */
+    val shadow: Color,
+    /** Quiet outline for neutral (untinted) cards. */
+    val edge: Color,
+    /** Content colour on tinted cards: dark ink in light, cream in dark. */
+    val onTint: Color,
     val live: Color = SignalLive,
     val success: Color = SignalSuccess,
     val warning: Color = SignalWarning
-)
+) {
+    val outline: Color get() = lineStrong
+    /** Dark ink that sits on pastel fills in both themes. */
+    val ink: Color get() = onAccent
+}
 
-fun kronoDarkColors(palette: ThemePaletteSeed) = KronoColors(
+private val Ink = Color(0xFF1D2233)
+private val NavyInk = Color(0xFF101624)
+
+@Suppress("UNUSED_PARAMETER")
+fun kronoDarkColors(palette: ThemePaletteSeed = ThemePaletteSeed.VOLT) = KronoColors(
     isDark = true,
-    background = Color(0xFF09090A),
-    surface = Color(0xFF131315),
-    surfaceRaised = Color(0xFF1B1B1E),
-    surfaceSunken = Color(0xFF0E0E10),
-    line = Color(0xFF222226),
-    lineStrong = Color(0xFF2E2E33),
-    textPrimary = Color(0xFFF4F4F5),
-    textSecondary = Color(0xFFA1A1AA),
-    textTertiary = Color(0xFF6B6B74),
-    accent = palette.fill,
-    onAccent = palette.onFill,
-    accentInk = palette.fill,
-    inverse = Color(0xFFF4F4F5),
-    onInverse = Color(0xFF0B0B0C)
+    background = NavyInk,
+    surface = Color(0xFF172037),
+    surfaceRaised = Color(0xFF212B48),
+    surfaceSunken = Color(0xFF0C1220),
+    line = Color(0xFF2A3553),
+    lineStrong = Color(0xFF47537E),
+    textPrimary = Color(0xFFF4EEDC),
+    textSecondary = Color(0xFFB7BED0),
+    textTertiary = Color(0xFF9AA4BD),
+    accent = Color(0xFFFFD66B),
+    onAccent = NavyInk,
+    accentInk = Color(0xFFFFD66B),
+    inverse = Color(0xFFF4EEDC),
+    onInverse = NavyInk,
+    butter = Color(0xFFFFD66B),
+    sky = Color(0xFF8EC5F0),
+    mint = Color(0xFF7FD6A8),
+    coral = Color(0xFFFF8F73),
+    shadow = Color(0x66000000),
+    edge = Color(0xFF34406A),
+    onTint = Color(0xFFF4EEDC),
+    live = Color(0xFFFF8F73)
 )
 
-fun kronoLightColors(palette: ThemePaletteSeed) = KronoColors(
+@Suppress("UNUSED_PARAMETER")
+fun kronoLightColors(palette: ThemePaletteSeed = ThemePaletteSeed.VOLT) = KronoColors(
     isDark = false,
-    background = Color(0xFFF5F5F2),
+    background = Color(0xFFFFF8E7),
     surface = Color(0xFFFFFFFF),
     surfaceRaised = Color(0xFFFFFFFF),
-    surfaceSunken = Color(0xFFEDEDE9),
-    line = Color(0xFFE5E5E0),
-    lineStrong = Color(0xFFD4D4CE),
-    textPrimary = Color(0xFF0B0B0C),
-    textSecondary = Color(0xFF55555D),
-    textTertiary = Color(0xFF8C8C94),
-    accent = if (palette == ThemePaletteSeed.MONOCHROME) Color(0xFF0B0B0C) else palette.fill,
-    onAccent = if (palette == ThemePaletteSeed.MONOCHROME) Color.White else palette.onFill,
-    accentInk = palette.inkOnLight,
-    inverse = Color(0xFF0B0B0C),
-    onInverse = Color(0xFFF4F4F5)
+    surfaceSunken = Color(0xFFF3EBD3),
+    line = Color(0xFFF3EBD3),
+    lineStrong = Ink,
+    textPrimary = Ink,
+    textSecondary = Color(0xFF6B7186),
+    textTertiary = Color(0xFF8E93A6),
+    accent = Color(0xFFFFD66B),
+    onAccent = Ink,
+    accentInk = Ink,
+    inverse = Ink,
+    onInverse = Color(0xFFFFF8E7),
+    butter = Color(0xFFFFD66B),
+    sky = Color(0xFFBFE3FA),
+    mint = Color(0xFFC9F0DA),
+    coral = Color(0xFFFFB3A0),
+    shadow = Ink,
+    edge = Ink,
+    onTint = Ink
 )
