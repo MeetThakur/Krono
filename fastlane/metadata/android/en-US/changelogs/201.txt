@@ -1,0 +1,1 @@
+Added a separate, privately signed store edition. Existing GitHub installations retain their original package and signing certificate. Includes store metadata, screenshots, privacy information and font notices. App features are unchanged.

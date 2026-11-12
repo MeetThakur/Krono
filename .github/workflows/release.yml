@@ -66,7 +66,18 @@ jobs:
           KRONO_KEYSTORE_PASSWORD: ${{ secrets.KRONO_KEYSTORE_PASSWORD }}
           KRONO_KEY_ALIAS: ${{ secrets.KRONO_KEY_ALIAS }}
           KRONO_KEY_PASSWORD: ${{ secrets.KRONO_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --stacktrace
+          KRONO_STORE_KEYSTORE_BASE64: ${{ secrets.KRONO_STORE_KEYSTORE_BASE64 }}
+          KRONO_STORE_KEYSTORE_PASSWORD: ${{ secrets.KRONO_STORE_KEYSTORE_PASSWORD }}
+          KRONO_STORE_KEY_ALIAS: ${{ secrets.KRONO_STORE_KEY_ALIAS }}
+          KRONO_STORE_KEY_PASSWORD: ${{ secrets.KRONO_STORE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KRONO_STORE_KEYSTORE_BASE64" ]; then
+            echo "::error::The private store signing key is missing. Refusing to publish."
+            exit 1
+          fi
+          export KRONO_STORE_KEYSTORE_PATH="$RUNNER_TEMP/krono-store.jks"
+          printf '%s' "$KRONO_STORE_KEYSTORE_BASE64" | base64 --decode > "$KRONO_STORE_KEYSTORE_PATH"
+          ./gradlew assembleRelease assembleStoreRelease --stacktrace
 
       # Fails the release if the APK isn't signed with the same certificate as v1.6.5.
       # To rotate keys later, use an APK signing lineage (apksigner rotate) and update this value.
@@ -82,10 +93,18 @@ jobs:
             echo "::error::Signing certificate $actual does not match the Krono 1.x certificate $EXPECTED_CERT_SHA256 (this APK could not update existing installs)."
             exit 1
           fi
+          "$apksigner" verify --print-certs app/build/outputs/apk/storeRelease/app-storeRelease.apk > store-signature.txt
+          store_actual=$(grep -m1 'certificate SHA-256 digest:' store-signature.txt | awk '{print $NF}')
+          store_expected=$(tr -d '\n\r' < distribution/store-certificate.sha256)
+          if [ "$store_actual" != "$store_expected" ] || [ "$store_actual" = "$actual" ]; then
+            echo "::error::Store APK must use its own pinned private signing key."
+            exit 1
+          fi
 
       - name: Prepare release assets and notes
         run: |
           cp app/build/outputs/apk/release/app-release.apk "krono-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/storeRelease/app-storeRelease.apk "krono-store-${GITHUB_REF_NAME}.apk"
           # Pull this version's section out of CHANGELOG.md (between "## [vX]" and the next "## [").
           awk -v tag="$GITHUB_REF_NAME" '
             $0 ~ "^## \\[" tag "\\]" { found = 1; next }
@@ -103,6 +122,7 @@ jobs:
           files: |
             app/build/outputs/apk/release/app-release.apk
             krono-${{ github.ref_name }}.apk
+            krono-store-${{ github.ref_name }}.apk
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
 
@@ -110,9 +130,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mapping-${{ github.ref_name }}
-          path: app/build/outputs/mapping/release/mapping.txt
+          path: |
+            app/build/outputs/mapping/release/mapping.txt
+            app/build/outputs/mapping/storeRelease/mapping.txt
           retention-days: 90
 
       - name: Remove keystore
         if: always()
-        run: rm -f "$RUNNER_TEMP/krono-release.jks"
+        run: rm -f "$RUNNER_TEMP/krono-release.jks" "$RUNNER_TEMP/krono-store.jks"

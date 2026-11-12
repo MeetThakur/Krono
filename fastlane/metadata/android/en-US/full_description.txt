@@ -1,0 +1,19 @@
+Keep your competitive programming routine in one place.
+
+Krono brings upcoming contests, public coding profiles and daily practice to your Android phone.
+
+• Follow Codeforces, LeetCode, CodeChef and AtCoder contests in your local timezone.
+• See live countdowns, filter by platform and add contests to your calendar.
+• Set reminders and check notification and exact-alarm permissions in Settings.
+• Connect public handles to view ratings, solved counts and available rating history.
+• Set a daily problem goal, log solves manually and track your streak.
+• Compare supported profiles with your rivals.
+• Choose light, dark or system appearance.
+
+No Krono account is required. Profile handles, cached statistics, reminders and practice history are stored on your device. Requests go directly to the coding platforms and the AtCoder community API. Krono has no advertising or analytics SDK.
+
+Android 8.0 or later is required. Internet access is needed to refresh platform data. Reminder timing depends on Android permissions and battery restrictions. Platform APIs and public pages can change or become temporarily unavailable.
+
+Krono is free software under GPLv3. It is an independent project and is not affiliated with the coding platforms.
+
+The store edition installs as Krono Store, separately from the GitHub edition, and has its own local data and update channel.

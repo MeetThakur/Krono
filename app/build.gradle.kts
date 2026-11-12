@@ -1,5 +1,6 @@
 import java.security.KeyStore
 import java.security.MessageDigest
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -17,6 +18,42 @@ val releaseStorePassword = System.getenv("KRONO_KEYSTORE_PASSWORD") ?: "android"
 val releaseKeyAlias = System.getenv("KRONO_KEY_ALIAS") ?: "androiddebugkey"
 val releaseKeyPassword = System.getenv("KRONO_KEY_PASSWORD") ?: "android"
 val publishedCertificateSha256 = "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+
+val storeProperties = Properties().apply {
+    rootProject.file(".signing/store-signing.properties").takeIf { it.isFile }
+        ?.inputStream()?.use { load(it) }
+}
+val storeKeystore = System.getenv("KRONO_STORE_KEYSTORE_PATH")?.let(::file)
+    ?: rootProject.file(".signing/krono-store.jks")
+val storeSigningPassword = System.getenv("KRONO_STORE_KEYSTORE_PASSWORD") ?: storeProperties.getProperty("storePassword", "")
+val storeKeyAlias = System.getenv("KRONO_STORE_KEY_ALIAS") ?: storeProperties.getProperty("keyAlias", "krono-store")
+val storeKeyPassword = System.getenv("KRONO_STORE_KEY_PASSWORD") ?: storeProperties.getProperty("keyPassword", "")
+// F-Droid must be able to rebuild without access to the developer's private signing key.
+// This opt-in affects only the separate store package; GitHub releases always require the 1.x key.
+val unsignedStoreBuild = providers.gradleProperty("kronoStoreUnsigned").map { it.toBooleanStrict() }.getOrElse(false)
+
+val validateStoreSigning = tasks.register("validateStoreSigning") {
+    group = "verification"
+    description = "Checks the private store signing identity before packaging."
+    onlyIf { !unsignedStoreBuild }
+    doLast {
+        check(storeKeystore.isFile && storeSigningPassword.isNotEmpty() && storeKeyPassword.isNotEmpty()) {
+            "Store signing is not configured. Run python3 scripts/prepare-store-signing.py " +
+                "or configure KRONO_STORE_KEYSTORE_PATH and the store signing credentials."
+        }
+        val store = KeyStore.getInstance(storeKeystore, storeSigningPassword.toCharArray())
+        val certificate = checkNotNull(store.getCertificate(storeKeyAlias)) { "Store signing certificate is missing." }
+        val actual = MessageDigest.getInstance("SHA-256").digest(certificate.encoded)
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        val expected = rootProject.file("distribution/store-certificate.sha256").readText().trim()
+        check(actual == expected && actual != publishedCertificateSha256) {
+            "Store signing certificate does not match the pinned private store identity."
+        }
+        check(store.isKeyEntry(storeKeyAlias) && store.getKey(storeKeyAlias, storeKeyPassword.toCharArray()) != null) {
+            "The store signing private key is missing or inaccessible."
+        }
+    }
+}
 
 val validateReleaseSigning = tasks.register("validateReleaseSigning") {
     group = "verification"
@@ -45,6 +82,9 @@ val validateReleaseSigning = tasks.register("validateReleaseSigning") {
 tasks.matching { it.name == "preReleaseBuild" }.configureEach {
     dependsOn(validateReleaseSigning)
 }
+tasks.matching { it.name == "preStoreReleaseBuild" }.configureEach {
+    dependsOn(validateStoreSigning)
+}
 
 android {
     namespace = "com.meet11.krono"
@@ -54,13 +94,19 @@ android {
         applicationId = "com.meet11.Krono"
         minSdk = 26
         targetSdk = 35
-        versionCode = 200
-        versionName = "2.0.0"
+        versionCode = 201
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
+        create("store") {
+            storeFile = storeKeystore
+            storePassword = storeSigningPassword
+            keyAlias = storeKeyAlias
+            keyPassword = storeKeyPassword
+        }
         create("release") {
             storeFile = releaseKeystore
             storePassword = releaseStorePassword
@@ -83,6 +129,13 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        create("storeRelease") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".store"
+            resValue("string", "app_name", "Krono Store")
+            signingConfig = if (unsignedStoreBuild) null else signingConfigs.getByName("store")
+            matchingFallbacks += "release"
         }
     }
     compileOptions {

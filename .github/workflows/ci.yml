@@ -46,7 +46,7 @@ jobs:
       # One Gradle invocation so configuration and compiled classes are shared across tasks.
       # assembleRelease runs R8, which catches missing keep rules before a tag is ever cut.
       - name: Build debug + release, run lint and unit tests
-        run: ./gradlew assembleDebug assembleRelease lintRelease testDebugUnitTest --stacktrace
+        run: ./gradlew assembleDebug assembleRelease assembleStoreRelease lintRelease lintStoreRelease testDebugUnitTest -PkronoStoreUnsigned=true --stacktrace
 
       - name: Upload lint report
         if: always()

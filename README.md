@@ -38,10 +38,12 @@
 </p>
 
 - **Direct APK** — grab `app-release.apk` from [GitHub Releases](https://github.com/MeetThakur/Krono/releases/latest) and install it (Android 8.0+ / API 26+).
+- **Store edition** — `krono-store-vX.Y.Z.apk` is a separate package, shown as **Krono Store**, signed with its own private release key. It installs alongside the original app and has separate local data. Store listings are pending; see [distribution status](distribution/README.md).
 - **Auto-updates with Obtainium**
   1. Open [Obtainium](https://github.com/ImranR98/Obtainium) on your device.
   2. Tap **Add App** and paste `https://github.com/MeetThakur/Krono`.
   3. Obtainium tracks new releases and installs them for you.
+  4. For the original GitHub edition, set the APK filename filter to `^app-release\.apk$` so the separately signed store edition is not selected.
 
 ---
 
@@ -189,6 +191,8 @@ Release builds must use the **same certificate as the GitHub v1.6.5 APK**, so An
 Alternatively, configure `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`. Gradle checks the certificate and private key before building a release and **fails if the key is missing or differs from v1.6.5**. There is no fallback to a machine-generated debug key. CI release artifacts use the original key too.
 
 Debug builds use the separate application ID `com.meet11.Krono.debug` and install alongside the published app. To update an existing GitHub installation, use `app-release.apk`.
+
+The store edition uses `com.meet11.Krono.store`. Its private key is generated once with `python3 scripts/prepare-store-signing.py`, kept in the ignored `.signing/` directory, and supplied to tagged-release builds through dedicated GitHub Actions secrets. Build it with `./gradlew assembleStoreRelease`. See [store build and submission instructions](distribution/README.md) for the unsigned source-build option used by packagers.
 
 ### Publishing a release
 

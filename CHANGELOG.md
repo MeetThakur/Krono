@@ -4,6 +4,13 @@ All notable changes to Krono are documented in this file.
 
 ---
 
+## [v2.0.1] - 2026-11-12
+
+- Added a separate store edition (`com.meet11.Krono.store`) signed with a private release key. It installs as Krono Store and has separate app data.
+- The original GitHub edition keeps `com.meet11.Krono` and its existing certificate, so installed versions continue to update normally.
+- Added app-store descriptions, screenshots, privacy information and bundled font license notices.
+- Added store builds to CI and the tagged-release workflow. Store approval and listing are handled by the respective repositories.
+
 ## [v2.0.0] - 2026-11-09
 
 Krono 2.0 is a ground-up redesign with its own look, plus a long list of reliability fixes. Every contest on one clock, your ratings across platforms, and a head-to-head with your rivals.
