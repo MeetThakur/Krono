@@ -1,3 +1,6 @@
+import java.security.KeyStore
+import java.security.MessageDigest
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +8,42 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+}
+
+// Keep the identity used by GitHub v1.6.5. Never substitute a machine-generated debug key.
+val releaseKeystore = System.getenv("KRONO_KEYSTORE_PATH")?.let(::file)
+    ?: rootProject.file(".signing/krono-legacy.keystore")
+val releaseStorePassword = System.getenv("KRONO_KEYSTORE_PASSWORD") ?: "android"
+val releaseKeyAlias = System.getenv("KRONO_KEY_ALIAS") ?: "androiddebugkey"
+val releaseKeyPassword = System.getenv("KRONO_KEY_PASSWORD") ?: "android"
+val publishedCertificateSha256 = "fac61745dc0903786fb9ede62a962b399f7348f0bb6f899b8332667591033b9c"
+
+val validateReleaseSigning = tasks.register("validateReleaseSigning") {
+    group = "verification"
+    description = "Rejects release keys that cannot update the published Krono app."
+    doLast {
+        check(releaseKeystore.isFile) {
+            "Release keystore is missing. Run python3 scripts/prepare-release-signing.py " +
+                "or set KRONO_KEYSTORE_PATH to the original Krono keystore."
+        }
+        val store = KeyStore.getInstance(releaseKeystore, releaseStorePassword.toCharArray())
+        val certificate = checkNotNull(store.getCertificate(releaseKeyAlias)) {
+            "Release keystore has no certificate for alias $releaseKeyAlias."
+        }
+        val actual = MessageDigest.getInstance("SHA-256").digest(certificate.encoded)
+            .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        check(actual == publishedCertificateSha256) {
+            "Release signing certificate $actual does not match GitHub v1.6.5 " +
+                "($publishedCertificateSha256). Refusing to build an incompatible update."
+        }
+        check(store.isKeyEntry(releaseKeyAlias) && store.getKey(releaseKeyAlias, releaseKeyPassword.toCharArray()) != null) {
+            "The original signing private key is missing or inaccessible."
+        }
+    }
+}
+
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(validateReleaseSigning)
 }
 
 android {
@@ -21,29 +60,25 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // Release signing comes from env vars (CI secrets). Published releases must be signed with the same
-    // certificate as Krono 1.x (the debug.keystore committed at tag v1.6.5), or Android won't install
-    // them as an update. Without the env vars we fall back to this machine's debug key so local
-    // `assembleRelease` still works; such APKs can't update a published release.
-    val releaseKeystore = System.getenv("KRONO_KEYSTORE_PATH")?.let(::file)?.takeIf { it.exists() }
     signingConfigs {
-        if (releaseKeystore != null) {
-            create("release") {
-                storeFile = releaseKeystore
-                storePassword = System.getenv("KRONO_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KRONO_KEY_ALIAS")
-                keyPassword = System.getenv("KRONO_KEY_PASSWORD")
-            }
+        create("release") {
+            storeFile = releaseKeystore
+            storePassword = releaseStorePassword
+            keyAlias = releaseKeyAlias
+            keyPassword = releaseKeyPassword
         }
     }
 
     buildTypes {
+        debug {
+            // Development APKs install separately and cannot replace the published app.
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug").also {
-                logger.warn("Krono: KRONO_KEYSTORE_PATH not set — release APK is signed with the DEBUG key.")
-            }
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

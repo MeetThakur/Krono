@@ -17,6 +17,7 @@ captures/
 Thumbs.db
 
 # Keystore files
+.signing/
 *.jks
 *.keystore
 

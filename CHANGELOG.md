@@ -16,6 +16,7 @@ Krono 2.0 is a ground-up redesign with its own look, plus a long list of reliabi
 
 ### Upgrading from 1.x
 - 2.0 installs **over** 1.x as an update (same package name, same signing certificate), so no uninstall is needed.
+- Release builds now reject missing or mismatched signing keys instead of silently using a machine-generated debug key. Local and CI release APKs use the original v1.6.5 certificate; development builds install separately as `com.meet11.Krono.debug`.
 - Your streak history, best streak and daily goal, your connected profiles (in their saved order) and your rivals are carried over automatically on first launch, then refreshed from the platforms. Only Codeforces, LeetCode, CodeChef and AtCoder accounts are kept; anything else 2.0 can't track is skipped. This runs once, so profiles you remove later don't come back.
 - 1.x scheduled **two** notifications per contest (60 and 15 minutes before). 2.0 sends **one**, at the lead time you choose in Settings, and never repeats a reminder for the same contest start.
 

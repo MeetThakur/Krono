@@ -180,10 +180,15 @@ Build directly from the command line using the Gradle wrapper:
 ./gradlew assembleDebug
 
 # Release APK (R8-minified and resource-shrunk, ~2 MB)
+python3 scripts/prepare-release-signing.py
 ./gradlew assembleRelease
 ```
 
-Release builds are signed with the keystore given by `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`. Published releases must use the **same certificate as Krono 1.x** (the `debug.keystore` committed at tag `v1.6.5`), otherwise Android will not install them as an update and users would lose their data. Without those variables Gradle falls back to your local debug key, which is fine for development but can never update a published release.
+Release builds must use the **same certificate as the GitHub v1.6.5 APK**, so Android can install them as an update while preserving data. Run `python3 scripts/prepare-release-signing.py` once to recover the original key from pinned v1.6.5 Git history into the ignored `.signing/` directory. This recovers the existing key; it does not generate a new one. Shallow checkouts must first fetch the commit printed by the script.
+
+Alternatively, configure `KRONO_KEYSTORE_PATH`, `KRONO_KEYSTORE_PASSWORD`, `KRONO_KEY_ALIAS` and `KRONO_KEY_PASSWORD`. Gradle checks the certificate and private key before building a release and **fails if the key is missing or differs from v1.6.5**. There is no fallback to a machine-generated debug key. CI release artifacts use the original key too.
+
+Debug builds use the separate application ID `com.meet11.Krono.debug` and install alongside the published app. To update an existing GitHub installation, use `app-release.apk`.
 
 ### Publishing a release
 
