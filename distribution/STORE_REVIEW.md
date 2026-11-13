@@ -6,6 +6,8 @@ Reviewed 13 November 2026 against the F-Droid and IzzyOnDroid policies linked be
 
 **F-Droid: technically ready for packaging review, with acceptance and signing arrangements pending. IzzyOnDroid: blocked by its policy on AI-generated code.** Passing a local audit does not establish store acceptance or guarantee the absence of defects.
 
+Update after this review: fixes were merged and released as v2.0.2, verification passed, and the existing F-Droid request was updated. See [v2.0.2 verification](releases/v2.0.2-verification.md) for current release evidence and publication links. The baseline observations below are retained for provenance.
+
 The F-Droid packaging request already exists at https://gitlab.com/fdroid/rfp/-/work_items/4789. It references v2.0.1. Before maintainers package the fixes below, publish a new version and update that request to the new immutable source commit and APK. Do not replace v2.0.1 assets in place. No further store submission was made during this audit.
 
 ## Scope

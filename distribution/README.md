@@ -5,7 +5,7 @@
 | Channel | App ID | Signing identity | Status |
 | --- | --- | --- | --- |
 | Original GitHub edition | `com.meet11.Krono` | Original 1.x certificate | Published on GitHub; existing installations can update |
-| Store edition | `com.meet11.Krono.store` | Separate private release key, pinned in `store-certificate.sha256` | Release prepared for store submission |
+| Store edition | `com.meet11.Krono.store` | Separate private release key, pinned in `store-certificate.sha256` | Published on GitHub; F-Droid request pending packaging review |
 | Development | `com.meet11.Krono.debug` | Local debug key | Development only |
 
 Krono Store installs separately and does not import another package's private app storage. Existing GitHub users should continue using `app-release.apk` unless they intentionally want a new store installation.
@@ -40,6 +40,7 @@ Upstream validation: a clean v2.0.1 checkout built without signing keys, and `ap
 - Font license notices: `app/src/main/assets/licenses/` and `THIRD_PARTY_NOTICES.md`.
 - Prepared F-Droid request: `fdroid-request.md`.
 - Promotion drafts: `PROMOTION.md`.
+- Release verification and publication links: `releases/v2.0.2-verification.md`.
 - Full code and policy review: `STORE_REVIEW.md` (including fixes, verification and remaining blockers).
 
 F-Droid requires maintainer review and a successful source build. A developer-signed listing also requires its reproducible-build checks; no such acceptance is claimed here. A separately F-Droid-signed APK would not be interchangeable with the developer-signed store APK, so the signing plan must be settled during packaging.

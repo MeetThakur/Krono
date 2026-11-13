@@ -25,7 +25,7 @@ gradle assembleStoreRelease -PkronoStoreUnsigned=true
 
 This produces `app/build/outputs/apk/storeRelease/app-storeRelease-unsigned.apk` without requiring the private signing key. The property does not affect the original GitHub release signing guard. Gradle wrapper configuration, version catalog and build instructions are in the public source repository. JDK 17 and Android SDK 35 are used.
 
-The published v2.0.1 Linux CI store APK matched a clean macOS unsigned rebuild using `apksigcopier compare --unsigned`. Verification of v2.0.2 is performed after release. This is upstream verification, not an independent F-Droid build. See `distribution/STORE_REVIEW.md` for the code and policy audit.
+The published v2.0.1 Linux CI store APK matched a clean macOS unsigned rebuild using `apksigcopier compare --unsigned`. The published v2.0.2 Linux CI store APK also matched a clean unsigned macOS rebuild; verification details are in `distribution/releases/v2.0.2-verification.md`. This is upstream verification, not an independent F-Droid build. See `distribution/STORE_REVIEW.md` for the code and policy audit.
 
 ## Signing and services
 
@@ -34,3 +34,5 @@ The store APK has a private release key whose public SHA-256 fingerprint is in `
 The app depends on public services operated by Codeforces, LeetCode, CodeChef, AtCoder and the AtCoder Problems community API at kenkoooo.com. Please assess any appropriate non-free-network-service anti-feature during review. No platform passwords or API keys are required.
 
 The repository includes AI-assisted/assistant-authored code. We are disclosing this rather than asserting otherwise.
+
+Existing request updated on 13 November 2026: https://gitlab.com/fdroid/rfp/-/work_items/4789

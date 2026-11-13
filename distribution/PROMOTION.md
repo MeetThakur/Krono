@@ -1,6 +1,8 @@
 # Krono launch copy
 
-These are drafts. No social posts have been sent.
+The Krono 2.0 launch announcement was published on Reddit on 13 November 2026: https://www.reddit.com/r/droidappshowcase/comments/1xv45yf/krono_20_contests_profiles_and_reminders/
+
+The other posts below remain drafts. The announcement links to v2.0.2, which includes the latest fixes.
 
 ## Developer-community post
 
