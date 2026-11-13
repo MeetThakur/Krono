@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import com.meet11.krono.domain.model.Contest
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,11 +26,11 @@ class ReminderScheduler @Inject constructor(
     fun canScheduleExact(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarmManager?.canScheduleExactAlarms() == true
 
-    /** Returns false when the trigger time has already passed. */
+    /** Returns false when the contest has started or Android cannot schedule the alarm. */
     fun schedule(contest: Contest, minutesBefore: Int): Boolean {
         val am = alarmManager ?: return false
-        val triggerAt = contest.startTime - minutesBefore * 60_000L
-        if (triggerAt <= System.currentTimeMillis()) return false
+        val triggerAt = ReminderTiming.triggerAt(contest.startTime, minutesBefore, System.currentTimeMillis())
+            ?: return false
 
         val pending = pendingIntent(contest.id, buildIntent(contest, minutesBefore))
         val exact = canScheduleExact() && runCatching {
@@ -42,14 +43,23 @@ class ReminderScheduler @Inject constructor(
             // minutes before its trigger can arrive up to ~10 minutes late (verified on Android 16).
             // Exact alarms (Settings > Reminders > Exact timing) remove this uncertainty.
             val windowStart = (triggerAt - INEXACT_WINDOW_MS).coerceAtLeast(System.currentTimeMillis())
-            am.setWindow(AlarmManager.RTC_WAKEUP, windowStart, triggerAt - windowStart, pending)
+            if (runCatching {
+                am.setWindow(AlarmManager.RTC_WAKEUP, windowStart, triggerAt - windowStart, pending)
+            }.isFailure) return false
         }
+        cancelPending(contest.id, legacy = true)
         return true
     }
 
     fun cancel(contestId: String) {
+        cancelPending(contestId, legacy = false)
+        cancelPending(contestId, legacy = true)
+    }
+
+    private fun cancelPending(contestId: String, legacy: Boolean) {
         val am = alarmManager ?: return
         val intent = Intent(context, ContestAlarmReceiver::class.java)
+        if (!legacy) intent.data = identity(contestId)
         val pending = PendingIntent.getBroadcast(
             context,
             contestId.hashCode(),
@@ -81,7 +91,11 @@ class ReminderScheduler @Inject constructor(
     private fun pendingIntent(contestId: String, intent: Intent) = PendingIntent.getBroadcast(
         context,
         contestId.hashCode(),
-        intent,
+        intent.setData(identity(contestId)),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
+
+    // Extras are excluded from PendingIntent identity. A hash alone can replace another contest's alarm.
+    private fun identity(contestId: String): Uri = Uri.Builder().scheme("krono-reminder")
+        .authority(context.packageName).appendPath(contestId).build()
 }

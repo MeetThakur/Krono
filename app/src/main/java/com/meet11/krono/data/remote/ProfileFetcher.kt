@@ -105,10 +105,11 @@ class ProfileFetcher @Inject constructor(
             try {
                 atCoderRatedHistory(handle)
             } catch (e: retrofit2.HttpException) {
-                throw UserNotFoundException(Platform.ATCODER, handle)
+                if (e.code() == 404) throw UserNotFoundException(Platform.ATCODER, handle)
+                throw e
             }
         }
-        val solved = async { runCatching { atCoderApi.getAcRank(handle).count }.getOrDefault(0) }
+        val solved = async { atCoderApi.getAcRank(handle).count }
         val rated = history.await()
         val current = rated.lastOrNull()?.newRating
         FetchedProfile(
@@ -125,19 +126,32 @@ class ProfileFetcher @Inject constructor(
     }
 
     private suspend fun fetchCodeforces(handle: String): FetchedProfile = coroutineScope {
-        val info = async { codeforcesApi.getUserInfo(handle) }
-        val subs = async { runCatching { codeforcesApi.getUserSubmissions(handle, 1, 10_000) }.getOrNull() }
-        val rating = async { runCatching { codeforcesApi.getUserRating(handle) }.getOrNull() }
-
-        // Codeforces answers an unknown handle with HTTP 400; network errors propagate as-is.
-        val user = try {
-            info.await().result?.firstOrNull()
+        // Codeforces also uses HTTP 400 for rate limits, so inspect its error before calling a user missing.
+        val response = try {
+            codeforcesApi.getUserInfo(handle)
         } catch (e: retrofit2.HttpException) {
-            null
-        } ?: throw UserNotFoundException(Platform.CODEFORCES, handle)
+            val error = e.response()?.errorBody()?.use { it.string() }.orEmpty()
+            if (e.code() == 404 || (e.code() == 400 && error.contains("handle", true) && error.contains("not found", true))) {
+                throw UserNotFoundException(Platform.CODEFORCES, handle)
+            }
+            throw e
+        }
+        check(response.status == "OK") { "Codeforces profile data unavailable" }
+        val user = response.result?.firstOrNull() ?: throw UserNotFoundException(Platform.CODEFORCES, handle)
+        // Incomplete snapshots must fail, so repositories retain the previous cached statistics.
+        val subs = async {
+            codeforcesApi.getUserSubmissions(handle, 1, 10_000).also {
+                check(it.status == "OK" && it.result != null) { "Codeforces submissions unavailable" }
+            }
+        }
+        val rating = async {
+            codeforcesApi.getUserRating(handle).also {
+                check(it.status == "OK" && it.result != null) { "Codeforces rating history unavailable" }
+            }
+        }
 
         // Count distinct *problems* with an accepted verdict (was distinct contests before).
-        val solved = subs.await()?.result.orEmpty()
+        val solved = subs.await().result.orEmpty()
             .asSequence()
             .filter { it.verdict == "OK" }
             .mapNotNull { s ->
@@ -156,7 +170,7 @@ class ProfileFetcher @Inject constructor(
             maxRating = user.maxRating,
             rank = user.rank,
             problemsSolved = solved,
-            totalContests = rating.await()?.result?.size ?: 0
+            totalContests = rating.await().result.orEmpty().size
         )
     }
 
@@ -183,17 +197,21 @@ class ProfileFetcher @Inject constructor(
         """.trimIndent()
 
         val userDeferred = async { leetCodeApi.getUserProfile(GraphQLRequest(userQuery, variables)) }
-        val contestDeferred = async { runCatching { leetCodeApi.getContestData(GraphQLRequest(contestQuery, variables)) }.getOrNull() }
+        val contestDeferred = async { leetCodeApi.getContestData(GraphQLRequest(contestQuery, variables)) }
 
-        val matched = userDeferred.await().data?.matchedUser ?: throw UserNotFoundException(Platform.LEETCODE, handle)
-        val solved = matched.submitStats?.acSubmissionNum?.firstOrNull { it.difficulty == "All" }?.count
-            ?: matched.submitStats?.acSubmissionNum?.sumOf { it.count } ?: 0
+        val userResponse = userDeferred.await()
+        check(userResponse.errors.isNullOrEmpty()) { "LeetCode profile data unavailable" }
+        val matched = userResponse.data?.matchedUser ?: throw UserNotFoundException(Platform.LEETCODE, handle)
+        val counts = checkNotNull(matched.submitStats?.acSubmissionNum) { "LeetCode solved counts unavailable" }
+        val solved = counts.firstOrNull { it.difficulty == "All" }?.count ?: counts.sumOf { it.count }
 
-        val contestData = contestDeferred.await()?.data
-        val ranking = contestData?.userContestRanking
+        val contestResponse = contestDeferred.await()
+        check(contestResponse.errors.isNullOrEmpty()) { "LeetCode contest data unavailable" }
+        val contestData = checkNotNull(contestResponse.data) { "LeetCode contest data unavailable" }
+        val ranking = contestData.userContestRanking
         val current = ranking?.rating?.toInt()
         // LeetCode doesn't expose a peak rating directly — derive it from history.
-        val peak = contestData?.userContestRankingHistory
+        val peak = contestData.userContestRankingHistory
             ?.filter { it.attended }
             ?.mapNotNull { it.rating?.toInt() }
             ?.maxOrNull()
@@ -216,10 +234,14 @@ class ProfileFetcher @Inject constructor(
         val html = try {
             codeChefApi.getUserProfilePage(handle).use { it.string() }
         } catch (e: retrofit2.HttpException) {
+            if (e.code() == 404) throw UserNotFoundException(Platform.CODECHEF, handle)
+            throw e
+        }
+        if (html.contains("User does not exist", ignoreCase = true) || html.contains("Could not find page", ignoreCase = true)) {
             throw UserNotFoundException(Platform.CODECHEF, handle)
         }
         val parsed = runCatching { CodeChefProfileParser.parse(html, handle) }
-            .getOrElse { throw UserNotFoundException(Platform.CODECHEF, handle) }
+            .getOrElse { throw IllegalStateException("CodeChef profile data is temporarily unavailable", it) }
         return FetchedProfile(
             platform = Platform.CODECHEF,
             username = parsed.username,

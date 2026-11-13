@@ -77,7 +77,7 @@ jobs:
           fi
           export KRONO_STORE_KEYSTORE_PATH="$RUNNER_TEMP/krono-store.jks"
           printf '%s' "$KRONO_STORE_KEYSTORE_BASE64" | base64 --decode > "$KRONO_STORE_KEYSTORE_PATH"
-          ./gradlew assembleRelease assembleStoreRelease --stacktrace
+          ./gradlew assembleRelease assembleStoreRelease testDebugUnitTest lintRelease lintStoreRelease --stacktrace
 
       # Fails the release if the APK isn't signed with the same certificate as v1.6.5.
       # To rotate keys later, use an APK signing lineage (apksigner rotate) and update this value.

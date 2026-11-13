@@ -40,7 +40,7 @@ interface RivalRepository {
 interface StreakRepository {
     fun getDailyGoal(): Flow<DailyGoal>
     suspend fun recordManualSolve(dateKey: String? = null)
-    suspend fun undoManualSolve()
+    suspend fun undoManualSolve(dateKey: String? = null)
     suspend fun setDailyGoalTarget(target: Int)
     suspend fun syncStreakWithProfiles(profiles: List<Profile>)
 }

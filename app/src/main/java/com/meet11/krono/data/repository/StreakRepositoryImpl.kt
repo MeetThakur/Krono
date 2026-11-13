@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import com.meet11.krono.core.ui.tickerFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
@@ -27,7 +29,7 @@ class StreakRepositoryImpl @Inject constructor(
     private fun keyOf(date: LocalDate): String = keyFormat.format(date)
 
     override fun getDailyGoal(): Flow<DailyGoal> {
-        return preferencesManager.streakSettings.map { settings ->
+        return combine(preferencesManager.streakSettings, tickerFlow()) { settings, _ ->
             val today = LocalDate.now()
             val solvedToday = settings.dailyHistory[keyOf(today)] ?: 0
             val target = settings.dailyGoal.coerceAtLeast(1)
@@ -47,10 +49,10 @@ class StreakRepositoryImpl @Inject constructor(
 
     override suspend fun recordManualSolve(dateKey: String?) = adjustToday(dateKey, +1)
 
-    override suspend fun undoManualSolve() = adjustToday(null, -1)
+    override suspend fun undoManualSolve(dateKey: String?) = adjustToday(dateKey, -1)
 
     private suspend fun adjustToday(dateKey: String?, delta: Int) = writeLock.withLock {
-        val key = dateKey ?: keyOf(LocalDate.now())
+        val key = keyOf(dateKey?.let(LocalDate::parse) ?: LocalDate.now())
         val settings = preferencesManager.streakSettings.first()
         val history = settings.dailyHistory.toMutableMap()
         val next = ((history[key] ?: 0) + delta).coerceAtLeast(0)

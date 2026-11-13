@@ -26,6 +26,7 @@ class ContestAlarmReceiver : BroadcastReceiver() {
         val minutesBefore = intent.getIntExtra(EXTRA_MINUTES_BEFORE, 15)
         val url = intent.getStringExtra(EXTRA_URL)
         val startTime = intent.getLongExtra(EXTRA_START_TIME, 0L)
+        if (startTime > 0L && startTime <= System.currentTimeMillis()) return
 
         // At most one reminder per contest start. Krono 1.x scheduled two (60 and 15 min) on purpose,
         // and redelivered/duplicate alarms (exact + inexact, reboot re-arm) must never notify twice.
@@ -38,6 +39,7 @@ class ContestAlarmReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) return
+        if (!reminderNotificationsAllowed(context)) return
 
         val openIntent = if (!url.isNullOrBlank()) {
             Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -69,7 +71,7 @@ class ContestAlarmReceiver : BroadcastReceiver() {
             .setContentIntent(pendingIntent)
             .build()
 
-        val posted = runCatching { NotificationManagerCompat.from(context).notify(contestId.hashCode(), notification) }
+        val posted = runCatching { NotificationManagerCompat.from(context).notify(contestId, 0, notification) }
         if (posted.isSuccess) {
             ledger.markFired(contestId, startTime)
             if (BuildConfig.DEBUG) Log.i(TAG, "posted reminder for $contestId")

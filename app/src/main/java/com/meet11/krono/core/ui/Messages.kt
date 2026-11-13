@@ -11,6 +11,9 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import com.meet11.krono.worker.reminderNotificationsAllowed
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -49,13 +52,21 @@ fun CollectMessages(messages: Flow<UiMessage>) {
 @Composable
 fun rememberNotificationGate(): (enabling: Boolean, proceed: () -> Unit) -> Unit {
     val context = LocalContext.current
+    val host = LocalSnackbarHost.current
+    val scope = rememberCoroutineScope()
+    val blocked = {
+        scope.launch { host.showSnackbar("Notifications are off. Enable them in Settings before setting a reminder.") }
+        Unit
+    }
     // Survives recomposition between launching the dialog and receiving its result.
     val pending = remember { arrayOfNulls<() -> Unit>(1) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        pending[0]?.invoke()
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        val proceed = pending[0]
         pending[0] = null
+        if (granted && reminderNotificationsAllowed(context)) proceed?.invoke()
+        else blocked()
     }
-    return remember(context, launcher) {
+    return remember(context, launcher, host, scope) {
         { enabling, proceed ->
             val needsAsk = enabling &&
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -63,6 +74,8 @@ fun rememberNotificationGate(): (enabling: Boolean, proceed: () -> Unit) -> Unit
             if (needsAsk) {
                 pending[0] = proceed
                 launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else if (enabling && !reminderNotificationsAllowed(context)) {
+                blocked()
             } else {
                 proceed()
             }
