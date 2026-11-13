@@ -6,8 +6,8 @@ I maintain Krono and would like to request inclusion of its separately signed st
 - License: GPL-3.0
 - Store application ID: `com.meet11.Krono.store`
 - Original GitHub application ID: `com.meet11.Krono`
-- Release: https://github.com/MeetThakur/Krono/releases/tag/v2.0.1
-- Store APK: https://github.com/MeetThakur/Krono/releases/download/v2.0.1/krono-store-v2.0.1.apk
+- Release: https://github.com/MeetThakur/Krono/releases/tag/v2.0.2
+- Store APK: https://github.com/MeetThakur/Krono/releases/download/v2.0.2/krono-store-v2.0.2.apk
 - Fastlane metadata: https://github.com/MeetThakur/Krono/tree/master/fastlane/metadata/android/en-US
 - Privacy: https://github.com/MeetThakur/Krono/blob/master/PRIVACY.md
 
@@ -25,7 +25,7 @@ gradle assembleStoreRelease -PkronoStoreUnsigned=true
 
 This produces `app/build/outputs/apk/storeRelease/app-storeRelease-unsigned.apk` without requiring the private signing key. The property does not affect the original GitHub release signing guard. Gradle wrapper configuration, version catalog and build instructions are in the public source repository. JDK 17 and Android SDK 35 are used.
 
-A local signed-versus-unsigned comparison passed with `apksigcopier compare --unsigned`. This was not an independent F-Droid build and is not being presented as one.
+The published v2.0.1 Linux CI store APK matched a clean macOS unsigned rebuild using `apksigcopier compare --unsigned`. Verification of v2.0.2 is performed after release. This is upstream verification, not an independent F-Droid build. See `distribution/STORE_REVIEW.md` for the code and policy audit.
 
 ## Signing and services
 

@@ -4,6 +4,18 @@ All notable changes to Krono are documented in this file.
 
 ---
 
+## [v2.0.2] - 2026-11-13
+
+- Keep cached profile statistics when a platform returns incomplete data or an error; preserve imported submission and badge data during refresh.
+- Respect notification permission denial and blocked notification channels before enabling reminders.
+- Re-arm reminders after contest changes, handle lead-time changes safely, and prevent alarm identity collisions and late notifications.
+- Fix a Rivals crash when the same handle is connected as a profile and rival.
+- Refresh daily practice at midnight and apply Undo to the original solve date.
+- Bundle runtime library licenses and notices, and add Privacy and Licenses links in Settings.
+- Require unit tests and both release lint checks before a tagged release can publish.
+
+Existing GitHub installations should update using **app-release.apk**. The separate **krono-store-v2.0.2.apk** installs as Krono Store with its own app data. F-Droid inclusion is pending maintainer review; neither APK is an accepted F-Droid listing yet.
+
 ## [v2.0.1] - 2026-11-12
 
 - Added a separate store edition (`com.meet11.Krono.store`) signed with a private release key. It installs as Krono Store and has separate app data.

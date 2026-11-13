@@ -1,0 +1,1 @@
+Fix profile refresh data loss, reminder permission handling and scheduling, duplicate-handle Rivals crashes, and midnight practice updates. Add bundled library notices and privacy links. Existing GitHub users should keep using app-release.apk.

@@ -31,8 +31,18 @@ Use the existing images in `fastlane/metadata/android/en-US/images/phoneScreensh
 ## Publishing order
 
 1. Publish a tagged release containing both the original GitHub APK and the separately signed store APK.
-2. Submit the store package to IzzyOnDroid and F-Droid. Describe each submission as pending until the maintainers accept and publish it.
+2. Update the existing F-Droid request with the release and verification evidence. Skip IzzyOnDroid while its AI-code policy excludes this project. Describe F-Droid inclusion as pending until the maintainers accept and publish it.
 3. Share a post with the direct GitHub download and screenshots. Add store links only after the listings exist.
 4. Follow up with a short update based on actual feedback or a new release.
 
 Before posting in a community, check its current self-promotion rules and disclose that you are the developer. Do not describe an unaccepted store submission as a published listing.
+
+## v2.0.2 announcement
+
+Krono v2.0.2 is out with fixes for profile syncing, contest reminders and a Rivals crash. It also adds bundled library notices and privacy links.
+
+If you already use the GitHub app, download **app-release.apk** to update without reinstalling. **Krono Store** is a separate installation with its own data.
+
+Release: https://github.com/MeetThakur/Krono/releases/tag/v2.0.2
+
+F-Droid inclusion is pending maintainer review. Feedback on reminder delivery and platform syncing is welcome.
