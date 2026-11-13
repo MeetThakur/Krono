@@ -50,15 +50,11 @@
 ## Screenshots
 
 <p align="center">
-  <img src="assets/images/screenshots/home.png" width="200" alt="Today — next-contest chronograph and profiles" />
-  <img src="assets/images/screenshots/home2.png" width="200" alt="Today — daily goal dial, stats and problem of the day" />
-  <img src="assets/images/screenshots/contests.png" width="200" alt="Contests — grouped schedule with live countdowns" />
-</p>
-<p align="center">
-  <img src="assets/images/screenshots/rivals.png" width="200" alt="Rivals — head-to-head and standings" />
-  <img src="assets/images/screenshots/settings.png" width="200" alt="Settings — theme and reminder health" />
-  <img src="assets/images/screenshots/home_light.png" width="200" alt="Today in light mode" />
-  <img src="assets/images/screenshots/contests_light.png" width="200" alt="Contests in light mode" />
+  <img src="assets/images/screenshots/1.jpg" width="200"/>
+  <img src="assets/images/screenshots/2.jpg" width="200"/>
+  <img src="assets/images/screenshots/3.jpg" width="200"/>
+  <img src="assets/images/screenshots/4.jpg" width="200"/>
+  <img src="assets/images/screenshots/5.jpg" width="200"/>
 </p>
 
 <sub>Screenshots use synthetic demo accounts.</sub>
