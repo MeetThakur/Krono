@@ -53,7 +53,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lint-report-${{ github.sha }}
-          path: app/build/reports/lint-results-release.html
+          path: |
+            app/build/reports/lint-results-release.html
+            app/build/reports/lint-results-storeRelease.html
+            app/build/test-results/testDebugUnitTest/
           if-no-files-found: ignore
           retention-days: 7
 

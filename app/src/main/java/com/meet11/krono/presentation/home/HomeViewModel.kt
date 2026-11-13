@@ -140,14 +140,15 @@ class HomeViewModel @Inject constructor(
     }
 
     fun recordManualSolve() {
+        val day = java.time.LocalDate.now().toString()
         viewModelScope.launch {
-            streakRepository.recordManualSolve()
-            messageChannel.send(UiMessage("Solve logged", actionLabel = "Undo", onAction = ::undoSolve))
+            streakRepository.recordManualSolve(day)
+            messageChannel.send(UiMessage("Solve logged", actionLabel = "Undo", onAction = { undoSolve(day) }))
         }
     }
 
-    private fun undoSolve() {
-        viewModelScope.launch { streakRepository.undoManualSolve() }
+    private fun undoSolve(day: String) {
+        viewModelScope.launch { streakRepository.undoManualSolve(day) }
     }
 
     fun setDailyGoalTarget(target: Int) {
@@ -187,7 +188,7 @@ class HomeViewModel @Inject constructor(
             val enable = !contest.reminderSet
             val ok = contestRepository.setReminder(contest.id, enable)
             when {
-                !ok -> messageChannel.send(UiMessage("Too close to the start to set a reminder"))
+                !ok -> messageChannel.send(UiMessage("Couldn't schedule the reminder. Check the start time and reminder settings."))
                 enable -> messageChannel.send(UiMessage("We'll remind you before ${contest.name}"))
             }
         }

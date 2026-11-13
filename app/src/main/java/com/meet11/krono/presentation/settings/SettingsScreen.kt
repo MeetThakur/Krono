@@ -144,6 +144,10 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit, modifier: M
             }
             Spacer(Modifier.height(14.dp))
             LinkRow("Source code") { openUrl(context, "https://github.com/MeetThakur/Krono") }
+            Spacer(Modifier.height(14.dp))
+            LinkRow("Privacy") { openUrl(context, "https://github.com/MeetThakur/Krono/blob/master/PRIVACY.md") }
+            Spacer(Modifier.height(14.dp))
+            LinkRow("Licenses and notices") { openUrl(context, "https://github.com/MeetThakur/Krono/blob/master/THIRD_PARTY_NOTICES.md") }
         }
         Spacer(Modifier.height(24.dp))
     }
@@ -213,7 +217,7 @@ private fun notificationsAllowed(context: Context): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     ) return false
-    return androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+    return com.meet11.krono.worker.reminderNotificationsAllowed(context)
 }
 
 private fun exactAlarmsAllowed(context: Context): Boolean =

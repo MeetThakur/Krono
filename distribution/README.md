@@ -31,7 +31,7 @@ Packagers can build an unsigned store APK without the private key:
 
 Output: `app/build/outputs/apk/storeRelease/app-storeRelease-unsigned.apk`. This option applies only to the store package. Original GitHub releases still enforce the original certificate. Unsigned APKs are never attached to GitHub Releases.
 
-Local validation: the unsigned store build succeeded with the store key unavailable, and `apksigcopier compare --unsigned` verified that its contents matched the locally signed store APK. This is a local comparison, not an independent F-Droid reproducibility verification.
+Upstream validation: a clean v2.0.1 checkout built without signing keys, and `apksigcopier compare --unsigned` verified it against the published GitHub CI store APK across Linux and macOS builders. This is not an F-Droid build-server verification. Repeat the comparison for the next release containing the review fixes.
 
 ## Store readiness
 
@@ -40,6 +40,7 @@ Local validation: the unsigned store build succeeded with the store key unavaila
 - Font license notices: `app/src/main/assets/licenses/` and `THIRD_PARTY_NOTICES.md`.
 - Prepared F-Droid request: `fdroid-request.md`.
 - Promotion drafts: `PROMOTION.md`.
+- Full code and policy review: `STORE_REVIEW.md` (including fixes, verification and remaining blockers).
 
 F-Droid requires maintainer review and a successful source build. A developer-signed listing also requires its reproducible-build checks; no such acceptance is claimed here. A separately F-Droid-signed APK would not be interchangeable with the developer-signed store APK, so the signing plan must be settled during packaging.
 

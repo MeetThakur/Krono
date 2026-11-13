@@ -50,13 +50,13 @@ class ProfileRepositoryImpl @Inject constructor(
                 async {
                     runCatching { fetcher.fetch(Platform.fromId(p.platformId), p.username) }
                         // Preserve id + user-chosen order; REPLACE used to reset order to 0.
-                        .map { it.toEntity(p.id, p.displayOrder) }
+                        .map { it.toEntity(p.id, p.displayOrder).copy(totalSubmissions = p.totalSubmissions, badges = p.badges) }
                 }
             }.awaitAll()
         }
         val updated = results.mapNotNull { it.getOrNull() }
         if (updated.isNotEmpty()) profileDao.upsertProfiles(updated)
-        if (updated.isEmpty()) throw results.first().exceptionOrNull() ?: IllegalStateException("Refresh failed")
+        results.firstOrNull { it.isFailure }?.exceptionOrNull()?.let { throw it }
     }
 
     override suspend fun deleteProfile(id: String) = profileDao.deleteProfile(id)

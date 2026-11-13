@@ -62,6 +62,8 @@ class ContestRepositoryImpl @Inject constructor(
         if (fetched.isNotEmpty()) contestDao.upsertContestsPreservingReminders(fetched)
         // Keep the table small: recent past contests stay visible, anything older than the window goes.
         contestDao.deleteOldUnstarredContests(System.currentTimeMillis() - PAST_WINDOW_MS)
+        // Foreground refreshes must update alarms too, including changed contest start times.
+        reminderScheduler.scheduleAll(getActiveReminders())
     }
 
     override suspend fun setReminder(contestId: String, enable: Boolean): Boolean {
@@ -85,9 +87,10 @@ class ContestRepositoryImpl @Inject constructor(
     override suspend fun updateReminderLeadTime(minutesBefore: Int) {
         val now = System.currentTimeMillis()
         contestDao.getActiveReminders(now).forEach { entity ->
-            contestDao.updateReminder(entity.id, true, minutesBefore)
-            reminderScheduler.cancel(entity.id)
-            reminderScheduler.schedule(entity.toDomain().copy(reminderMinutesBefore = minutesBefore), minutesBefore)
+            // Scheduling replaces the existing PendingIntent. Keep the old alarm/state if it fails.
+            if (reminderScheduler.schedule(entity.toDomain(), minutesBefore)) {
+                contestDao.updateReminder(entity.id, true, minutesBefore)
+            }
         }
     }
 

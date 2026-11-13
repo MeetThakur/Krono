@@ -110,7 +110,7 @@ class ContestsViewModel @Inject constructor(
             val enable = !contest.reminderSet
             val ok = contestRepository.setReminder(contest.id, enable)
             when {
-                !ok -> messageChannel.send(UiMessage("Too close to the start to set a reminder"))
+                !ok -> messageChannel.send(UiMessage("Couldn't schedule the reminder. Check the start time and reminder settings."))
                 enable -> messageChannel.send(UiMessage("Reminder set for ${contest.name}"))
             }
         }

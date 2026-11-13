@@ -44,12 +44,13 @@ class RivalRepositoryImpl @Inject constructor(
         if (current.isEmpty()) return@runCatching
         val results = supervisorScope {
             current.map { r ->
-                async { runCatching { fetcher.fetch(Platform.fromId(r.platformId), r.username).toEntity(r.id) } }
+                async { runCatching { fetcher.fetch(Platform.fromId(r.platformId), r.username).toEntity(r.id)
+                    .copy(totalSubmissions = r.totalSubmissions, badges = r.badges) } }
             }.awaitAll()
         }
         val updated = results.mapNotNull { it.getOrNull() }
         if (updated.isNotEmpty()) rivalDao.upsertRivals(updated)
-        if (updated.isEmpty()) throw results.first().exceptionOrNull() ?: IllegalStateException("Refresh failed")
+        results.firstOrNull { it.isFailure }?.exceptionOrNull()?.let { throw it }
     }
 
     private fun FetchedProfile.toEntity(id: String) = RivalEntity(

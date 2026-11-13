@@ -149,7 +149,7 @@ fun RivalsScreen(viewModel: RivalsViewModel, modifier: Modifier = Modifier) {
             }
 
             if (state.leaderboard.isNotEmpty() && state.leaderboard.any { !it.isMe }) {
-                itemsIndexed(state.leaderboard, key = { _, e -> e.id }) { index, entry ->
+                itemsIndexed(state.leaderboard, key = { _, e -> "${if (e.isMe) "me" else "rival"}:${e.id}" }) { index, entry ->
                     StandingRow(
                         position = index + 1,
                         entry = entry,
